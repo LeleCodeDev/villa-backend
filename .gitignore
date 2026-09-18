@@ -1,0 +1,15 @@
+uploads/*
+!uploads/.gitkeep
+tmp/
+.env
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
