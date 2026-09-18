@@ -65,3 +65,27 @@ func (h *FaqHandler) CreateFaq(c *gin.Context) {
 
 	response.Success(c, http.StatusCreated, "Faq successfully created!", faq)
 }
+
+func (h *FaqHandler) UpdateFaq(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	var req dto.FaqRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	faq, err := h.service.Update(ctx, id, req)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Faq successfully updated!", faq)
+}

@@ -73,3 +73,32 @@ func (s *FaqService) Create(ctx context.Context, req dto.FaqRequest) (dto.FaqRes
 
 	return mapper.ToFaqResponse(createdFaq), nil
 }
+
+func (s *FaqService) Update(ctx context.Context, id uint, req dto.FaqRequest) (dto.FaqResponse, error) {
+	var updatedFaq *model.Faq
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txRepo := s.repo.WithTx(tx)
+
+		faq, err := txRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if faq == nil {
+			return errors.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
+		}
+
+		mapper.UpdateFaqModel(faq, req)
+		if err := txRepo.Update(ctx, faq); err != nil {
+			return err
+		}
+
+		updatedFaq = faq
+
+		return nil
+	}); err != nil {
+		return dto.FaqResponse{}, err
+	}
+
+	return mapper.ToFaqResponse(updatedFaq), nil
+}
