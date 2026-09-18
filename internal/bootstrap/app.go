@@ -19,6 +19,7 @@ type App struct {
 	Router             *gin.Engine
 	DB                 *gorm.DB
 	HeroSectionHandler *handler.HeroSectionHandler
+	FaqHandler         *handler.FaqHandler
 }
 
 func NewApp() *App {
@@ -27,13 +28,16 @@ func NewApp() *App {
 	txManager := repository.NewTxManager(db)
 
 	heroSectionRepo := repository.NewHeroSectionRepository(db)
+	faqRepo := repository.NewFaqRepository(db)
 
 	heroSectionService := service.NewHeroSectionService(txManager, heroSectionRepo)
+	faqService := service.NewFaqService(txManager, faqRepo)
 
 	app := &App{
 		Router:             r,
 		DB:                 db,
 		HeroSectionHandler: handler.NewHeroSectionHandler(heroSectionService),
+		FaqHandler:         handler.NewFaqHandler(faqService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

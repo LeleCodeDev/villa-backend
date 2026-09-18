@@ -10,4 +10,12 @@ func (a *App) RegisterRoute() {
 		heroSection.PUT("", a.HeroSectionHandler.UpdateHeroSection)
 		heroSection.DELETE("", a.HeroSectionHandler.DeleteHeroSection)
 	}
+
+	faq := api.Group("/faqs")
+	{
+		faq.GET("", a.FaqHandler.GetAllFaqs)
+		// faq.POST("", a.HeroSectionHandler.CreateHeroSection)
+		// faq.PUT("", a.HeroSectionHandler.UpdateHeroSection)
+		// faq.DELETE("", a.HeroSectionHandler.DeleteHeroSection)
+	}
 }
