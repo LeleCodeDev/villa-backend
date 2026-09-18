@@ -95,3 +95,19 @@ func (s *HeroSectionService) Update(ctx context.Context, req dto.HeroSectionRequ
 
 	return mapper.ToHeroSectionResponse(updatedHeroSection), nil
 }
+
+func (s *HeroSectionService) Delete(ctx context.Context) error {
+	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txRepo := s.repo.WithTx(tx)
+
+		heroSection, err := txRepo.Get(ctx)
+		if err != nil {
+			return err
+		}
+		if heroSection == nil {
+			return errors.NotFound("Hero section data not found!")
+		}
+
+		return txRepo.Delete(ctx, heroSection)
+	})
+}

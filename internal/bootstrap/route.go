@@ -8,5 +8,6 @@ func (a *App) RegisterRoute() {
 		heroSection.GET("", a.HeroSectionHandler.GetHeroSecton)
 		heroSection.POST("", a.HeroSectionHandler.CreateHeroSection)
 		heroSection.PUT("", a.HeroSectionHandler.UpdateHeroSection)
+		heroSection.DELETE("", a.HeroSectionHandler.DeleteHeroSection)
 	}
 }

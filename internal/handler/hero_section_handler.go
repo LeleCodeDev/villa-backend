@@ -66,3 +66,14 @@ func (h *HeroSectionHandler) UpdateHeroSection(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, "Hero section successfully updated!", heroSection)
 }
+
+func (h *HeroSectionHandler) DeleteHeroSection(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	if err := h.service.Delete(ctx); err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success[any](c, http.StatusOK, "Hero section successfully deleted!", nil)
+}

@@ -51,3 +51,7 @@ func (r *HeroSectionRepository) Create(ctx context.Context, heroSection *model.H
 func (r *HeroSectionRepository) Update(ctx context.Context, heroSection *model.HeroSection) error {
 	return r.db.WithContext(ctx).Save(heroSection).Error
 }
+
+func (r *HeroSectionRepository) Delete(ctx context.Context, heroSection *model.HeroSection) error {
+	return r.db.WithContext(ctx).Delete(heroSection).Error
+}
