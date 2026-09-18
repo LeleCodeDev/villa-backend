@@ -89,3 +89,20 @@ func (h *FaqHandler) UpdateFaq(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, "Faq successfully updated!", faq)
 }
+
+func (h *FaqHandler) DeleteFaq(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	if err := h.service.Delete(ctx, id); err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success[any](c, http.StatusOK, "Faq successfully deleted!", nil)
+}

@@ -102,3 +102,19 @@ func (s *FaqService) Update(ctx context.Context, id uint, req dto.FaqRequest) (d
 
 	return mapper.ToFaqResponse(updatedFaq), nil
 }
+
+func (s *FaqService) Delete(ctx context.Context, id uint) error {
+	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txRepo := s.repo.WithTx(tx)
+
+		faq, err := txRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if faq == nil {
+			return errors.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
+		}
+
+		return txRepo.Delete(ctx, faq)
+	})
+}

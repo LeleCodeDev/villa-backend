@@ -17,6 +17,6 @@ func (a *App) RegisterRoute() {
 		faq.GET("/:id", a.FaqHandler.GetFaqByID)
 		faq.POST("", a.FaqHandler.CreateFaq)
 		faq.PUT("/:id", a.FaqHandler.UpdateFaq)
-		// faq.DELETE("", a.HeroSectionHandler.DeleteHeroSection)
+		faq.DELETE("/:id", a.FaqHandler.DeleteFaq)
 	}
 }
