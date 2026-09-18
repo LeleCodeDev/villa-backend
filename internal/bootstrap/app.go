@@ -23,6 +23,8 @@ type App struct {
 }
 
 func NewApp() *App {
+	setupValidator()
+
 	r := gin.Default()
 	db := database.NewDB()
 	txManager := repository.NewTxManager(db)

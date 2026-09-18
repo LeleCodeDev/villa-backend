@@ -14,8 +14,9 @@ func (a *App) RegisterRoute() {
 	faq := api.Group("/faqs")
 	{
 		faq.GET("", a.FaqHandler.GetAllFaqs)
-		// faq.POST("", a.HeroSectionHandler.CreateHeroSection)
-		// faq.PUT("", a.HeroSectionHandler.UpdateHeroSection)
-		// faq.DELETE("", a.HeroSectionHandler.DeleteHeroSection)
+		faq.GET("/:id", a.FaqHandler.GetFaqByID)
+		faq.POST("", a.FaqHandler.CreateFaq)
+		faq.PUT("/:id", a.FaqHandler.UpdateFaq)
+		faq.DELETE("/:id", a.FaqHandler.DeleteFaq)
 	}
 }

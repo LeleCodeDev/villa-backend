@@ -14,3 +14,15 @@ func ToFaqResponse(faq *model.Faq) dto.FaqResponse {
 		UpdatedAt: faq.UpdatedAt,
 	}
 }
+
+func ToFaqModel(req dto.FaqRequest) *model.Faq {
+	return &model.Faq{
+		Question: req.Question,
+		Answer:   req.Answer,
+	}
+}
+
+func UpdateFaqModel(faq *model.Faq, req dto.FaqRequest) {
+	faq.Question = req.Question
+	faq.Answer = req.Answer
+}
