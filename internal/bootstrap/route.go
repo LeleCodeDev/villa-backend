@@ -9,20 +9,25 @@ func (a *App) RegisterRoute() {
 		auth.POST("/login", a.AuthHandler.Login)
 	}
 
-	heroSection := api.Group("/hero-section")
+	public := api.Group("")
 	{
-		heroSection.GET("", a.HeroSectionHandler.GetHeroSecton)
-		heroSection.POST("", a.HeroSectionHandler.CreateHeroSection)
-		heroSection.PUT("", a.HeroSectionHandler.UpdateHeroSection)
-		heroSection.DELETE("", a.HeroSectionHandler.DeleteHeroSection)
+		public.GET("/hero-section", a.HeroSectionHandler.GetHeroSecton)
+
+		public.GET("/faqs", a.FaqHandler.GetAllFaqs)
 	}
 
-	faq := api.Group("/faqs")
+	authenticated := api.Group("")
+	authenticated.Use(a.AuthMiddleware)
+
+	admin := authenticated.Group("")
 	{
-		faq.GET("", a.FaqHandler.GetAllFaqs)
-		faq.GET("/:id", a.FaqHandler.GetFaqByID)
-		faq.POST("", a.FaqHandler.CreateFaq)
-		faq.PUT("/:id", a.FaqHandler.UpdateFaq)
-		faq.DELETE("/:id", a.FaqHandler.DeleteFaq)
+		admin.POST("/hero-section", a.HeroSectionHandler.CreateHeroSection)
+		admin.PUT("/hero-section", a.HeroSectionHandler.UpdateHeroSection)
+		admin.DELETE("/hero-section", a.HeroSectionHandler.DeleteHeroSection)
+
+		admin.GET("/faqs/:id", a.FaqHandler.GetFaqByID)
+		admin.POST("/faqs", a.FaqHandler.CreateFaq)
+		admin.PUT("/faqs/:id", a.FaqHandler.UpdateFaq)
+		admin.DELETE("/faqs/:id", a.FaqHandler.DeleteFaq)
 	}
 }

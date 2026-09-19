@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/lelecodedev/villa-backend/internal/database"
 	"github.com/lelecodedev/villa-backend/internal/handler"
+	"github.com/lelecodedev/villa-backend/internal/middleware"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 	"github.com/lelecodedev/villa-backend/internal/service"
 	"gorm.io/gorm"
@@ -18,6 +19,7 @@ import (
 type App struct {
 	Router             *gin.Engine
 	DB                 *gorm.DB
+	AuthMiddleware     gin.HandlerFunc
 	AuthHandler        *handler.AuthHandler
 	HeroSectionHandler *handler.HeroSectionHandler
 	FaqHandler         *handler.FaqHandler
@@ -41,6 +43,7 @@ func NewApp() *App {
 	app := &App{
 		Router:             r,
 		DB:                 db,
+		AuthMiddleware:     middleware.AuthMiddleware(userRepo),
 		AuthHandler:        handler.NewAuthHandler(authService),
 		HeroSectionHandler: handler.NewHeroSectionHandler(heroSectionService),
 		FaqHandler:         handler.NewFaqHandler(faqService),
