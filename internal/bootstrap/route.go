@@ -1,5 +1,10 @@
 package bootstrap
 
+import (
+	"github.com/lelecodedev/villa-backend/internal/middleware"
+	"github.com/lelecodedev/villa-backend/internal/model"
+)
+
 func (a *App) RegisterRoute() {
 	api := a.Router.Group("/api")
 
@@ -11,8 +16,10 @@ func (a *App) RegisterRoute() {
 
 	public := api.Group("")
 	{
+		// Hero Section
 		public.GET("/hero-section", a.HeroSectionHandler.GetHeroSecton)
 
+		// FAQ
 		public.GET("/faqs", a.FaqHandler.GetAllFaqs)
 	}
 
@@ -20,11 +27,14 @@ func (a *App) RegisterRoute() {
 	authenticated.Use(a.AuthMiddleware)
 
 	admin := authenticated.Group("")
+	admin.Use(middleware.RoleMiddleware(model.RoleAdmin))
 	{
+		// Hero Section
 		admin.POST("/hero-section", a.HeroSectionHandler.CreateHeroSection)
 		admin.PUT("/hero-section", a.HeroSectionHandler.UpdateHeroSection)
 		admin.DELETE("/hero-section", a.HeroSectionHandler.DeleteHeroSection)
 
+		// FAQ
 		admin.GET("/faqs/:id", a.FaqHandler.GetFaqByID)
 		admin.POST("/faqs", a.FaqHandler.CreateFaq)
 		admin.PUT("/faqs/:id", a.FaqHandler.UpdateFaq)
