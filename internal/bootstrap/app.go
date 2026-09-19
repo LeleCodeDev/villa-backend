@@ -18,6 +18,7 @@ import (
 type App struct {
 	Router             *gin.Engine
 	DB                 *gorm.DB
+	AuthHandler        *handler.AuthHandler
 	HeroSectionHandler *handler.HeroSectionHandler
 	FaqHandler         *handler.FaqHandler
 }
@@ -29,15 +30,18 @@ func NewApp() *App {
 	db := database.NewDB()
 	txManager := repository.NewTxManager(db)
 
+	userRepo := repository.NewUserRepository(db)
 	heroSectionRepo := repository.NewHeroSectionRepository(db)
 	faqRepo := repository.NewFaqRepository(db)
 
+	authService := service.NewAuthService(txManager, userRepo)
 	heroSectionService := service.NewHeroSectionService(txManager, heroSectionRepo)
 	faqService := service.NewFaqService(txManager, faqRepo)
 
 	app := &App{
 		Router:             r,
 		DB:                 db,
+		AuthHandler:        handler.NewAuthHandler(authService),
 		HeroSectionHandler: handler.NewHeroSectionHandler(heroSectionService),
 		FaqHandler:         handler.NewFaqHandler(faqService),
 	}

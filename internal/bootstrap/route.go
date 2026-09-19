@@ -3,6 +3,12 @@ package bootstrap
 func (a *App) RegisterRoute() {
 	api := a.Router.Group("/api")
 
+	auth := api.Group("/auth")
+	{
+		auth.POST("/register", a.AuthHandler.Register)
+		auth.POST("/login", a.AuthHandler.Login)
+	}
+
 	heroSection := api.Group("/hero-section")
 	{
 		heroSection.GET("", a.HeroSectionHandler.GetHeroSecton)
