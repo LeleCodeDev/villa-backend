@@ -1,6 +1,9 @@
 package dto
 
-import "time"
+import (
+	"mime/multipart"
+	"time"
+)
 
 type (
 	GalleryResponse struct {
@@ -13,7 +16,8 @@ type (
 	}
 
 	GalleryRequest struct {
-		Title       string `json:"title" form:"title" binding:"required"`
-		Description string `json:"description" form:"description" binding:"required"`
+		Title       string                `json:"title" form:"title" binding:"required"`
+		Description string                `json:"description" form:"description" binding:"required"`
+		Image       *multipart.FileHeader `form:"image" binding:"omitempty"`
 	}
 )
