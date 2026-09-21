@@ -11,7 +11,7 @@ type Testimony struct {
 	Star      int    `gorm:"not null"`
 	Comment   string `gorm:"not null;type:text"`
 	Username  string `gorm:"not null"`
-	Order     int    `gorm:"not null"`
+	SortOrder int    `gorm:"not null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
