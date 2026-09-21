@@ -47,6 +47,8 @@ func (a *App) RegisterRoute() {
 
 		// Gallery
 		admin.GET("/galleries/:id", a.GalleryHandler.GetGalleryByID)
-		admin.POST("/galleries/", a.GalleryHandler.CreateGallery)
+		admin.POST("/galleries", a.GalleryHandler.CreateGallery)
+		admin.PUT("/galleries/:id", a.GalleryHandler.UpdateGallery)
+		admin.DELETE("/galleries/:id", a.GalleryHandler.DeleteGallery)
 	}
 }
