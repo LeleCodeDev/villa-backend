@@ -147,6 +147,14 @@ func (s *FaqService) Delete(ctx context.Context, id uint) error {
 			return errors.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
 		}
 
+		maxOrder, err := txRepo.GetMaxSortOrder(ctx)
+		if err != nil {
+			return err
+		}
+		if err := txRepo.UpdateSortOrderRange(ctx, faq.SortOrder+1, maxOrder, -1); err != nil {
+			return err
+		}
+
 		return txRepo.Delete(ctx, faq)
 	})
 }
