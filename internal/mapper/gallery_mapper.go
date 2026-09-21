@@ -32,3 +32,10 @@ func ToGalleryModel(req dto.GalleryRequest, filename *string, order int) *model.
 		SortOrder:   order,
 	}
 }
+
+func UpdateGalleryModel(gallery *model.Gallery, req dto.GalleryRequest, filename *string, order int) {
+	gallery.Title = req.Title
+	gallery.Description = req.Description
+	gallery.Image = filename
+	gallery.SortOrder = order
+}

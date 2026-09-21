@@ -23,7 +23,9 @@ func (r *GalleryRepository) WithTx(tx *gorm.DB) *GalleryRepository {
 func (r *GalleryRepository) GetAll(ctx context.Context) ([]model.Gallery, error) {
 	var galleries []model.Gallery
 
-	if err := r.db.WithContext(ctx).Find(&galleries).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Order("sort_order ASC").
+		Find(&galleries).Error; err != nil {
 		return nil, err
 	}
 

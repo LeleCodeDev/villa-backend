@@ -100,3 +100,84 @@ func (s *GalleryService) Create(ctx context.Context, req dto.GalleryRequest) (dt
 
 	return mapper.ToGalleryResponse(createdGallery), nil
 }
+
+func (s *GalleryService) Update(ctx context.Context, req dto.GalleryRequest, id uint) (dto.GalleryResponse, error) {
+	var updatedGallery *model.Gallery
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txRepo := s.repo.WithTx(tx)
+
+		gallery, err := txRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if gallery == nil {
+			return errors.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
+		}
+
+		oldOrder := gallery.SortOrder
+		newOrder := req.SortOrder
+
+		if newOrder == nil {
+			newOrder = &oldOrder
+		} else if newOrder != &oldOrder {
+			if *newOrder < oldOrder {
+				if err := txRepo.UpdateSortOrderRange(ctx, *newOrder, oldOrder-1, +1); err != nil {
+					return err
+				}
+			} else {
+				if err := txRepo.UpdateSortOrderRange(ctx, oldOrder+1, *newOrder, -1); err != nil {
+					return err
+				}
+			}
+		}
+
+		imagepath := gallery.Image
+		if req.Image != nil {
+			if gallery.Image != nil {
+				image.DeleteImage(*gallery.Image)
+			}
+
+			path, err := image.SaveImage("uploads/galleries", req.Image, image.DefaultOptions())
+			if err != nil {
+				return err
+			}
+
+			imagepath = &path
+		}
+
+		mapper.UpdateGalleryModel(gallery, req, imagepath, *newOrder)
+		if err := txRepo.Update(ctx, gallery); err != nil {
+			image.DeleteImage(*gallery.Image)
+			return err
+		}
+
+		updatedGallery = gallery
+
+		return nil
+	}); err != nil {
+		return dto.GalleryResponse{}, err
+	}
+
+	return mapper.ToGalleryResponse(updatedGallery), nil
+}
+
+func (s *GalleryService) Delete(ctx context.Context, id uint) error {
+	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txRepo := s.repo.WithTx(tx)
+
+		gallery, err := txRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if gallery == nil {
+			return errors.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
+		}
+
+		if gallery.Image != nil {
+			image.DeleteImage(*gallery.Image)
+		}
+
+		return txRepo.Delete(ctx, gallery)
+	})
+}

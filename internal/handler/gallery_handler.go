@@ -65,3 +65,44 @@ func (h *GalleryHandler) CreateGallery(c *gin.Context) {
 
 	response.Success(c, http.StatusCreated, "Gallery successfully created!", gallery)
 }
+
+func (h *GalleryHandler) UpdateGallery(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	var req dto.GalleryRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	gallery, err := h.service.Update(ctx, req, id)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Gallery successfully updated!", gallery)
+}
+
+func (h *GalleryHandler) DeleteGallery(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	if err := h.service.Delete(ctx, id); err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success[any](c, http.StatusOK, "Gallery successfully deleted!", nil)
+}
