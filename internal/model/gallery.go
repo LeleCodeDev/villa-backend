@@ -11,7 +11,7 @@ type Gallery struct {
 	Title       string  `gorm:"not null"`
 	Description string  `gorm:"not null"`
 	Image       *string `gorm:"type:varchar(255)"`
-	Order       int     `gorm:"not null"`
+	SortOrder   int     `gorm:"not null"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

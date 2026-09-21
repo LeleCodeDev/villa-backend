@@ -35,7 +35,7 @@ func DefaultOptions() SaveOptions {
 	}
 }
 
-func ValidateImage(file *multipart.FileHeader, opts SaveOptions) (image.Image, error) {
+func validateImage(file *multipart.FileHeader, opts SaveOptions) (image.Image, error) {
 	if file.Size > opts.MaxSizeBytes {
 		return nil, errors.BadRequest(fmt.Sprintf("File must be under %d MB", opts.MaxSizeBytes/1024/1024))
 	}
@@ -63,7 +63,7 @@ func ValidateImage(file *multipart.FileHeader, opts SaveOptions) (image.Image, e
 
 // always save file into jpg for smaller image size
 func SaveImage(basePath string, file *multipart.FileHeader, opts SaveOptions) (string, error) {
-	img, err := ValidateImage(file, opts)
+	img, err := validateImage(file, opts)
 	if err != nil {
 		return "", err
 	}

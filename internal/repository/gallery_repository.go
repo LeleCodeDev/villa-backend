@@ -56,27 +56,27 @@ func (r *GalleryRepository) Delete(ctx context.Context, gallery *model.Gallery) 
 	return r.db.WithContext(ctx).Delete(gallery).Error
 }
 
-func (r *GalleryRepository) GetMaxOrder(ctx context.Context) (int, error) {
+func (r *GalleryRepository) GetMaxSortOrder(ctx context.Context) (int, error) {
 	var max int
 
 	err := r.db.WithContext(ctx).
 		Model(&model.Gallery{}).
-		Select("COALESCE(MAX(order), 0)").
+		Select("COALESCE(MAX(sort_order), 0)").
 		Scan(&max).Error
 
 	return max, err
 }
 
-func (r *GalleryRepository) UpdateOrderRange(ctx context.Context, start, end, delta int) error {
+func (r *GalleryRepository) UpdateSortOrderRange(ctx context.Context, start, end, delta int) error {
 	return r.db.WithContext(ctx).
 		Model(&model.Gallery{}).
-		Where("order BETWEEN ? AND ?", start, end).
-		Update("order", gorm.Expr("order + ", delta)).Error
+		Where("sort_order BETWEEN ? AND ?", start, end).
+		Update("sort_order", gorm.Expr("sort_order + ?", delta)).Error
 }
 
-func (r *GalleryRepository) ShiftOrder(ctx context.Context, order int) error {
+func (r *GalleryRepository) ShiftSortOrder(ctx context.Context, sortOrder int) error {
 	return r.db.WithContext(ctx).
 		Model(&model.Gallery{}).
-		Where("order >= ?", order).
-		Update("order", gorm.Expr("order + 1")).Error
+		Where("sort_order >= ?", sortOrder).
+		Update("sort_order", gorm.Expr("sort_order + 1")).Error
 }
