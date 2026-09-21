@@ -8,6 +8,8 @@ import (
 func (a *App) RegisterRoute() {
 	api := a.Router.Group("/api")
 
+	api.Static("/uploads", "uploads")
+
 	auth := api.Group("/auth")
 	{
 		auth.POST("/register", a.AuthHandler.Register)
@@ -21,6 +23,9 @@ func (a *App) RegisterRoute() {
 
 		// FAQ
 		public.GET("/faqs", a.FaqHandler.GetAllFaqs)
+
+		// Gallery
+		public.GET("/galleries", a.GalleryHandler.GetAllGalleries)
 	}
 
 	authenticated := api.Group("")
@@ -39,5 +44,9 @@ func (a *App) RegisterRoute() {
 		admin.POST("/faqs", a.FaqHandler.CreateFaq)
 		admin.PUT("/faqs/:id", a.FaqHandler.UpdateFaq)
 		admin.DELETE("/faqs/:id", a.FaqHandler.DeleteFaq)
+
+		// Gallery
+		admin.GET("/galleries/:id", a.GalleryHandler.GetGalleryByID)
+		admin.POST("/galleries/", a.GalleryHandler.CreateGallery)
 	}
 }

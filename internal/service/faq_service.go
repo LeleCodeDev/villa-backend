@@ -59,7 +59,22 @@ func (s *FaqService) Create(ctx context.Context, req dto.FaqRequest) (dto.FaqRes
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
-		faq := mapper.ToFaqModel(req)
+		var sortOrder int
+		if req.SortOrder == nil {
+			maxOrder, err := txRepo.GetMaxSortOrder(ctx)
+			if err != nil {
+				return err
+			}
+
+			sortOrder = maxOrder + 1
+		} else {
+			sortOrder = *req.SortOrder
+			if err := txRepo.ShiftSortOrder(ctx, sortOrder); err != nil {
+				return err
+			}
+		}
+
+		faq := mapper.ToFaqModel(req, sortOrder)
 		if err := txRepo.Create(ctx, faq); err != nil {
 			return err
 		}
@@ -88,7 +103,24 @@ func (s *FaqService) Update(ctx context.Context, id uint, req dto.FaqRequest) (d
 			return errors.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
 		}
 
-		mapper.UpdateFaqModel(faq, req)
+		oldOrder := faq.SortOrder
+		newOrder := req.SortOrder
+
+		if newOrder == nil {
+			newOrder = &oldOrder
+		} else if *newOrder != oldOrder {
+			if *newOrder < oldOrder {
+				if err := txRepo.UpdateSortOrderRange(ctx, *newOrder, oldOrder-1, +1); err != nil {
+					return err
+				}
+			} else {
+				if err := txRepo.UpdateSortOrderRange(ctx, oldOrder+1, *newOrder, -1); err != nil {
+					return err
+				}
+			}
+		}
+
+		mapper.UpdateFaqModel(faq, req, *newOrder)
 		if err := txRepo.Update(ctx, faq); err != nil {
 			return err
 		}

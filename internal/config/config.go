@@ -32,6 +32,7 @@ func LoadConfig() {
 		DBUser:    getEnv("DB_USER", "root"),
 		DBPass:    getEnv("DB_PASS", ""),
 		DBName:    getEnv("DB_NAME", "villa_aira"),
+		BaseURL:   getEnv("BASE_URL", "http://localhost:3000"),
 		JWTSecret: getEnv("JWT_SECRET", "SECRET"),
 	}
 

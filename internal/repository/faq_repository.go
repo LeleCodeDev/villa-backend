@@ -23,7 +23,9 @@ func (r *FaqRepository) WithTx(tx *gorm.DB) *FaqRepository {
 func (r *FaqRepository) GetAll(ctx context.Context) ([]model.Faq, error) {
 	var faqs []model.Faq
 
-	if err := r.db.WithContext(ctx).Find(&faqs).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Order("sort_order ASC").
+		Find(&faqs).Error; err != nil {
 		return nil, err
 	}
 
@@ -54,4 +56,29 @@ func (r *FaqRepository) Update(ctx context.Context, faq *model.Faq) error {
 
 func (r *FaqRepository) Delete(ctx context.Context, faq *model.Faq) error {
 	return r.db.WithContext(ctx).Delete(faq).Error
+}
+
+func (r *FaqRepository) GetMaxSortOrder(ctx context.Context) (int, error) {
+	var max int
+
+	err := r.db.WithContext(ctx).
+		Model(&model.Faq{}).
+		Select("COALESCE(MAX(sort_order), 0)").
+		Scan(&max).Error
+
+	return max, err
+}
+
+func (r *FaqRepository) UpdateSortOrderRange(ctx context.Context, start, end, delta int) error {
+	return r.db.WithContext(ctx).
+		Model(&model.Faq{}).
+		Where("sort_order BETWEEN ? AND ?", start, end).
+		Update("sort_order", gorm.Expr("sort_order + ?", delta)).Error
+}
+
+func (r *FaqRepository) ShiftSortOrder(ctx context.Context, sortOrder int) error {
+	return r.db.WithContext(ctx).
+		Model(&model.Faq{}).
+		Where("sort_order >= ?", sortOrder).
+		Update("sort_order", gorm.Expr("sort_order + 1")).Error
 }

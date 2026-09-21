@@ -10,19 +10,22 @@ func ToFaqResponse(faq *model.Faq) dto.FaqResponse {
 		ID:        faq.ID,
 		Question:  faq.Question,
 		Answer:    faq.Answer,
+		SortOrder: faq.SortOrder,
 		CreatedAt: faq.CreatedAt,
 		UpdatedAt: faq.UpdatedAt,
 	}
 }
 
-func ToFaqModel(req dto.FaqRequest) *model.Faq {
+func ToFaqModel(req dto.FaqRequest, sortOrder int) *model.Faq {
 	return &model.Faq{
-		Question: req.Question,
-		Answer:   req.Answer,
+		Question:  req.Question,
+		Answer:    req.Answer,
+		SortOrder: sortOrder,
 	}
 }
 
-func UpdateFaqModel(faq *model.Faq, req dto.FaqRequest) {
+func UpdateFaqModel(faq *model.Faq, req dto.FaqRequest, sortOrder int) {
 	faq.Question = req.Question
 	faq.Answer = req.Answer
+	faq.SortOrder = sortOrder
 }
