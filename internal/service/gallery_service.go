@@ -174,6 +174,14 @@ func (s *GalleryService) Delete(ctx context.Context, id uint) error {
 			return errors.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
 		}
 
+		maxOrder, err := txRepo.GetMaxSortOrder(ctx)
+		if err != nil {
+			return err
+		}
+		if err := txRepo.UpdateSortOrderRange(ctx, gallery.SortOrder+1, maxOrder, -1); err != nil {
+			return err
+		}
+
 		if gallery.Image != nil {
 			image.DeleteImage(*gallery.Image)
 		}
