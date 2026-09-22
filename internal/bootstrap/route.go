@@ -26,6 +26,9 @@ func (a *App) RegisterRoute() {
 
 		// Gallery
 		public.GET("/galleries", a.GalleryHandler.GetAllGalleries)
+
+		// Testimony
+		public.GET("/testimonies", a.TestimonyHandler.GetAllTestimonies)
 	}
 
 	authenticated := api.Group("")
