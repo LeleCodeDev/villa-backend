@@ -5,9 +5,9 @@ import "time"
 type (
 	TestimonyResponse struct {
 		ID        uint      `json:"id"`
-		Star      int       `json:"star"`
 		Comment   string    `json:"comment"`
 		Username  string    `json:"username"`
+		Star      int       `json:"star"`
 		SortOrder int       `json:"sort_order"`
 		CreatedAt time.Time `json:"createdAt"`
 		UpdatedAt time.Time `json:"updatedAt"`

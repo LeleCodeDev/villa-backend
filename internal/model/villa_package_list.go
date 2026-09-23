@@ -11,6 +11,7 @@ type VillaPackageList struct {
 	Text           string       `gorm:"not null"`
 	VillaPackageID uint         `gorm:"not null;index"`
 	VillaPackage   VillaPackage `gorm:"constraint:OnDelete:CASCADE"`
+	SortOrder      int          `gorm:"not null"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	DeletedAt      gorm.DeletedAt `gorm:"index"`
