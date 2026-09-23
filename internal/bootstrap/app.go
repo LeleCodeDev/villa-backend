@@ -25,6 +25,7 @@ type App struct {
 	HeroSectionHandler *handler.HeroSectionHandler
 	FaqHandler         *handler.FaqHandler
 	GalleryHandler     *handler.GalleryHandler
+	TestimonyHandler   *handler.TestimonyHandler
 }
 
 func NewApp() *App {
@@ -39,12 +40,14 @@ func NewApp() *App {
 	heroSectionRepo := repository.NewHeroSectionRepository(db)
 	faqRepo := repository.NewFaqRepository(db)
 	galleryRepo := repository.NewGalleryRepository(db)
+	testimonyRepo := repository.NewTestimonyRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
 	heroSectionService := service.NewHeroSectionService(txManager, heroSectionRepo)
 	faqService := service.NewFaqService(txManager, faqRepo)
 	galleryService := service.NewGalleryService(txManager, galleryRepo)
+	testimonyService := service.NewTestimonyService(txManager, testimonyRepo)
 
 	app := &App{
 		Router:             r,
@@ -55,6 +58,7 @@ func NewApp() *App {
 		HeroSectionHandler: handler.NewHeroSectionHandler(heroSectionService),
 		FaqHandler:         handler.NewFaqHandler(faqService),
 		GalleryHandler:     handler.NewGalleryHandler(galleryService),
+		TestimonyHandler:   handler.NewTestimonyHandler(testimonyService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
