@@ -21,6 +21,7 @@ type App struct {
 	DB                 *gorm.DB
 	AuthMiddleware     gin.HandlerFunc
 	AuthHandler        *handler.AuthHandler
+	ApplicationHandler *handler.ApplicationHandler
 	HeroSectionHandler *handler.HeroSectionHandler
 	FaqHandler         *handler.FaqHandler
 	GalleryHandler     *handler.GalleryHandler
@@ -33,12 +34,14 @@ func NewApp() *App {
 	db := database.NewDB()
 	txManager := repository.NewTxManager(db)
 
+	applicationRepo := repository.NewApplicationRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	heroSectionRepo := repository.NewHeroSectionRepository(db)
 	faqRepo := repository.NewFaqRepository(db)
 	galleryRepo := repository.NewGalleryRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
+	applicationService := service.NewApplicationService(txManager, applicationRepo)
 	heroSectionService := service.NewHeroSectionService(txManager, heroSectionRepo)
 	faqService := service.NewFaqService(txManager, faqRepo)
 	galleryService := service.NewGalleryService(txManager, galleryRepo)
@@ -48,6 +51,7 @@ func NewApp() *App {
 		DB:                 db,
 		AuthMiddleware:     middleware.AuthMiddleware(userRepo),
 		AuthHandler:        handler.NewAuthHandler(authService),
+		ApplicationHandler: handler.NewApplicationHandler(applicationService),
 		HeroSectionHandler: handler.NewHeroSectionHandler(heroSectionService),
 		FaqHandler:         handler.NewFaqHandler(faqService),
 		GalleryHandler:     handler.NewGalleryHandler(galleryService),

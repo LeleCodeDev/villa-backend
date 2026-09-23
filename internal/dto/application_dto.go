@@ -17,7 +17,7 @@ type (
 
 	ApplicationRequest struct {
 		Title       string                `json:"title" form:"title" binding:"required"`
-		Logo        *multipart.FileHeader `form:"image" binding:"omitempty"`
+		Logo        *multipart.FileHeader `form:"logo" binding:"omitempty"`
 		PhoneNumber string                `json:"phone_number" form:"phone_number" binding:"required"`
 	}
 )
