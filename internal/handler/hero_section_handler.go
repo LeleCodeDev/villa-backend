@@ -17,7 +17,7 @@ func NewHeroSectionHandler(service *service.HeroSectionService) *HeroSectionHand
 	return &HeroSectionHandler{service: service}
 }
 
-func (h *HeroSectionHandler) GetHeroSecton(c *gin.Context) {
+func (h *HeroSectionHandler) GetHeroSection(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	heroSection, err := h.service.Get(ctx)
