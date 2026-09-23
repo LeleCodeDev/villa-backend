@@ -1,4 +1,3 @@
-// Package dto
 package dto
 
 import "time"
