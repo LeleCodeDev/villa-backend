@@ -32,6 +32,9 @@ func (a *App) RegisterRoute() {
 
 		// Testimony
 		public.GET("/testimonies", a.TestimonyHandler.GetAllTestimonies)
+
+		// Villa Package List
+		public.GET("/villa-package-lists", a.VillaPackageListHandler.GetAllVillaPackageLists)
 	}
 
 	authenticated := api.Group("")
@@ -67,5 +70,11 @@ func (a *App) RegisterRoute() {
 		admin.POST("/testimonies", a.TestimonyHandler.CreateTestimony)
 		admin.PUT("/testimonies/:id", a.TestimonyHandler.UpdateTestimony)
 		admin.DELETE("/testimonies/:id", a.TestimonyHandler.DeleteTestimony)
+
+		// Villa Package List
+		admin.GET("/villa-package-lists/:id", a.VillaPackageListHandler.GetVillaPackageListByID)
+		admin.POST("/villa-package-lists", a.VillaPackageListHandler.CreateVillaPackageList)
+		admin.PUT("/villa-package-lists/:id", a.VillaPackageListHandler.UpdateVillaPackageList)
+		admin.DELETE("/villa-package-lists/:id", a.VillaPackageListHandler.DeleteVillaPackageList)
 	}
 }

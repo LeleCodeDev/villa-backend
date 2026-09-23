@@ -17,15 +17,16 @@ import (
 )
 
 type App struct {
-	Router             *gin.Engine
-	DB                 *gorm.DB
-	AuthMiddleware     gin.HandlerFunc
-	AuthHandler        *handler.AuthHandler
-	ApplicationHandler *handler.ApplicationHandler
-	HeroSectionHandler *handler.HeroSectionHandler
-	FaqHandler         *handler.FaqHandler
-	GalleryHandler     *handler.GalleryHandler
-	TestimonyHandler   *handler.TestimonyHandler
+	Router                  *gin.Engine
+	DB                      *gorm.DB
+	AuthMiddleware          gin.HandlerFunc
+	AuthHandler             *handler.AuthHandler
+	ApplicationHandler      *handler.ApplicationHandler
+	HeroSectionHandler      *handler.HeroSectionHandler
+	FaqHandler              *handler.FaqHandler
+	GalleryHandler          *handler.GalleryHandler
+	TestimonyHandler        *handler.TestimonyHandler
+	VillaPackageListHandler *handler.VillaPackageListHandler
 }
 
 func NewApp() *App {
@@ -41,6 +42,7 @@ func NewApp() *App {
 	faqRepo := repository.NewFaqRepository(db)
 	galleryRepo := repository.NewGalleryRepository(db)
 	testimonyRepo := repository.NewTestimonyRepository(db)
+	villaPackageListRepo := repository.NewVillaPackageListRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -48,17 +50,19 @@ func NewApp() *App {
 	faqService := service.NewFaqService(txManager, faqRepo)
 	galleryService := service.NewGalleryService(txManager, galleryRepo)
 	testimonyService := service.NewTestimonyService(txManager, testimonyRepo)
+	villaPackageListService := service.NewVillaPackageListService(txManager, villaPackageListRepo)
 
 	app := &App{
-		Router:             r,
-		DB:                 db,
-		AuthMiddleware:     middleware.AuthMiddleware(userRepo),
-		AuthHandler:        handler.NewAuthHandler(authService),
-		ApplicationHandler: handler.NewApplicationHandler(applicationService),
-		HeroSectionHandler: handler.NewHeroSectionHandler(heroSectionService),
-		FaqHandler:         handler.NewFaqHandler(faqService),
-		GalleryHandler:     handler.NewGalleryHandler(galleryService),
-		TestimonyHandler:   handler.NewTestimonyHandler(testimonyService),
+		Router:                  r,
+		DB:                      db,
+		AuthMiddleware:          middleware.AuthMiddleware(userRepo),
+		AuthHandler:             handler.NewAuthHandler(authService),
+		ApplicationHandler:      handler.NewApplicationHandler(applicationService),
+		HeroSectionHandler:      handler.NewHeroSectionHandler(heroSectionService),
+		FaqHandler:              handler.NewFaqHandler(faqService),
+		GalleryHandler:          handler.NewGalleryHandler(galleryService),
+		TestimonyHandler:        handler.NewTestimonyHandler(testimonyService),
+		VillaPackageListHandler: handler.NewVillaPackageListHandler(villaPackageListService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
