@@ -26,7 +26,7 @@ func ToTestimonyModel(req dto.TestimonyRequest, sortOrder int) *model.Testimony 
 	}
 }
 
-func UpdateTestimonyModel(testimony *model.Testimony, req dto.TestimonyResponse, sortOrder int) {
+func UpdateTestimonyModel(testimony *model.Testimony, req dto.TestimonyRequest, sortOrder int) {
 	testimony.Star = req.Star
 	testimony.Comment = req.Comment
 	testimony.Username = req.Username

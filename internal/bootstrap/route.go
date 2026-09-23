@@ -53,5 +53,11 @@ func (a *App) RegisterRoute() {
 		admin.POST("/galleries", a.GalleryHandler.CreateGallery)
 		admin.PUT("/galleries/:id", a.GalleryHandler.UpdateGallery)
 		admin.DELETE("/galleries/:id", a.GalleryHandler.DeleteGallery)
+
+		// Testimony
+		admin.GET("/testimonies/:id", a.TestimonyHandler.GetTestimonyByID)
+		admin.POST("/testimonies", a.TestimonyHandler.CreateTestimony)
+		admin.PUT("/testimonies/:id", a.TestimonyHandler.UpdateTestimony)
+		admin.DELETE("/testimonies/:id", a.TestimonyHandler.DeleteTestimony)
 	}
 }
