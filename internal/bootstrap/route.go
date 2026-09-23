@@ -29,6 +29,7 @@ func (a *App) RegisterRoute() {
 
 		// Application
 		public.GET("/application", a.ApplicationHandler.GetApplication)
+
 		// Testimony
 		public.GET("/testimonies", a.TestimonyHandler.GetAllTestimonies)
 	}
@@ -60,6 +61,7 @@ func (a *App) RegisterRoute() {
 		admin.POST("/application", a.ApplicationHandler.CreateApplication)
 		admin.PUT("/application", a.ApplicationHandler.UpdateApplication)
 		admin.DELETE("/application", a.ApplicationHandler.DeleteApplication)
+
 		// Testimony
 		admin.GET("/testimonies/:id", a.TestimonyHandler.GetTestimonyByID)
 		admin.POST("/testimonies", a.TestimonyHandler.CreateTestimony)
