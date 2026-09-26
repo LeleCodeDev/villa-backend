@@ -15,14 +15,18 @@ func ToVillaPackageListResponse(villaPackageList *model.VillaPackageList) dto.Vi
 	}
 }
 
-func ToVillaPackageListModel(req dto.VillaPackageListRequest, sortOrder int) *model.VillaPackageList {
+func ToVillaPackageListModel(req dto.VillaPackageListRequest, villaPackage model.VillaPackage, sortOrder int) *model.VillaPackageList {
 	return &model.VillaPackageList{
-		Text:      req.Text,
-		SortOrder: sortOrder,
+		Text:           req.Text,
+		VillaPackage:   villaPackage,
+		VillaPackageID: villaPackage.ID,
+		SortOrder:      sortOrder,
 	}
 }
 
-func UpdateVillaPackageListModel(villaPackageList *model.VillaPackageList, req dto.VillaPackageListRequest, sortOrder int) {
+func UpdateVillaPackageListModel(villaPackageList *model.VillaPackageList, villaPackage model.VillaPackage, req dto.VillaPackageListRequest, sortOrder int) {
 	villaPackageList.Text = req.Text
+	villaPackageList.VillaPackageID = villaPackage.ID
+	villaPackageList.VillaPackage = villaPackage
 	villaPackageList.SortOrder = sortOrder
 }

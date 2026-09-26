@@ -63,11 +63,11 @@ func (s *VillaPackageListService) Create(ctx context.Context, req dto.VillaPacka
 		txRepo := s.repo.WithTx(tx)
 		txVillaPackageRepo := s.villaPackageRepo.WithTx(tx)
 
-		villaPackageExist, err := txVillaPackageRepo.ExistByID(ctx, req.VillaPackageID)
+		villaPackage, err := txVillaPackageRepo.GetByID(ctx, req.VillaPackageID)
 		if err != nil {
 			return err
 		}
-		if !villaPackageExist {
+		if villaPackage == nil {
 			return errors.NotFound(fmt.Sprintf("Villa package not found with ID : %d", req.VillaPackageID))
 		}
 
@@ -86,7 +86,7 @@ func (s *VillaPackageListService) Create(ctx context.Context, req dto.VillaPacka
 			}
 		}
 
-		villaPackageList := mapper.ToVillaPackageListModel(req, sortOrder)
+		villaPackageList := mapper.ToVillaPackageListModel(req, *villaPackage, sortOrder)
 		if err := txRepo.Create(ctx, villaPackageList); err != nil {
 			return err
 		}
@@ -116,11 +116,11 @@ func (s *VillaPackageListService) Update(ctx context.Context, id uint, req dto.V
 			return errors.NotFound(fmt.Sprintf("Villa package list not found with ID: %d", id))
 		}
 
-		villaPackageExist, err := txVillaPackageRepo.ExistByID(ctx, req.VillaPackageID)
+		villaPackage, err := txVillaPackageRepo.GetByID(ctx, req.VillaPackageID)
 		if err != nil {
 			return err
 		}
-		if !villaPackageExist {
+		if villaPackage == nil {
 			return errors.NotFound(fmt.Sprintf("Villa package not found with ID : %d", req.VillaPackageID))
 		}
 
@@ -141,7 +141,7 @@ func (s *VillaPackageListService) Update(ctx context.Context, id uint, req dto.V
 			}
 		}
 
-		mapper.UpdateVillaPackageListModel(villaPackageList, req, *newOrder)
+		mapper.UpdateVillaPackageListModel(villaPackageList, *villaPackage, req, *newOrder)
 		if err := txRepo.Update(ctx, villaPackageList); err != nil {
 			return err
 		}
