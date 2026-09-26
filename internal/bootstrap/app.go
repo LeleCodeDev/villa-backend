@@ -26,6 +26,7 @@ type App struct {
 	FaqHandler              *handler.FaqHandler
 	GalleryHandler          *handler.GalleryHandler
 	TestimonyHandler        *handler.TestimonyHandler
+	VillaPackageHandler     *handler.VillaPackageHandler
 	VillaPackageListHandler *handler.VillaPackageListHandler
 }
 
@@ -43,6 +44,7 @@ func NewApp() *App {
 	galleryRepo := repository.NewGalleryRepository(db)
 	testimonyRepo := repository.NewTestimonyRepository(db)
 	villaPackageListRepo := repository.NewVillaPackageListRepository(db)
+	villaPackageRepo := repository.NewVillaPackageRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -50,7 +52,8 @@ func NewApp() *App {
 	faqService := service.NewFaqService(txManager, faqRepo)
 	galleryService := service.NewGalleryService(txManager, galleryRepo)
 	testimonyService := service.NewTestimonyService(txManager, testimonyRepo)
-	villaPackageListService := service.NewVillaPackageListService(txManager, villaPackageListRepo)
+	villaPackageListService := service.NewVillaPackageListService(txManager, villaPackageListRepo, villaPackageRepo)
+	villaPackageService := service.NewVillaPackageService(txManager, villaPackageRepo, villaPackageListRepo)
 
 	app := &App{
 		Router:                  r,
@@ -63,6 +66,7 @@ func NewApp() *App {
 		GalleryHandler:          handler.NewGalleryHandler(galleryService),
 		TestimonyHandler:        handler.NewTestimonyHandler(testimonyService),
 		VillaPackageListHandler: handler.NewVillaPackageListHandler(villaPackageListService),
+		VillaPackageHandler:     handler.NewVillaPackageHandler(villaPackageService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

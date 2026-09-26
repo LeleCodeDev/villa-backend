@@ -33,6 +33,9 @@ func (a *App) RegisterRoute() {
 		// Testimony
 		public.GET("/testimonies", a.TestimonyHandler.GetAllTestimonies)
 
+		// Villa Package
+		public.GET("/villa-packages", a.VillaPackageHandler.GetAllVillaPackages)
+
 		// Villa Package List
 		public.GET("/villa-package-lists", a.VillaPackageListHandler.GetAllVillaPackageLists)
 	}
@@ -70,6 +73,12 @@ func (a *App) RegisterRoute() {
 		admin.POST("/testimonies", a.TestimonyHandler.CreateTestimony)
 		admin.PUT("/testimonies/:id", a.TestimonyHandler.UpdateTestimony)
 		admin.DELETE("/testimonies/:id", a.TestimonyHandler.DeleteTestimony)
+
+		// Villa Package
+		admin.GET("/villa-packages/:id", a.VillaPackageHandler.GetVillaPackageByID)
+		admin.POST("/villa-packages", a.VillaPackageHandler.CreateVillaPackage)
+		admin.PUT("/villa-packages/:id", a.VillaPackageHandler.UpdateVillaPackage)
+		admin.DELETE("/villa-packages/:id", a.VillaPackageHandler.DeleteVillaPackage)
 
 		// Villa Package List
 		admin.GET("/villa-package-lists/:id", a.VillaPackageListHandler.GetVillaPackageListByID)

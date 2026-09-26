@@ -13,17 +13,20 @@ import (
 )
 
 type VillaPackageListService struct {
-	txManager *repository.TxManager
-	repo      *repository.VillaPackageListRepository
+	txManager        *repository.TxManager
+	repo             *repository.VillaPackageListRepository
+	villaPackageRepo *repository.VillaPackageRepository
 }
 
 func NewVillaPackageListService(
 	txManager *repository.TxManager,
 	repo *repository.VillaPackageListRepository,
+	villaPackageRepo *repository.VillaPackageRepository,
 ) *VillaPackageListService {
 	return &VillaPackageListService{
-		txManager: txManager,
-		repo:      repo,
+		txManager:        txManager,
+		repo:             repo,
+		villaPackageRepo: villaPackageRepo,
 	}
 }
 
@@ -42,15 +45,15 @@ func (s *VillaPackageListService) GetAll(ctx context.Context) ([]dto.VillaPackag
 }
 
 func (s *VillaPackageListService) GetByID(ctx context.Context, id uint) (dto.VillaPackageListResponse, error) {
-	faq, err := s.repo.GetByID(ctx, id)
+	villaPackageList, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return dto.VillaPackageListResponse{}, err
 	}
-	if faq == nil {
+	if villaPackageList == nil {
 		return dto.VillaPackageListResponse{}, errors.NotFound(fmt.Sprintf("Villa package list not found with ID: %d", id))
 	}
 
-	return mapper.ToVillaPackageListResponse(faq), nil
+	return mapper.ToVillaPackageListResponse(villaPackageList), nil
 }
 
 func (s *VillaPackageListService) Create(ctx context.Context, req dto.VillaPackageListRequest) (dto.VillaPackageListResponse, error) {
@@ -58,6 +61,15 @@ func (s *VillaPackageListService) Create(ctx context.Context, req dto.VillaPacka
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txVillaPackageRepo := s.villaPackageRepo.WithTx(tx)
+
+		villaPackageExist, err := txVillaPackageRepo.ExistByID(ctx, req.VillaPackageID)
+		if err != nil {
+			return err
+		}
+		if !villaPackageExist {
+			return errors.NotFound(fmt.Sprintf("Villa package not found with ID : %d", req.VillaPackageID))
+		}
 
 		var sortOrder int
 		if req.SortOrder == nil {
@@ -94,6 +106,7 @@ func (s *VillaPackageListService) Update(ctx context.Context, id uint, req dto.V
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txVillaPackageRepo := s.villaPackageRepo.WithTx(tx)
 
 		villaPackageList, err := txRepo.GetByID(ctx, id)
 		if err != nil {
@@ -101,6 +114,14 @@ func (s *VillaPackageListService) Update(ctx context.Context, id uint, req dto.V
 		}
 		if villaPackageList == nil {
 			return errors.NotFound(fmt.Sprintf("Villa package list not found with ID: %d", id))
+		}
+
+		villaPackageExist, err := txVillaPackageRepo.ExistByID(ctx, req.VillaPackageID)
+		if err != nil {
+			return err
+		}
+		if !villaPackageExist {
+			return errors.NotFound(fmt.Sprintf("Villa package not found with ID : %d", req.VillaPackageID))
 		}
 
 		oldOrder := villaPackageList.SortOrder
