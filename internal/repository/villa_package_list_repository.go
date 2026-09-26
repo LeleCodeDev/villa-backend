@@ -46,6 +46,32 @@ func (r *VillaPackageListRepository) GetByID(ctx context.Context, id uint) (*mod
 	return &villaPackageList, nil
 }
 
+func (r *VillaPackageListRepository) GetAllByVillaPackageIDIn(ctx context.Context, villaPackageIds []uint) ([]model.VillaPackageList, error) {
+	var villaPackageLists []model.VillaPackageList
+
+	if err := r.db.WithContext(ctx).
+		Where("villa_package_id IN ?", villaPackageIds).
+		Order("sort_order ASC").
+		Find(&villaPackageLists).Error; err != nil {
+		return nil, err
+	}
+
+	return villaPackageLists, nil
+}
+
+func (r *VillaPackageListRepository) GetAllByVillaPackageID(ctx context.Context, villaPackageId uint) ([]model.VillaPackageList, error) {
+	var villaPackageLists []model.VillaPackageList
+
+	if err := r.db.WithContext(ctx).
+		Where("villa_package_id = ?", villaPackageId).
+		Order("sort_order ASC").
+		Find(&villaPackageLists).Error; err != nil {
+		return nil, err
+	}
+
+	return villaPackageLists, nil
+}
+
 func (r *VillaPackageListRepository) Create(ctx context.Context, villaPackageList *model.VillaPackageList) error {
 	return r.db.WithContext(ctx).Create(villaPackageList).Error
 }
@@ -56,6 +82,12 @@ func (r *VillaPackageListRepository) Update(ctx context.Context, villaPackageLis
 
 func (r *VillaPackageListRepository) Delete(ctx context.Context, villaPackageList *model.VillaPackageList) error {
 	return r.db.WithContext(ctx).Delete(villaPackageList).Error
+}
+
+func (r *VillaPackageListRepository) DeleteByVillaPackageID(ctx context.Context, villaPackageId uint) error {
+	return r.db.WithContext(ctx).
+		Where("villa_package_id = ?", villaPackageId).
+		Delete(&model.VillaPackageList{}).Error
 }
 
 func (r *VillaPackageListRepository) GetMaxSortOrder(ctx context.Context) (int, error) {

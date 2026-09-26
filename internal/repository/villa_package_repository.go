@@ -46,6 +46,17 @@ func (r *VillaPackageRepository) GetByID(ctx context.Context, id uint) (*model.V
 	return &villaPackage, nil
 }
 
+func (r *VillaPackageRepository) ExistByID(ctx context.Context, id uint) (bool, error) {
+	var count int64
+
+	err := r.db.WithContext(ctx).
+		Model(&model.VillaPackage{}).
+		Where("id = ?", id).
+		Count(&count).Error
+
+	return count > 0, err
+}
+
 func (r *VillaPackageRepository) Create(ctx context.Context, villaPackage *model.VillaPackage) error {
 	return r.db.WithContext(ctx).Create(villaPackage).Error
 }

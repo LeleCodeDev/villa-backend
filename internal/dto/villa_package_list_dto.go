@@ -12,7 +12,8 @@ type (
 	}
 
 	VillaPackageListRequest struct {
-		Text      string `json:"text" form:"text" binding:"required"`
-		SortOrder *int   `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
+		VillaPackageID uint   `json:"villa_package_id" binding:"required,gt=0"`
+		Text           string `json:"text" form:"text" binding:"required"`
+		SortOrder      *int   `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
 	}
 )
