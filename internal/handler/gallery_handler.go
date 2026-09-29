@@ -7,6 +7,7 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/service"
 	"github.com/lelecodedev/villa-backend/internal/util"
+	"github.com/lelecodedev/villa-backend/pkg/pagination"
 	"github.com/lelecodedev/villa-backend/pkg/response"
 )
 
@@ -19,15 +20,28 @@ func NewGalleryHandler(service *service.GalleryService) *GalleryHandler {
 }
 
 func (h *GalleryHandler) GetAllGalleries(c *gin.Context) {
+	var query dto.GalleryQuery
+	if err := c.ShouldBind(&query); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
 	ctx := c.Request.Context()
 
-	galleries, err := h.service.GetAll(ctx)
+	galleries, total, err := h.service.GetAll(ctx, query)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	response.Success(c, http.StatusOK, "All galleries successfully fetched!", galleries)
+	if query.Unpage {
+
+		response.Success(c, http.StatusOK, "All galleries successfully fetched!", galleries)
+		return
+	}
+
+	pagination := pagination.BuildPagination(query.Page, query.Size, total)
+	response.Paginated(c, http.StatusOK, "All galleries successfully fetched!", galleries, pagination)
 }
 
 func (h *GalleryHandler) GetGalleryByID(c *gin.Context) {

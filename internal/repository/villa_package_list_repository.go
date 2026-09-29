@@ -59,11 +59,11 @@ func (r *VillaPackageListRepository) GetAllByVillaPackageIDIn(ctx context.Contex
 	return villaPackageLists, nil
 }
 
-func (r *VillaPackageListRepository) GetAllByVillaPackageID(ctx context.Context, villaPackageId uint) ([]model.VillaPackageList, error) {
+func (r *VillaPackageListRepository) GetAllByVillaPackageID(ctx context.Context, villaPackageID uint) ([]model.VillaPackageList, error) {
 	var villaPackageLists []model.VillaPackageList
 
 	if err := r.db.WithContext(ctx).
-		Where("villa_package_id = ?", villaPackageId).
+		Where("villa_package_id = ?", villaPackageID).
 		Order("sort_order ASC").
 		Find(&villaPackageLists).Error; err != nil {
 		return nil, err
@@ -84,9 +84,9 @@ func (r *VillaPackageListRepository) Delete(ctx context.Context, villaPackageLis
 	return r.db.WithContext(ctx).Delete(villaPackageList).Error
 }
 
-func (r *VillaPackageListRepository) DeleteByVillaPackageID(ctx context.Context, villaPackageId uint) error {
+func (r *VillaPackageListRepository) DeleteByVillaPackageID(ctx context.Context, villaPackageID uint) error {
 	return r.db.WithContext(ctx).
-		Where("villa_package_id = ?", villaPackageId).
+		Where("villa_package_id = ?", villaPackageID).
 		Delete(&model.VillaPackageList{}).Error
 }
 

@@ -1,9 +1,11 @@
+// Package repository
 package repository
 
 import (
 	"context"
 	"errors"
 
+	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"gorm.io/gorm"
 )
@@ -20,16 +22,27 @@ func (r *FaqRepository) WithTx(tx *gorm.DB) *FaqRepository {
 	return &FaqRepository{db: tx}
 }
 
-func (r *FaqRepository) GetAll(ctx context.Context) ([]model.Faq, error) {
+func (r *FaqRepository) GetAll(ctx context.Context, query dto.FaqQuery) ([]model.Faq, int64, error) {
 	var faqs []model.Faq
+	var total int64
 
-	if err := r.db.WithContext(ctx).
-		Order("sort_order ASC").
-		Find(&faqs).Error; err != nil {
-		return nil, err
+	db := r.db.WithContext(ctx).Model(&model.Faq{})
+
+	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return faqs, nil
+	db = db.Order("sort_order " + string(query.Sort))
+
+	if !query.Unpage {
+		db = db.Offset(query.GetOffset()).Limit(query.Size)
+	}
+
+	if err := db.Find(&faqs).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return faqs, total, nil
 }
 
 func (r *FaqRepository) GetByID(ctx context.Context, id uint) (*model.Faq, error) {
