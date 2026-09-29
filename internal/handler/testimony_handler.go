@@ -7,6 +7,7 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/service"
 	"github.com/lelecodedev/villa-backend/internal/util"
+	"github.com/lelecodedev/villa-backend/pkg/pagination"
 	"github.com/lelecodedev/villa-backend/pkg/response"
 )
 
@@ -21,14 +22,26 @@ func NewTestimonyHandler(service *service.TestimonyService) *TestimonyHandler {
 }
 
 func (h *TestimonyHandler) GetAllTestimonies(c *gin.Context) {
+	var query dto.TestimonyQuery
+	if err := c.ShouldBind(&query); err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
 	ctx := c.Request.Context()
 
-	testimonies, err := h.service.GetAll(ctx)
+	testimonies, total, err := h.service.GetAll(ctx, query)
 	if err != nil {
 		response.HandleServiceError(c, err)
 	}
 
-	response.Success(c, http.StatusOK, "All testimonies successfully fetched!", testimonies)
+	if query.Unpage {
+		response.Success(c, http.StatusOK, "All testimonies successfully fetched!", testimonies)
+		return
+	}
+
+	pagination := pagination.BuildPagination(query.Page, query.Size, total)
+	response.Paginated(c, http.StatusOK, "All testimonies successfully fetched!", testimonies, pagination)
 }
 
 func (h *TestimonyHandler) GetTestimonyByID(c *gin.Context) {

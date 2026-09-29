@@ -27,10 +27,10 @@ func NewTestimonyService(
 	}
 }
 
-func (s *TestimonyService) GetAll(ctx context.Context) ([]dto.TestimonyResponse, error) {
-	testimonies, err := s.repo.GetAll(ctx)
+func (s *TestimonyService) GetAll(ctx context.Context, query dto.TestimonyQuery) ([]dto.TestimonyResponse, int64, error) {
+	testimonies, total, err := s.repo.GetAll(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	responses := make([]dto.TestimonyResponse, 0, len(testimonies))
@@ -38,7 +38,7 @@ func (s *TestimonyService) GetAll(ctx context.Context) ([]dto.TestimonyResponse,
 		responses = append(responses, mapper.ToTestimonyResponse(&testimony))
 	}
 
-	return responses, nil
+	return responses, total, nil
 }
 
 func (s *TestimonyService) GetByID(ctx context.Context, id uint) (dto.TestimonyResponse, error) {
