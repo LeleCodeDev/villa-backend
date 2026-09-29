@@ -1,3 +1,4 @@
+// Package service
 package service
 
 import (
@@ -27,10 +28,10 @@ func NewFaqService(
 	}
 }
 
-func (s *FaqService) GetAll(ctx context.Context) ([]dto.FaqResponse, error) {
-	faqs, err := s.repo.GetAll(ctx)
+func (s *FaqService) GetAll(ctx context.Context, query dto.FaqQuery) ([]dto.FaqResponse, int64, error) {
+	faqs, total, err := s.repo.GetAll(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	responses := make([]dto.FaqResponse, 0, len(faqs))
@@ -38,7 +39,7 @@ func (s *FaqService) GetAll(ctx context.Context) ([]dto.FaqResponse, error) {
 		responses = append(responses, mapper.ToFaqResponse(&faq))
 	}
 
-	return responses, nil
+	return responses, total, nil
 }
 
 func (s *FaqService) GetByID(ctx context.Context, id uint) (dto.FaqResponse, error) {

@@ -28,10 +28,10 @@ func NewGalleryService(
 	}
 }
 
-func (s *GalleryService) GetAll(ctx context.Context) ([]dto.GalleryResponse, error) {
-	galleries, err := s.repo.GetAll(ctx)
+func (s *GalleryService) GetAll(ctx context.Context, query dto.GalleryQuery) ([]dto.GalleryResponse, int64, error) {
+	galleries, total, err := s.repo.GetAll(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	responses := make([]dto.GalleryResponse, 0, len(galleries))
@@ -39,7 +39,7 @@ func (s *GalleryService) GetAll(ctx context.Context) ([]dto.GalleryResponse, err
 		responses = append(responses, mapper.ToGalleryResponse(&gallery))
 	}
 
-	return responses, nil
+	return responses, total, nil
 }
 
 func (s *GalleryService) GetByID(ctx context.Context, id uint) (dto.GalleryResponse, error) {

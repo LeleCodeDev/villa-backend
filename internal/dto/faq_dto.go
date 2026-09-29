@@ -1,8 +1,16 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type (
+	FaqQuery struct {
+		PaginationQuery
+		SortQuery
+		Unpage bool `form:"unpage"`
+	}
+
 	FaqResponse struct {
 		ID        uint      `json:"id"`
 		Question  string    `json:"question"`
@@ -18,3 +26,8 @@ type (
 		SortOrder *int   `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
 	}
 )
+
+func (fq *FaqQuery) SetDefault() {
+	fq.setDefaultPagination()
+	fq.SetDefaultSort(SortAsc)
+}

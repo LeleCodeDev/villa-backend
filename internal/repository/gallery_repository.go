@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"gorm.io/gorm"
 )
@@ -20,16 +21,27 @@ func (r *GalleryRepository) WithTx(tx *gorm.DB) *GalleryRepository {
 	return &GalleryRepository{db: tx}
 }
 
-func (r *GalleryRepository) GetAll(ctx context.Context) ([]model.Gallery, error) {
+func (r *GalleryRepository) GetAll(ctx context.Context, query dto.GalleryQuery) ([]model.Gallery, int64, error) {
 	var galleries []model.Gallery
+	var total int64
 
-	if err := r.db.WithContext(ctx).
-		Order("sort_order ASC").
-		Find(&galleries).Error; err != nil {
-		return nil, err
+	db := r.db.WithContext(ctx).Model(&model.Gallery{})
+
+	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return galleries, nil
+	db = db.Order("sort_order " + string(query.Sort))
+
+	if !query.Unpage {
+		db = db.Offset(query.GetOffset()).Limit(query.Size)
+	}
+
+	if err := db.Find(&galleries).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return galleries, total, nil
 }
 
 func (r *GalleryRepository) GetByID(ctx context.Context, id uint) (*model.Gallery, error) {

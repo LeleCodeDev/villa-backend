@@ -3,6 +3,12 @@ package dto
 import "time"
 
 type (
+	TestimonyQuery struct {
+		PaginationQuery
+		SortQuery
+		Unpage bool `form:"unpage"`
+	}
+
 	TestimonyResponse struct {
 		ID        uint      `json:"id"`
 		Comment   string    `json:"comment"`

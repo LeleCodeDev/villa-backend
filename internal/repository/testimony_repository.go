@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"gorm.io/gorm"
 )
@@ -20,16 +21,27 @@ func (r *TestimonyRepository) WithTx(tx *gorm.DB) *TestimonyRepository {
 	return &TestimonyRepository{db: tx}
 }
 
-func (r *TestimonyRepository) GetAll(ctx context.Context) ([]model.Testimony, error) {
+func (r *TestimonyRepository) GetAll(ctx context.Context, query dto.TestimonyQuery) ([]model.Testimony, int64, error) {
 	var testimonies []model.Testimony
+	var total int64
 
-	if err := r.db.WithContext(ctx).
-		Order("sort_order ASC").
-		Find(&testimonies).Error; err != nil {
-		return nil, err
+	db := r.db.WithContext(ctx).Model(&model.Testimony{})
+
+	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return testimonies, nil
+	db = db.Order("sort_order " + string(query.Sort))
+
+	if !query.Unpage {
+		db = db.Offset(query.GetOffset()).Limit(query.Size)
+	}
+
+	if err := db.Find(&testimonies).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return testimonies, total, nil
 }
 
 func (r *TestimonyRepository) GetByID(ctx context.Context, id uint) (*model.Testimony, error) {

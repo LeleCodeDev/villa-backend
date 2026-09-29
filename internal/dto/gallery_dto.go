@@ -6,6 +6,12 @@ import (
 )
 
 type (
+	GalleryQuery struct {
+		PaginationQuery
+		SortQuery
+		Unpage bool `form:"unpage"`
+	}
+
 	GalleryResponse struct {
 		ID          uint      `json:"id"`
 		Title       string    `json:"title"`
@@ -23,3 +29,8 @@ type (
 		Image       *multipart.FileHeader `form:"image" binding:"omitempty"`
 	}
 )
+
+func (gq *GalleryQuery) SetDefault() {
+	gq.setDefaultPagination()
+	gq.SetDefaultSort(SortAsc)
+}

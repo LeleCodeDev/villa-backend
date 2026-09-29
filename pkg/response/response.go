@@ -15,11 +15,35 @@ type Response[T any] struct {
 	Errors  any    `json:"errors,omitempty"`
 }
 
+type PaginatedResponse[T any] struct {
+	Success    bool           `json:"success"`
+	Message    string         `json:"message"`
+	Data       T              `json:"data"`
+	Pagination PaginationData `json:"pagination"`
+	Errors     any            `json:"errors,omitempty"`
+}
+
+type PaginationData struct {
+	Page       int   `json:"page"`
+	Size       int   `json:"size"`
+	TotalItems int64 `json:"total_items"`
+	TotalPages int   `json:"total_pages"`
+}
+
 func Success[T any](c *gin.Context, code int, message string, data T) {
 	c.JSON(code, Response[T]{
 		Success: true,
 		Message: message,
 		Data:    data,
+	})
+}
+
+func Paginated[T any](c *gin.Context, code int, message string, data T, pagination PaginationData) {
+	c.JSON(code, PaginatedResponse[T]{
+		Success:    true,
+		Message:    message,
+		Data:       data,
+		Pagination: pagination,
 	})
 }
 
