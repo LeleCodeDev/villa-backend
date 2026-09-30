@@ -12,11 +12,18 @@ import (
 )
 
 type VillaPackageHandler struct {
-	service *service.VillaPackageService
+	service     *service.VillaPackageService
+	listService *service.VillaPackageListService
 }
 
-func NewVillaPackageHandler(service *service.VillaPackageService) *VillaPackageHandler {
-	return &VillaPackageHandler{service: service}
+func NewVillaPackageHandler(
+	service *service.VillaPackageService,
+	listService *service.VillaPackageListService,
+) *VillaPackageHandler {
+	return &VillaPackageHandler{
+		service:     service,
+		listService: listService,
+	}
 }
 
 func (h *VillaPackageHandler) GetAllVillaPackages(c *gin.Context) {
@@ -36,7 +43,6 @@ func (h *VillaPackageHandler) GetAllVillaPackages(c *gin.Context) {
 	}
 
 	if query.Unpage {
-
 		response.Success(c, http.StatusOK, "All villa package successfully fetched!", villaPackages)
 		return
 	}
@@ -61,6 +67,37 @@ func (h *VillaPackageHandler) GetVillaPackageByID(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Villa package successfully fetched!", villaPackage)
+}
+
+func (h *VillaPackageHandler) GetAllVillaPackageListsByID(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	var query dto.VillaPackageListQuery
+	if err := c.ShouldBind(&query); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	query.SetDefault()
+	ctx := c.Request.Context()
+
+	villaPackageLists, total, err := h.listService.GetAllByVillaPackageID(ctx, id, query)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	if query.Unpage {
+		response.Success(c, http.StatusOK, "All villa package lists successfully fetched!", villaPackageLists)
+		return
+	}
+
+	pagination := pagination.BuildPagination(query.Page, query.Size, total)
+	response.Paginated(c, http.StatusOK, "All villa package lists successfully fetched!", villaPackageLists, pagination)
 }
 
 func (h *VillaPackageHandler) CreateVillaPackage(c *gin.Context) {

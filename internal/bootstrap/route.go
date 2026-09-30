@@ -80,6 +80,7 @@ func (a *App) RegisterRoute() {
 		admin.POST("/villa-packages", a.VillaPackageHandler.CreateVillaPackage)
 		admin.PUT("/villa-packages/:id", a.VillaPackageHandler.UpdateVillaPackage)
 		admin.DELETE("/villa-packages/:id", a.VillaPackageHandler.DeleteVillaPackage)
+		admin.GET("/villa-packages/:id/lists", a.VillaPackageHandler.GetAllVillaPackageListsByID)
 
 		// Villa Package List
 		admin.GET("/villa-package-lists/:id", a.VillaPackageListHandler.GetVillaPackageListByID)

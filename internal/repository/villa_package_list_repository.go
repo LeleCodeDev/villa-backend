@@ -44,6 +44,31 @@ func (r *VillaPackageListRepository) GetAll(ctx context.Context, query dto.Villa
 	return villaPackageLists, total, nil
 }
 
+func (r *VillaPackageListRepository) GetAllByVillaPackageIDWithQuery(ctx context.Context, villaPackageID uint, query dto.VillaPackageListQuery) ([]model.VillaPackageList, int64, error) {
+	var villaPackageLists []model.VillaPackageList
+	var total int64
+
+	db := r.db.WithContext(ctx).Model(&model.VillaPackageList{})
+
+	db = db.Where("villa_package_id = ?", villaPackageID)
+
+	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	db.Order("sort_order " + string(query.Sort))
+
+	if !query.Unpage {
+		db = db.Offset(query.GetOffset()).Limit(query.Size)
+	}
+
+	if err := db.Find(&villaPackageLists).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return villaPackageLists, total, nil
+}
+
 func (r *VillaPackageListRepository) GetByID(ctx context.Context, id uint) (*model.VillaPackageList, error) {
 	var villaPackageList model.VillaPackageList
 
