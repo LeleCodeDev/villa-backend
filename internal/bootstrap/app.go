@@ -29,6 +29,7 @@ type App struct {
 	VillaPackageHandler     *handler.VillaPackageHandler
 	VillaPackageListHandler *handler.VillaPackageListHandler
 	PricelistHandler        *handler.PricelistHandler
+	FacilityHandler         *handler.FacilityHandler
 }
 
 func NewApp() *App {
@@ -47,6 +48,7 @@ func NewApp() *App {
 	villaPackageListRepo := repository.NewVillaPackageListRepository(db)
 	villaPackageRepo := repository.NewVillaPackageRepository(db)
 	pricelistRepo := repository.NewPricelistRepository(db)
+	facilityRepo := repository.NewFacilityRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -57,6 +59,7 @@ func NewApp() *App {
 	villaPackageListService := service.NewVillaPackageListService(txManager, villaPackageListRepo, villaPackageRepo)
 	villaPackageService := service.NewVillaPackageService(txManager, villaPackageRepo, villaPackageListRepo)
 	pricelistService := service.NewPricelistService(txManager, pricelistRepo)
+	facilityService := service.NewFacilityService(txManager, facilityRepo)
 
 	app := &App{
 		Router:                  r,
@@ -71,6 +74,7 @@ func NewApp() *App {
 		VillaPackageListHandler: handler.NewVillaPackageListHandler(villaPackageListService),
 		VillaPackageHandler:     handler.NewVillaPackageHandler(villaPackageService, villaPackageListService),
 		PricelistHandler:        handler.NewPricelistHandler(pricelistService),
+		FacilityHandler:         handler.NewFacilityHandler(facilityService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

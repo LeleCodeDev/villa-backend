@@ -42,6 +42,9 @@ func (a *App) RegisterRoute() {
 
 		// Pricelist
 		public.GET("/pricelists", a.PricelistHandler.GetAllPricelists)
+
+		// Facility
+		public.GET("/facilities", a.FacilityHandler.GetAllFacilities)
 	}
 
 	authenticated := api.Group("")
@@ -96,5 +99,11 @@ func (a *App) RegisterRoute() {
 		admin.POST("/pricelists", a.PricelistHandler.CreatePricelist)
 		admin.PUT("/pricelists/:id", a.PricelistHandler.UpdatePricelist)
 		admin.DELETE("/pricelists/:id", a.PricelistHandler.DeletePricelist)
+
+		// Facility
+		admin.GET("/facilities/:id", a.FacilityHandler.GetFacilityByID)
+		admin.POST("/facilities", a.FacilityHandler.CreateFacility)
+		admin.PUT("/facilities/:id", a.FacilityHandler.UpdateFacility)
+		admin.DELETE("/facilities/:id", a.FacilityHandler.DeleteFacility)
 	}
 }
