@@ -28,6 +28,7 @@ type App struct {
 	TestimonyHandler        *handler.TestimonyHandler
 	VillaPackageHandler     *handler.VillaPackageHandler
 	VillaPackageListHandler *handler.VillaPackageListHandler
+	PricelistHandler        *handler.PricelistHandler
 }
 
 func NewApp() *App {
@@ -45,6 +46,7 @@ func NewApp() *App {
 	testimonyRepo := repository.NewTestimonyRepository(db)
 	villaPackageListRepo := repository.NewVillaPackageListRepository(db)
 	villaPackageRepo := repository.NewVillaPackageRepository(db)
+	pricelistRepo := repository.NewPricelistRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -54,6 +56,7 @@ func NewApp() *App {
 	testimonyService := service.NewTestimonyService(txManager, testimonyRepo)
 	villaPackageListService := service.NewVillaPackageListService(txManager, villaPackageListRepo, villaPackageRepo)
 	villaPackageService := service.NewVillaPackageService(txManager, villaPackageRepo, villaPackageListRepo)
+	pricelistService := service.NewPricelistService(txManager, pricelistRepo)
 
 	app := &App{
 		Router:                  r,
@@ -67,6 +70,7 @@ func NewApp() *App {
 		TestimonyHandler:        handler.NewTestimonyHandler(testimonyService),
 		VillaPackageListHandler: handler.NewVillaPackageListHandler(villaPackageListService),
 		VillaPackageHandler:     handler.NewVillaPackageHandler(villaPackageService, villaPackageListService),
+		PricelistHandler:        handler.NewPricelistHandler(pricelistService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
