@@ -20,6 +20,7 @@ type App struct {
 	Router                  *gin.Engine
 	DB                      *gorm.DB
 	AuthMiddleware          gin.HandlerFunc
+	HealthHandler           *handler.HealthHandler
 	AuthHandler             *handler.AuthHandler
 	ApplicationHandler      *handler.ApplicationHandler
 	HeroSectionHandler      *handler.HeroSectionHandler
@@ -30,6 +31,7 @@ type App struct {
 	VillaPackageListHandler *handler.VillaPackageListHandler
 	PricelistHandler        *handler.PricelistHandler
 	FacilityHandler         *handler.FacilityHandler
+	SpecificationHandler    *handler.SpecificationHandler
 }
 
 func NewApp() *App {
@@ -49,6 +51,7 @@ func NewApp() *App {
 	villaPackageRepo := repository.NewVillaPackageRepository(db)
 	pricelistRepo := repository.NewPricelistRepository(db)
 	facilityRepo := repository.NewFacilityRepository(db)
+	specificationRepo := repository.NewSpecificationRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -60,11 +63,13 @@ func NewApp() *App {
 	villaPackageService := service.NewVillaPackageService(txManager, villaPackageRepo, villaPackageListRepo)
 	pricelistService := service.NewPricelistService(txManager, pricelistRepo)
 	facilityService := service.NewFacilityService(txManager, facilityRepo)
+	specificationService := service.NewSpecificationService(txManager, specificationRepo)
 
 	app := &App{
 		Router:                  r,
 		DB:                      db,
 		AuthMiddleware:          middleware.AuthMiddleware(userRepo),
+		HealthHandler:           handler.NewHealthHandler(),
 		AuthHandler:             handler.NewAuthHandler(authService),
 		ApplicationHandler:      handler.NewApplicationHandler(applicationService),
 		HeroSectionHandler:      handler.NewHeroSectionHandler(heroSectionService),
@@ -75,6 +80,7 @@ func NewApp() *App {
 		VillaPackageHandler:     handler.NewVillaPackageHandler(villaPackageService, villaPackageListService),
 		PricelistHandler:        handler.NewPricelistHandler(pricelistService),
 		FacilityHandler:         handler.NewFacilityHandler(facilityService),
+		SpecificationHandler:    handler.NewSpecificationHandler(specificationService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
