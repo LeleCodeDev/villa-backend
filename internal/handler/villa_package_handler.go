@@ -7,6 +7,7 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/service"
 	"github.com/lelecodedev/villa-backend/internal/util"
+	"github.com/lelecodedev/villa-backend/pkg/pagination"
 	"github.com/lelecodedev/villa-backend/pkg/response"
 )
 
@@ -19,15 +20,29 @@ func NewVillaPackageHandler(service *service.VillaPackageService) *VillaPackageH
 }
 
 func (h *VillaPackageHandler) GetAllVillaPackages(c *gin.Context) {
+	var query dto.VillaPackageQuery
+	if err := c.ShouldBind(&query); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	query.SetDefault()
 	ctx := c.Request.Context()
 
-	villaPackages, err := h.service.GetAll(ctx)
+	villaPackages, total, err := h.service.GetAll(ctx, query)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	response.Success(c, http.StatusOK, "All villa package successfully fetched!", villaPackages)
+	if query.Unpage {
+
+		response.Success(c, http.StatusOK, "All villa package successfully fetched!", villaPackages)
+		return
+	}
+
+	pagination := pagination.BuildPagination(query.Page, query.Size, total)
+	response.Paginated(c, http.StatusOK, "All villa package successfully fetched!", villaPackages, pagination)
 }
 
 func (h *VillaPackageHandler) GetVillaPackageByID(c *gin.Context) {

@@ -26,3 +26,8 @@ type (
 		SortOrder *int   `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
 	}
 )
+
+func (tq *TestimonyQuery) SetDefault() {
+	tq.setDefaultPagination()
+	tq.SetDefaultSort(SortAsc)
+}

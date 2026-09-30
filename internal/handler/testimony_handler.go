@@ -28,6 +28,7 @@ func (h *TestimonyHandler) GetAllTestimonies(c *gin.Context) {
 		return
 	}
 
+	query.SetDefault()
 	ctx := c.Request.Context()
 
 	testimonies, total, err := h.service.GetAll(ctx, query)
