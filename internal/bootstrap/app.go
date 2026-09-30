@@ -66,7 +66,7 @@ func NewApp() *App {
 		GalleryHandler:          handler.NewGalleryHandler(galleryService),
 		TestimonyHandler:        handler.NewTestimonyHandler(testimonyService),
 		VillaPackageListHandler: handler.NewVillaPackageListHandler(villaPackageListService),
-		VillaPackageHandler:     handler.NewVillaPackageHandler(villaPackageService),
+		VillaPackageHandler:     handler.NewVillaPackageHandler(villaPackageService, villaPackageListService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

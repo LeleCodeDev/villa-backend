@@ -44,6 +44,20 @@ func (s *VillaPackageListService) GetAll(ctx context.Context, query dto.VillaPac
 	return responses, total, nil
 }
 
+func (s *VillaPackageListService) GetAllByVillaPackageID(ctx context.Context, villaPackageID uint, query dto.VillaPackageListQuery) ([]dto.VillaPackageListResponse, int64, error) {
+	villaPackageLists, total, err := s.repo.GetAllByVillaPackageIDWithQuery(ctx, villaPackageID, query)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	responses := make([]dto.VillaPackageListResponse, 0, len(villaPackageLists))
+	for _, villaPackageList := range villaPackageLists {
+		responses = append(responses, mapper.ToVillaPackageListResponse(&villaPackageList))
+	}
+
+	return responses, total, nil
+}
+
 func (s *VillaPackageListService) GetByID(ctx context.Context, id uint) (dto.VillaPackageListResponse, error) {
 	villaPackageList, err := s.repo.GetByID(ctx, id)
 	if err != nil {
