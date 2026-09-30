@@ -19,6 +19,8 @@ func (a *App) RegisterRoute() {
 
 	public := api.Group("")
 	{
+		public.GET("/health", a.HealthHandler.CheckHealth)
+
 		// Hero Section
 		public.GET("/hero-section", a.HeroSectionHandler.GetHeroSection)
 
@@ -45,6 +47,9 @@ func (a *App) RegisterRoute() {
 
 		// Facility
 		public.GET("/facilities", a.FacilityHandler.GetAllFacilities)
+
+		// Specification
+		public.GET("/specifications", a.SpecificationHandler.GetAllSpecifications)
 	}
 
 	authenticated := api.Group("")
@@ -105,5 +110,11 @@ func (a *App) RegisterRoute() {
 		admin.POST("/facilities", a.FacilityHandler.CreateFacility)
 		admin.PUT("/facilities/:id", a.FacilityHandler.UpdateFacility)
 		admin.DELETE("/facilities/:id", a.FacilityHandler.DeleteFacility)
+
+		// Specification
+		admin.GET("/specifications/:id", a.SpecificationHandler.GetSpecificationByID)
+		admin.POST("/specifications", a.SpecificationHandler.CreateSpecification)
+		admin.PUT("/specifications/:id", a.SpecificationHandler.UpdateSpecification)
+		admin.DELETE("/specifications/:id", a.SpecificationHandler.DeleteSpecification)
 	}
 }
