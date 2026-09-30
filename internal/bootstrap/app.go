@@ -89,7 +89,7 @@ func (a *App) Run(addr string) error {
 func setupValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterTagNameFunc(func(field reflect.StructField) string {
-			name := strings.SplitN(field.Tag.Get("json"), ",", 2)[0]
+			name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
 			return name
 		})
 	}

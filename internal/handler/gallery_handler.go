@@ -26,6 +26,7 @@ func (h *GalleryHandler) GetAllGalleries(c *gin.Context) {
 		return
 	}
 
+	query.SetDefault()
 	ctx := c.Request.Context()
 
 	galleries, total, err := h.service.GetAll(ctx, query)

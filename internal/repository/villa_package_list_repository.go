@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"gorm.io/gorm"
 )
@@ -20,16 +21,27 @@ func (r *VillaPackageListRepository) WithTx(tx *gorm.DB) *VillaPackageListReposi
 	return &VillaPackageListRepository{db: tx}
 }
 
-func (r *VillaPackageListRepository) GetAll(ctx context.Context) ([]model.VillaPackageList, error) {
+func (r *VillaPackageListRepository) GetAll(ctx context.Context, query dto.VillaPackageListQuery) ([]model.VillaPackageList, int64, error) {
 	var villaPackageLists []model.VillaPackageList
+	var total int64
 
-	if err := r.db.WithContext(ctx).
-		Order("sort_order ASC").
-		Find(&villaPackageLists).Error; err != nil {
-		return nil, err
+	db := r.db.WithContext(ctx).Model(&model.VillaPackageList{})
+
+	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return villaPackageLists, nil
+	db.Order("sort_order " + string(query.Sort))
+
+	if !query.Unpage {
+		db = db.Offset(query.GetOffset()).Limit(query.Size)
+	}
+
+	if err := db.Find(&villaPackageLists).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return villaPackageLists, total, nil
 }
 
 func (r *VillaPackageListRepository) GetByID(ctx context.Context, id uint) (*model.VillaPackageList, error) {

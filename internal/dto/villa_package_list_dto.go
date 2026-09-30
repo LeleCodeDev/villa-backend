@@ -3,6 +3,12 @@ package dto
 import "time"
 
 type (
+	VillaPackageListQuery struct {
+		PaginationQuery
+		SortQuery
+		Unpage bool `form:"unpage"`
+	}
+
 	VillaPackageListResponse struct {
 		ID        uint      `json:"id"`
 		Text      string    `json:"text"`
@@ -17,3 +23,8 @@ type (
 		SortOrder      *int   `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
 	}
 )
+
+func (vplq *VillaPackageListQuery) SetDefault() {
+	vplq.setDefaultPagination()
+	vplq.SetDefaultSort(SortAsc)
+}
