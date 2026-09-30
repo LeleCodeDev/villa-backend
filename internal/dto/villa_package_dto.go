@@ -5,6 +5,12 @@ import (
 )
 
 type (
+	VillaPackageQuery struct {
+		PaginationQuery
+		SortQuery
+		Unpage bool `form:"unpage"`
+	}
+
 	VillaPackageResponse struct {
 		ID          uint                       `json:"id"`
 		Title       string                     `json:"title"`
@@ -25,3 +31,8 @@ type (
 		SortOrder   *int    `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
 	}
 )
+
+func (vpq *VillaPackageQuery) SetDefault() {
+	vpq.setDefaultPagination()
+	vpq.SetDefaultSort(SortAsc)
+}

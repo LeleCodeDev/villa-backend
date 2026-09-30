@@ -30,10 +30,10 @@ func NewVillaPackageService(
 	}
 }
 
-func (s *VillaPackageService) GetAll(ctx context.Context) ([]dto.VillaPackageResponse, error) {
-	villaPackages, err := s.repo.GetAll(ctx)
+func (s *VillaPackageService) GetAll(ctx context.Context, query dto.VillaPackageQuery) ([]dto.VillaPackageResponse, int64, error) {
+	villaPackages, total, err := s.repo.GetAll(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	villaPackageIds := make([]uint, 0, len(villaPackages))
@@ -43,7 +43,7 @@ func (s *VillaPackageService) GetAll(ctx context.Context) ([]dto.VillaPackageRes
 
 	allLists, err := s.listRepo.GetAllByVillaPackageIDIn(ctx, villaPackageIds)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	listMap := make(map[uint][]dto.VillaPackageListResponse, len(villaPackages))
@@ -63,7 +63,7 @@ func (s *VillaPackageService) GetAll(ctx context.Context) ([]dto.VillaPackageRes
 		)
 	}
 
-	return responses, nil
+	return responses, total, nil
 }
 
 func (s *VillaPackageService) GetByID(ctx context.Context, id uint) (dto.VillaPackageResponse, error) {
