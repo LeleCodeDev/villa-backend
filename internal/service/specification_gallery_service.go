@@ -45,6 +45,14 @@ func (s *SpecificationGalleryService) Create(ctx context.Context, req dto.Specif
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
+		exist, err := txRepo.Exist(ctx)
+		if err != nil {
+			return err
+		}
+		if exist {
+			return errors.AlreadyExist("Specification gallery data already exist!")
+		}
+
 		var imagePath1 *string
 		if req.Image1 != nil {
 			path, err := image.SaveImage("uploads/specification_galleries", req.Image1, image.DefaultOptions())
