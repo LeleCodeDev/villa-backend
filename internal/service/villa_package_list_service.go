@@ -87,7 +87,7 @@ func (s *VillaPackageListService) Create(ctx context.Context, req dto.VillaPacka
 
 		var sortOrder int
 		if req.SortOrder == nil {
-			maxOrder, err := txRepo.GetMaxSortOrder(ctx)
+			maxOrder, err := txRepo.GetMaxSortOrder(ctx, villaPackage.ID)
 			if err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ func (s *VillaPackageListService) Create(ctx context.Context, req dto.VillaPacka
 			sortOrder = maxOrder + 1
 		} else {
 			sortOrder = *req.SortOrder
-			if err := txRepo.ShiftSortOrder(ctx, sortOrder); err != nil {
+			if err := txRepo.ShiftSortOrder(ctx, villaPackage.ID, sortOrder); err != nil {
 				return err
 			}
 		}
@@ -145,11 +145,11 @@ func (s *VillaPackageListService) Update(ctx context.Context, id uint, req dto.V
 			newOrder = &oldOrder
 		} else if *newOrder != oldOrder {
 			if *newOrder < oldOrder {
-				if err := txRepo.UpdateSortOrderRange(ctx, *newOrder, oldOrder-1, +1); err != nil {
+				if err := txRepo.UpdateSortOrderRange(ctx, villaPackage.ID, *newOrder, oldOrder-1, +1); err != nil {
 					return err
 				}
 			} else {
-				if err := txRepo.UpdateSortOrderRange(ctx, oldOrder+1, *newOrder, -1); err != nil {
+				if err := txRepo.UpdateSortOrderRange(ctx, villaPackage.ID, oldOrder+1, *newOrder, -1); err != nil {
 					return err
 				}
 			}
@@ -182,11 +182,11 @@ func (s *VillaPackageListService) Delete(ctx context.Context, id uint) error {
 			return errors.NotFound(fmt.Sprintf("Villa package list not found with ID: %d", id))
 		}
 
-		maxOrder, err := txRepo.GetMaxSortOrder(ctx)
+		maxOrder, err := txRepo.GetMaxSortOrder(ctx, villaPackageList.ID)
 		if err != nil {
 			return err
 		}
-		if err := txRepo.UpdateSortOrderRange(ctx, villaPackageList.SortOrder+1, maxOrder, -1); err != nil {
+		if err := txRepo.UpdateSortOrderRange(ctx, villaPackageList.VillaPackageID, villaPackageList.SortOrder+1, maxOrder, -1); err != nil {
 			return err
 		}
 
