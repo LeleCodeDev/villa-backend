@@ -121,7 +121,7 @@ func (s *SpecificationGalleryService) Update(ctx context.Context, req dto.Specif
 				image.DeleteImage(*specificationGallery.Image1)
 			}
 
-			path, err := image.SaveImage("uploads/galleries", req.Image1, image.DefaultOptions())
+			path, err := image.SaveImage("uploads/specification_galleries", req.Image1, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
@@ -135,7 +135,7 @@ func (s *SpecificationGalleryService) Update(ctx context.Context, req dto.Specif
 				image.DeleteImage(*specificationGallery.Image2)
 			}
 
-			path, err := image.SaveImage("uploads/galleries", req.Image2, image.DefaultOptions())
+			path, err := image.SaveImage("uploads/specification_galleries", req.Image2, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
@@ -149,7 +149,7 @@ func (s *SpecificationGalleryService) Update(ctx context.Context, req dto.Specif
 				image.DeleteImage(*specificationGallery.Image3)
 			}
 
-			path, err := image.SaveImage("uploads/galleries", req.Image3, image.DefaultOptions())
+			path, err := image.SaveImage("uploads/specification_galleries", req.Image3, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
