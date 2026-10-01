@@ -53,6 +53,12 @@ func (a *App) RegisterRoute() {
 
 		// Specification Gallery
 		public.GET("/specification-gallery", a.SpecificationGalleryHandler.GetSpecificationGallery)
+
+		// Addon
+		public.GET("/addons", a.AddonHandler.GetAllAddons)
+
+		// Addon List
+		public.GET("/addon-lists", a.AddonListHandler.GetAllAddonLists)
 	}
 
 	authenticated := api.Group("")
@@ -124,5 +130,18 @@ func (a *App) RegisterRoute() {
 		admin.POST("/specification-gallery", a.SpecificationGalleryHandler.CreateSpecificationGallery)
 		admin.PUT("/specification-gallery", a.SpecificationGalleryHandler.UpdateSpecificationGallery)
 		admin.DELETE("/specification-gallery", a.SpecificationGalleryHandler.DeleteSpecificationGallery)
+
+		// Addon
+		admin.GET("/addons/:id", a.AddonHandler.GetAddonByID)
+		admin.POST("/addons", a.AddonHandler.CreateAddon)
+		admin.PUT("/addons/:id", a.AddonHandler.UpdateAddon)
+		admin.DELETE("/addons/:id", a.AddonHandler.DeleteAddon)
+		admin.GET("/addons/:id/lists", a.AddonHandler.GetAllAddonListsByID)
+
+		// Addon List
+		admin.GET("/addon-lists/:id", a.AddonListHandler.GetAddonListByID)
+		admin.POST("/addon-lists", a.AddonListHandler.CreateAddonList)
+		admin.PUT("/addon-lists/:id", a.AddonListHandler.UpdateAddonList)
+		admin.DELETE("/addon-lists/:id", a.AddonListHandler.DeleteAddonList)
 	}
 }

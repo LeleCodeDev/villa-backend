@@ -11,23 +11,23 @@ import (
 	"github.com/lelecodedev/villa-backend/pkg/response"
 )
 
-type VillaPackageHandler struct {
-	service     *service.VillaPackageService
-	listService *service.VillaPackageListService
+type AddonHandler struct {
+	service     *service.AddonService
+	listService *service.AddonListService
 }
 
-func NewVillaPackageHandler(
-	service *service.VillaPackageService,
-	listService *service.VillaPackageListService,
-) *VillaPackageHandler {
-	return &VillaPackageHandler{
+func NewAddonHandler(
+	service *service.AddonService,
+	listService *service.AddonListService,
+) *AddonHandler {
+	return &AddonHandler{
 		service:     service,
 		listService: listService,
 	}
 }
 
-func (h *VillaPackageHandler) GetAllVillaPackages(c *gin.Context) {
-	var query dto.VillaPackageQuery
+func (h *AddonHandler) GetAllAddons(c *gin.Context) {
+	var query dto.AddonQuery
 	if err := c.ShouldBind(&query); err != nil {
 		response.HandleValidationError(c, err)
 		return
@@ -36,22 +36,22 @@ func (h *VillaPackageHandler) GetAllVillaPackages(c *gin.Context) {
 	query.SetDefault()
 	ctx := c.Request.Context()
 
-	villaPackages, total, err := h.service.GetAll(ctx, query)
+	addons, total, err := h.service.GetAll(ctx, query)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
 	if query.Unpage {
-		response.Success(c, http.StatusOK, "All villa packages successfully fetched!", villaPackages)
+		response.Success(c, http.StatusOK, "All addons successfully fetched!", addons)
 		return
 	}
 
 	pagination := pagination.BuildPagination(query.Page, query.Size, total)
-	response.Paginated(c, http.StatusOK, "All villa packages successfully fetched!", villaPackages, pagination)
+	response.Paginated(c, http.StatusOK, "All addons successfully fetched!", addons, pagination)
 }
 
-func (h *VillaPackageHandler) GetVillaPackageByID(c *gin.Context) {
+func (h *AddonHandler) GetAddonByID(c *gin.Context) {
 	id, err := util.GetParamsID(c)
 	if err != nil {
 		response.HandleServiceError(c, err)
@@ -60,23 +60,23 @@ func (h *VillaPackageHandler) GetVillaPackageByID(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	villaPackage, err := h.service.GetByID(ctx, id)
+	addon, err := h.service.GetByID(ctx, id)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Villa package successfully fetched!", villaPackage)
+	response.Success(c, http.StatusOK, "Addon successfully fetched!", addon)
 }
 
-func (h *VillaPackageHandler) GetAllVillaPackageListsByID(c *gin.Context) {
+func (h *AddonHandler) GetAllAddonListsByID(c *gin.Context) {
 	id, err := util.GetParamsID(c)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	var query dto.VillaPackageListQuery
+	var query dto.AddonListQuery
 	if err := c.ShouldBind(&query); err != nil {
 		response.HandleValidationError(c, err)
 		return
@@ -85,23 +85,23 @@ func (h *VillaPackageHandler) GetAllVillaPackageListsByID(c *gin.Context) {
 	query.SetDefault()
 	ctx := c.Request.Context()
 
-	villaPackageLists, total, err := h.listService.GetAllByVillaPackageID(ctx, id, query)
+	addonLists, total, err := h.listService.GetAllByAddonID(ctx, id, query)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
 	if query.Unpage {
-		response.Success(c, http.StatusOK, "All villa package lists successfully fetched!", villaPackageLists)
+		response.Success(c, http.StatusOK, "All addon lists successfully fetched!", addonLists)
 		return
 	}
 
 	pagination := pagination.BuildPagination(query.Page, query.Size, total)
-	response.Paginated(c, http.StatusOK, "All villa package lists successfully fetched!", villaPackageLists, pagination)
+	response.Paginated(c, http.StatusOK, "All addon lists successfully fetched!", addonLists, pagination)
 }
 
-func (h *VillaPackageHandler) CreateVillaPackage(c *gin.Context) {
-	var req dto.VillaPackageRequest
+func (h *AddonHandler) CreateAddon(c *gin.Context) {
+	var req dto.AddonRequest
 	if err := c.ShouldBind(&req); err != nil {
 		response.HandleValidationError(c, err)
 		return
@@ -109,23 +109,23 @@ func (h *VillaPackageHandler) CreateVillaPackage(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	villaPackage, err := h.service.Create(ctx, req)
+	addon, err := h.service.Create(ctx, req)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Villa package successfully created!", villaPackage)
+	response.Success(c, http.StatusCreated, "Addon successfully created!", addon)
 }
 
-func (h *VillaPackageHandler) UpdateVillaPackage(c *gin.Context) {
+func (h *AddonHandler) UpdateAddon(c *gin.Context) {
 	id, err := util.GetParamsID(c)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	var req dto.VillaPackageRequest
+	var req dto.AddonRequest
 	if err := c.ShouldBind(&req); err != nil {
 		response.HandleValidationError(c, err)
 		return
@@ -133,16 +133,16 @@ func (h *VillaPackageHandler) UpdateVillaPackage(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	villaPackage, err := h.service.Update(ctx, id, req)
+	addon, err := h.service.Update(ctx, id, req)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Villa package successfully updated!", villaPackage)
+	response.Success(c, http.StatusOK, "Addon successfully updated!", addon)
 }
 
-func (h *VillaPackageHandler) DeleteVillaPackage(c *gin.Context) {
+func (h *AddonHandler) DeleteAddon(c *gin.Context) {
 	id, err := util.GetParamsID(c)
 	if err != nil {
 		response.HandleServiceError(c, err)
@@ -156,5 +156,5 @@ func (h *VillaPackageHandler) DeleteVillaPackage(c *gin.Context) {
 		return
 	}
 
-	response.Success[any](c, http.StatusOK, "Villa package successfully deleted!", nil)
+	response.Success[any](c, http.StatusOK, "Addon successfully deleted!", nil)
 }
