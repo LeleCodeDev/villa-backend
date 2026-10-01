@@ -159,9 +159,6 @@ func (s *SpecificationGalleryService) Update(ctx context.Context, req dto.Specif
 
 		mapper.UpdateSpecificationGalleryModel(specificationGallery, imagepath1, imagepath2, imagepath3)
 		if err := txRepo.Update(ctx, specificationGallery); err != nil {
-			image.DeleteImage(*specificationGallery.Image1)
-			image.DeleteImage(*specificationGallery.Image2)
-			image.DeleteImage(*specificationGallery.Image3)
 			return err
 		}
 

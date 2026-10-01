@@ -148,7 +148,6 @@ func (s *GalleryService) Update(ctx context.Context, req dto.GalleryRequest, id 
 
 		mapper.UpdateGalleryModel(gallery, req, imagepath, *newOrder)
 		if err := txRepo.Update(ctx, gallery); err != nil {
-			image.DeleteImage(*gallery.Image)
 			return err
 		}
 
