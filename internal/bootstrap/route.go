@@ -50,6 +50,9 @@ func (a *App) RegisterRoute() {
 
 		// Specification
 		public.GET("/specifications", a.SpecificationHandler.GetAllSpecifications)
+
+		// Specification Gallery
+		public.GET("/specification-gallery", a.SpecificationGalleryHandler.GetSpecificationGallery)
 	}
 
 	authenticated := api.Group("")
@@ -116,5 +119,10 @@ func (a *App) RegisterRoute() {
 		admin.POST("/specifications", a.SpecificationHandler.CreateSpecification)
 		admin.PUT("/specifications/:id", a.SpecificationHandler.UpdateSpecification)
 		admin.DELETE("/specifications/:id", a.SpecificationHandler.DeleteSpecification)
+
+		// Specification Gallery
+		admin.POST("/specification-gallery", a.SpecificationGalleryHandler.CreateSpecificationGallery)
+		admin.PUT("/specification-gallery", a.SpecificationGalleryHandler.UpdateSpecificationGallery)
+		admin.DELETE("/specification-gallery", a.SpecificationGalleryHandler.DeleteSpecificationGallery)
 	}
 }
