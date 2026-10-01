@@ -17,21 +17,22 @@ import (
 )
 
 type App struct {
-	Router                  *gin.Engine
-	DB                      *gorm.DB
-	AuthMiddleware          gin.HandlerFunc
-	HealthHandler           *handler.HealthHandler
-	AuthHandler             *handler.AuthHandler
-	ApplicationHandler      *handler.ApplicationHandler
-	HeroSectionHandler      *handler.HeroSectionHandler
-	FaqHandler              *handler.FaqHandler
-	GalleryHandler          *handler.GalleryHandler
-	TestimonyHandler        *handler.TestimonyHandler
-	VillaPackageHandler     *handler.VillaPackageHandler
-	VillaPackageListHandler *handler.VillaPackageListHandler
-	PricelistHandler        *handler.PricelistHandler
-	FacilityHandler         *handler.FacilityHandler
-	SpecificationHandler    *handler.SpecificationHandler
+	Router                      *gin.Engine
+	DB                          *gorm.DB
+	AuthMiddleware              gin.HandlerFunc
+	HealthHandler               *handler.HealthHandler
+	AuthHandler                 *handler.AuthHandler
+	ApplicationHandler          *handler.ApplicationHandler
+	HeroSectionHandler          *handler.HeroSectionHandler
+	FaqHandler                  *handler.FaqHandler
+	GalleryHandler              *handler.GalleryHandler
+	TestimonyHandler            *handler.TestimonyHandler
+	VillaPackageHandler         *handler.VillaPackageHandler
+	VillaPackageListHandler     *handler.VillaPackageListHandler
+	PricelistHandler            *handler.PricelistHandler
+	FacilityHandler             *handler.FacilityHandler
+	SpecificationHandler        *handler.SpecificationHandler
+	SpecificationGalleryHandler *handler.SpecificationGalleryHandler
 }
 
 func NewApp() *App {
@@ -52,6 +53,7 @@ func NewApp() *App {
 	pricelistRepo := repository.NewPricelistRepository(db)
 	facilityRepo := repository.NewFacilityRepository(db)
 	specificationRepo := repository.NewSpecificationRepository(db)
+	specificationGalleryRepo := repository.NewSpecificationGalleryRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -64,23 +66,25 @@ func NewApp() *App {
 	pricelistService := service.NewPricelistService(txManager, pricelistRepo)
 	facilityService := service.NewFacilityService(txManager, facilityRepo)
 	specificationService := service.NewSpecificationService(txManager, specificationRepo)
+	specificationGalleryService := service.NewSpecificationGalleryService(txManager, specificationGalleryRepo)
 
 	app := &App{
-		Router:                  r,
-		DB:                      db,
-		AuthMiddleware:          middleware.AuthMiddleware(userRepo),
-		HealthHandler:           handler.NewHealthHandler(),
-		AuthHandler:             handler.NewAuthHandler(authService),
-		ApplicationHandler:      handler.NewApplicationHandler(applicationService),
-		HeroSectionHandler:      handler.NewHeroSectionHandler(heroSectionService),
-		FaqHandler:              handler.NewFaqHandler(faqService),
-		GalleryHandler:          handler.NewGalleryHandler(galleryService),
-		TestimonyHandler:        handler.NewTestimonyHandler(testimonyService),
-		VillaPackageListHandler: handler.NewVillaPackageListHandler(villaPackageListService),
-		VillaPackageHandler:     handler.NewVillaPackageHandler(villaPackageService, villaPackageListService),
-		PricelistHandler:        handler.NewPricelistHandler(pricelistService),
-		FacilityHandler:         handler.NewFacilityHandler(facilityService),
-		SpecificationHandler:    handler.NewSpecificationHandler(specificationService),
+		Router:                      r,
+		DB:                          db,
+		AuthMiddleware:              middleware.AuthMiddleware(userRepo),
+		HealthHandler:               handler.NewHealthHandler(),
+		AuthHandler:                 handler.NewAuthHandler(authService),
+		ApplicationHandler:          handler.NewApplicationHandler(applicationService),
+		HeroSectionHandler:          handler.NewHeroSectionHandler(heroSectionService),
+		FaqHandler:                  handler.NewFaqHandler(faqService),
+		GalleryHandler:              handler.NewGalleryHandler(galleryService),
+		TestimonyHandler:            handler.NewTestimonyHandler(testimonyService),
+		VillaPackageListHandler:     handler.NewVillaPackageListHandler(villaPackageListService),
+		VillaPackageHandler:         handler.NewVillaPackageHandler(villaPackageService, villaPackageListService),
+		PricelistHandler:            handler.NewPricelistHandler(pricelistService),
+		FacilityHandler:             handler.NewFacilityHandler(facilityService),
+		SpecificationHandler:        handler.NewSpecificationHandler(specificationService),
+		SpecificationGalleryHandler: handler.NewSpecificationGalleryHandler(specificationGalleryService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

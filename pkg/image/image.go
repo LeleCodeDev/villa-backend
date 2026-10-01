@@ -1,3 +1,4 @@
+// Package image
 package image
 
 import (
@@ -61,7 +62,7 @@ func validateImage(file *multipart.FileHeader, opts SaveOptions) (image.Image, e
 	return img, nil
 }
 
-// always save file into jpg for smaller image size
+// SaveImage always save file into jpg for smaller image size
 func SaveImage(basePath string, file *multipart.FileHeader, opts SaveOptions) (string, error) {
 	img, err := validateImage(file, opts)
 	if err != nil {
