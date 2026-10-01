@@ -33,6 +33,8 @@ type App struct {
 	FacilityHandler             *handler.FacilityHandler
 	SpecificationHandler        *handler.SpecificationHandler
 	SpecificationGalleryHandler *handler.SpecificationGalleryHandler
+	AddonHandler                *handler.AddonHandler
+	AddonListHandler            *handler.AddonListHandler
 }
 
 func NewApp() *App {
@@ -54,6 +56,8 @@ func NewApp() *App {
 	facilityRepo := repository.NewFacilityRepository(db)
 	specificationRepo := repository.NewSpecificationRepository(db)
 	specificationGalleryRepo := repository.NewSpecificationGalleryRepository(db)
+	addonListRepo := repository.NewAddonListRepository(db)
+	addonRepo := repository.NewAddonRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -67,6 +71,8 @@ func NewApp() *App {
 	facilityService := service.NewFacilityService(txManager, facilityRepo)
 	specificationService := service.NewSpecificationService(txManager, specificationRepo)
 	specificationGalleryService := service.NewSpecificationGalleryService(txManager, specificationGalleryRepo)
+	addonListService := service.NewAddonListService(txManager, addonListRepo, addonRepo)
+	addonService := service.NewAddonService(txManager, addonRepo, addonListRepo)
 
 	app := &App{
 		Router:                      r,
@@ -85,6 +91,8 @@ func NewApp() *App {
 		FacilityHandler:             handler.NewFacilityHandler(facilityService),
 		SpecificationHandler:        handler.NewSpecificationHandler(specificationService),
 		SpecificationGalleryHandler: handler.NewSpecificationGalleryHandler(specificationGalleryService),
+		AddonListHandler:            handler.NewAddonListHandler(addonListService),
+		AddonHandler:                handler.NewAddonHandler(addonService, addonListService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

@@ -5,14 +5,14 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
-func ToVillaPackageResponse(villaPackage *model.VillaPackage, villaPackageResponses []dto.VillaPackageListResponse) dto.VillaPackageResponse {
+func ToVillaPackageResponse(villaPackage *model.VillaPackage, listResponses []dto.VillaPackageListResponse) dto.VillaPackageResponse {
 	return dto.VillaPackageResponse{
 		ID:          villaPackage.ID,
 		Title:       villaPackage.Title,
 		Subtitle:    villaPackage.Subtitle,
 		MaxCapacity: villaPackage.MaxCapacity,
 		Price:       villaPackage.Price,
-		Lists:       villaPackageResponses,
+		Lists:       listResponses,
 		SortOrder:   villaPackage.SortOrder,
 		CreatedAt:   villaPackage.CreatedAt,
 		UpdatedAt:   villaPackage.UpdatedAt,

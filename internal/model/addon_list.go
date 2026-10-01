@@ -11,6 +11,7 @@ type AddonList struct {
 	Text      string `gorm:"not null"`
 	AddonID   uint   `gorm:"not null;index"`
 	Addon     Addon  `gorm:"constraint:OnDelete:CASCADE"`
+	SortOrder int    `gorm:"not null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
