@@ -127,27 +127,30 @@ func (r *VillaPackageListRepository) DeleteByVillaPackageID(ctx context.Context,
 		Delete(&model.VillaPackageList{}).Error
 }
 
-func (r *VillaPackageListRepository) GetMaxSortOrder(ctx context.Context) (int, error) {
+func (r *VillaPackageListRepository) GetMaxSortOrder(ctx context.Context, villaPackageID uint) (int, error) {
 	var max int
 
 	err := r.db.WithContext(ctx).
 		Model(&model.VillaPackageList{}).
+		Where("villa_package_id = ?", villaPackageID).
 		Select("COALESCE(MAX(sort_order), 0)").
 		Scan(&max).Error
 
 	return max, err
 }
 
-func (r *VillaPackageListRepository) UpdateSortOrderRange(ctx context.Context, start, end, delta int) error {
+func (r *VillaPackageListRepository) UpdateSortOrderRange(ctx context.Context, villaPackageID uint, start, end, delta int) error {
 	return r.db.WithContext(ctx).
 		Model(&model.VillaPackageList{}).
+		Where("villa_package_id = ?", villaPackageID).
 		Where("sort_order BETWEEN ? AND ?", start, end).
 		Update("sort_order", gorm.Expr("sort_order + ?", delta)).Error
 }
 
-func (r *VillaPackageListRepository) ShiftSortOrder(ctx context.Context, sortOrder int) error {
+func (r *VillaPackageListRepository) ShiftSortOrder(ctx context.Context, villaPackageID uint, sortOrder int) error {
 	return r.db.WithContext(ctx).
 		Model(&model.VillaPackageList{}).
+		Where("villa_package_id = ?", villaPackageID).
 		Where("sort_order >= ?", sortOrder).
 		Update("sort_order", gorm.Expr("sort_order + 1")).Error
 }
