@@ -182,7 +182,7 @@ func (s *VillaPackageListService) Delete(ctx context.Context, id uint) error {
 			return errors.NotFound(fmt.Sprintf("Villa package list not found with ID: %d", id))
 		}
 
-		maxOrder, err := txRepo.GetMaxSortOrder(ctx, villaPackageList.ID)
+		maxOrder, err := txRepo.GetMaxSortOrder(ctx, villaPackageList.VillaPackageID)
 		if err != nil {
 			return err
 		}
