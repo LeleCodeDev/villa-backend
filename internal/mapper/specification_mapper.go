@@ -9,23 +9,25 @@ func ToSpecificationResponse(specification *model.Specification) dto.Specificati
 	return dto.SpecificationResponse{
 		ID:        specification.ID,
 		Text:      specification.Text,
-		Logo:      specification.Logo,
+		Logo:      ToLogoResponse(&specification.Logo),
 		SortOrder: specification.SortOrder,
 		CreatedAt: specification.CreatedAt,
 		UpdatedAt: specification.UpdatedAt,
 	}
 }
 
-func ToSpecificationModel(req dto.SpecificationRequest, sortOrder int) *model.Specification {
+func ToSpecificationModel(req dto.SpecificationRequest, sortOrder int, logo *model.Logo) *model.Specification {
 	return &model.Specification{
 		Text:      req.Text,
-		Logo:      req.Logo,
+		LogoID:    logo.ID,
+		Logo:      *logo,
 		SortOrder: sortOrder,
 	}
 }
 
-func UpdateSpecificationModel(specification *model.Specification, req dto.SpecificationRequest, sortOrder int) {
+func UpdateSpecificationModel(specification *model.Specification, req dto.SpecificationRequest, logo *model.Logo, sortOrder int) {
 	specification.Text = req.Text
-	specification.Logo = req.Logo
+	specification.LogoID = req.LogoID
+	specification.Logo = *logo
 	specification.SortOrder = sortOrder
 }

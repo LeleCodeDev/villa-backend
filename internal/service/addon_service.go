@@ -46,9 +46,9 @@ func (s *AddonService) GetAll(ctx context.Context, query dto.AddonQuery) ([]dto.
 		return nil, 0, err
 	}
 
-	listMap := make(map[uint][]dto.AddonListResponse, len(addons))
+	listMap := make(map[uint][]model.AddonList, len(addons))
 	for _, list := range addonLists {
-		listMap[list.AddonID] = append(listMap[list.AddonID], mapper.ToAddonListResponse(&list))
+		listMap[list.AddonID] = append(listMap[list.AddonID], list)
 	}
 
 	responses := make([]dto.AddonResponse, 0, len(addons))
@@ -73,12 +73,7 @@ func (s *AddonService) GetByID(ctx context.Context, id uint) (dto.AddonResponse,
 		return dto.AddonResponse{}, err
 	}
 
-	listResponses := make([]dto.AddonListResponse, 0, len(lists))
-	for _, list := range lists {
-		listResponses = append(listResponses, mapper.ToAddonListResponse(&list))
-	}
-
-	return mapper.ToAddonResponse(addon, listResponses), nil
+	return mapper.ToAddonResponse(addon, lists), nil
 }
 
 func (s *AddonService) Create(ctx context.Context, req dto.AddonRequest) (dto.AddonResponse, error) {

@@ -5,9 +5,10 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
-func ToAddonResponse(addon *model.Addon, listResponses []dto.AddonListResponse) dto.AddonResponse {
-	if listResponses == nil {
-		listResponses = []dto.AddonListResponse{}
+func ToAddonResponse(addon *model.Addon, lists []model.AddonList) dto.AddonResponse {
+	listResponses := make([]dto.AddonListResponse, 0, len(lists))
+	for _, list := range lists {
+		listResponses = append(listResponses, ToAddonListResponse(&list))
 	}
 
 	return dto.AddonResponse{

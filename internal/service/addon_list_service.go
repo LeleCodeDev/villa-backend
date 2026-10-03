@@ -130,12 +130,15 @@ func (s *AddonListService) Update(ctx context.Context, id uint, req dto.AddonLis
 			return errors.NotFound(fmt.Sprintf("Addon list not found with ID: %d", id))
 		}
 
-		addon, err := txAddonRepo.GetByID(ctx, req.AddonID)
-		if err != nil {
-			return err
-		}
-		if addon == nil {
-			return errors.NotFound(fmt.Sprintf("Addon not found with ID : %d", req.AddonID))
+		addon := &addonList.Addon
+		if addonList.AddonID != req.AddonID {
+			addon, err = txAddonRepo.GetByID(ctx, req.AddonID)
+			if err != nil {
+				return err
+			}
+			if addon == nil {
+				return errors.NotFound(fmt.Sprintf("Addon not found with ID : %d", req.AddonID))
+			}
 		}
 
 		oldOrder := addonList.SortOrder

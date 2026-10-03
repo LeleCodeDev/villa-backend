@@ -46,21 +46,14 @@ func (s *VillaPackageService) GetAll(ctx context.Context, query dto.VillaPackage
 		return nil, 0, err
 	}
 
-	listMap := make(map[uint][]dto.VillaPackageListResponse, len(villaPackages))
+	listMap := make(map[uint][]model.VillaPackageList, len(villaPackages))
 	for _, list := range allLists {
-		listMap[list.VillaPackageID] = append(
-			listMap[list.VillaPackageID],
-			mapper.ToVillaPackageListResponse(&list),
-		)
+		listMap[list.VillaPackageID] = append(listMap[list.VillaPackageID], list)
 	}
 
 	responses := make([]dto.VillaPackageResponse, 0, len(villaPackages))
 	for _, villaPackage := range villaPackages {
-		responses = append(
-			responses,
-			mapper.ToVillaPackageResponse(&villaPackage,
-				listMap[villaPackage.ID]),
-		)
+		responses = append(responses, mapper.ToVillaPackageResponse(&villaPackage, listMap[villaPackage.ID]))
 	}
 
 	return responses, total, nil
@@ -80,12 +73,7 @@ func (s *VillaPackageService) GetByID(ctx context.Context, id uint) (dto.VillaPa
 		return dto.VillaPackageResponse{}, err
 	}
 
-	listsResponse := make([]dto.VillaPackageListResponse, 0, len(lists))
-	for _, list := range lists {
-		listsResponse = append(listsResponse, mapper.ToVillaPackageListResponse(&list))
-	}
-
-	return mapper.ToVillaPackageResponse(villaPackage, listsResponse), nil
+	return mapper.ToVillaPackageResponse(villaPackage, lists), nil
 }
 
 func (s *VillaPackageService) Create(ctx context.Context, req dto.VillaPackageRequest) (dto.VillaPackageResponse, error) {

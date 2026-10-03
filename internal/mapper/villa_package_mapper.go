@@ -5,17 +5,19 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
-func ToVillaPackageResponse(villaPackage *model.VillaPackage, listResponses []dto.VillaPackageListResponse) dto.VillaPackageResponse {
-	if listResponses == nil {
-		listResponses = []dto.VillaPackageListResponse{}
+func ToVillaPackageResponse(villaPackage *model.VillaPackage, lists []model.VillaPackageList) dto.VillaPackageResponse {
+	listsResponse := make([]dto.VillaPackageListResponse, 0, len(lists))
+	for _, list := range lists {
+		listsResponse = append(listsResponse, ToVillaPackageListResponse(&list))
 	}
+
 	return dto.VillaPackageResponse{
 		ID:          villaPackage.ID,
 		Title:       villaPackage.Title,
 		Subtitle:    villaPackage.Subtitle,
 		MaxCapacity: villaPackage.MaxCapacity,
 		Price:       villaPackage.Price,
-		Lists:       listResponses,
+		Lists:       listsResponse,
 		SortOrder:   villaPackage.SortOrder,
 		CreatedAt:   villaPackage.CreatedAt,
 		UpdatedAt:   villaPackage.UpdatedAt,

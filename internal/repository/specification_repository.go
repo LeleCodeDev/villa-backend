@@ -25,7 +25,7 @@ func (r *SpecificationRepository) GetAll(ctx context.Context, query dto.Specific
 	var specifications []model.Specification
 	var total int64
 
-	db := r.db.WithContext(ctx).Model(&model.Specification{})
+	db := r.db.WithContext(ctx).Preload("Logo").Model(&model.Specification{})
 
 	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -47,7 +47,7 @@ func (r *SpecificationRepository) GetAll(ctx context.Context, query dto.Specific
 func (r *SpecificationRepository) GetByID(ctx context.Context, id uint) (*model.Specification, error) {
 	var specification model.Specification
 
-	if err := r.db.WithContext(ctx).First(&specification, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Logo").First(&specification, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
