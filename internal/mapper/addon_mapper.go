@@ -6,6 +6,10 @@ import (
 )
 
 func ToAddonResponse(addon *model.Addon, listResponses []dto.AddonListResponse) dto.AddonResponse {
+	if listResponses == nil {
+		listResponses = []dto.AddonListResponse{}
+	}
+
 	return dto.AddonResponse{
 		ID:          addon.ID,
 		Title:       addon.Title,
