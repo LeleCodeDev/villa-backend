@@ -20,6 +20,6 @@ func ToLogoModel(req dto.LogoRequest) *model.Logo {
 	}
 }
 
-func UpdateLogo(logo *model.Logo, req dto.LogoRequest) {
+func UpdateLogoModel(logo *model.Logo, req dto.LogoRequest) {
 	logo.Text = req.Text
 }
