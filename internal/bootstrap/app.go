@@ -70,7 +70,7 @@ func NewApp() *App {
 	villaPackageListService := service.NewVillaPackageListService(txManager, villaPackageListRepo, villaPackageRepo)
 	villaPackageService := service.NewVillaPackageService(txManager, villaPackageRepo, villaPackageListRepo)
 	pricelistService := service.NewPricelistService(txManager, pricelistRepo)
-	facilityService := service.NewFacilityService(txManager, facilityRepo)
+	facilityService := service.NewFacilityService(txManager, facilityRepo, logoRepo)
 	specificationService := service.NewSpecificationService(txManager, specificationRepo, logoRepo)
 	specificationGalleryService := service.NewSpecificationGalleryService(txManager, specificationGalleryRepo)
 	addonListService := service.NewAddonListService(txManager, addonListRepo, addonRepo)
