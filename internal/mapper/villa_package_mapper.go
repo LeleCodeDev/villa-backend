@@ -6,6 +6,9 @@ import (
 )
 
 func ToVillaPackageResponse(villaPackage *model.VillaPackage, listResponses []dto.VillaPackageListResponse) dto.VillaPackageResponse {
+	if listResponses == nil {
+		listResponses = []dto.VillaPackageListResponse{}
+	}
 	return dto.VillaPackageResponse{
 		ID:          villaPackage.ID,
 		Title:       villaPackage.Title,
