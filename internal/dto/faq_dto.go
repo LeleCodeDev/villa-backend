@@ -16,8 +16,8 @@ type (
 		Question  string    `json:"question"`
 		Answer    string    `json:"answer"`
 		SortOrder int       `json:"sort_order"`
-		CreatedAt time.Time `json:"createdAt"`
-		UpdatedAt time.Time `json:"updatedAt"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
 	}
 
 	FaqRequest struct {

@@ -16,8 +16,8 @@ type (
 		Text      string    `json:"text"`
 		Logo      string    `json:"logo"`
 		SortOrder int       `json:"sort_order"`
-		CreatedAt time.Time `json:"createdAt"`
-		UpdatedAt time.Time `json:"updatedAt"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
 	}
 
 	SpecificationRequest struct {
