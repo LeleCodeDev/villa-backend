@@ -70,6 +70,17 @@ func (r *FacilityRepository) Delete(ctx context.Context, facility *model.Facilit
 	return r.db.WithContext(ctx).Delete(facility).Error
 }
 
+func (r *FacilityRepository) ExistByLogoID(ctx context.Context, logoID uint) (bool, error) {
+	var count int64
+
+	err := r.db.WithContext(ctx).
+		Model(&model.Facility{}).
+		Where("logo_id = ?", logoID).
+		Count(&count).Error
+
+	return count > 0, err
+}
+
 func (r *FacilityRepository) GetMaxSortOrder(ctx context.Context) (int, error) {
 	var max int
 

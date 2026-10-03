@@ -70,6 +70,17 @@ func (r *SpecificationRepository) Delete(ctx context.Context, specification *mod
 	return r.db.WithContext(ctx).Delete(specification).Error
 }
 
+func (r *SpecificationRepository) ExistByLogoID(ctx context.Context, logoID uint) (bool, error) {
+	var count int64
+
+	err := r.db.WithContext(ctx).
+		Model(&model.Specification{}).
+		Where("logo_id = ?", logoID).
+		Count(&count).Error
+
+	return count > 0, err
+}
+
 func (r *SpecificationRepository) GetMaxSortOrder(ctx context.Context) (int, error) {
 	var max int
 

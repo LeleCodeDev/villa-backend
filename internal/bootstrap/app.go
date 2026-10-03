@@ -75,7 +75,7 @@ func NewApp() *App {
 	specificationGalleryService := service.NewSpecificationGalleryService(txManager, specificationGalleryRepo)
 	addonListService := service.NewAddonListService(txManager, addonListRepo, addonRepo)
 	addonService := service.NewAddonService(txManager, addonRepo, addonListRepo)
-	logoService := service.NewLogoService(txManager, logoRepo)
+	logoService := service.NewLogoService(txManager, logoRepo, specificationRepo, facilityRepo)
 
 	app := &App{
 		Router:                      r,

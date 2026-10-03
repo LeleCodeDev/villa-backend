@@ -13,17 +13,23 @@ import (
 )
 
 type LogoService struct {
-	txManager *repository.TxManager
-	repo      *repository.LogoRepository
+	txManager         *repository.TxManager
+	repo              *repository.LogoRepository
+	specificationRepo *repository.SpecificationRepository
+	facilityRepo      *repository.FacilityRepository
 }
 
 func NewLogoService(
 	txManager *repository.TxManager,
 	repo *repository.LogoRepository,
+	specificationRepo *repository.SpecificationRepository,
+	facilityRepo *repository.FacilityRepository,
 ) *LogoService {
 	return &LogoService{
-		txManager: txManager,
-		repo:      repo,
+		txManager:         txManager,
+		repo:              repo,
+		specificationRepo: specificationRepo,
+		facilityRepo:      facilityRepo,
 	}
 }
 
@@ -106,6 +112,8 @@ func (s *LogoService) Update(ctx context.Context, id uint, req dto.LogoRequest) 
 func (s *LogoService) Delete(ctx context.Context, id uint) error {
 	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txSpecRepo := s.specificationRepo.WithTx(tx)
+		txFacRepo := s.facilityRepo.WithTx(tx)
 
 		logo, err := txRepo.GetByID(ctx, id)
 		if err != nil {
@@ -113,6 +121,20 @@ func (s *LogoService) Delete(ctx context.Context, id uint) error {
 		}
 		if logo == nil {
 			return errors.NotFound(fmt.Sprintf("Logo not found with ID: %d", id))
+		}
+
+		specExist, err := txSpecRepo.ExistByLogoID(ctx, logo.ID)
+		if err != nil {
+			return err
+		}
+
+		facExist, err := txFacRepo.ExistByLogoID(ctx, logo.ID)
+		if err != nil {
+			return err
+		}
+
+		if facExist || specExist {
+			return errors.Conflict("Logo is still used by specifications or facilities")
 		}
 
 		return txRepo.Delete(ctx, logo)
