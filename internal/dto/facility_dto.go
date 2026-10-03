@@ -12,19 +12,19 @@ type (
 	}
 
 	FacilityResponse struct {
-		ID          uint      `json:"id"`
-		Title       string    `json:"title"`
-		Description string    `json:"description"`
-		Logo        string    `json:"logo"`
-		SortOrder   int       `json:"sort_order"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"updated_at"`
+		ID          uint         `json:"id"`
+		Title       string       `json:"title"`
+		Description string       `json:"description"`
+		Logo        LogoResponse `json:"logo"`
+		SortOrder   int          `json:"sort_order"`
+		CreatedAt   time.Time    `json:"created_at"`
+		UpdatedAt   time.Time    `json:"updated_at"`
 	}
 
 	FacilityRequest struct {
 		Title       string `json:"title" form:"title" binding:"required"`
 		Description string `json:"description" form:"description" binding:"required"`
-		Logo        string `json:"logo" form:"logo" binding:"required"`
+		LogoID      uint   `json:"logo_id" binding:"required,gt=0"`
 		SortOrder   *int   `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
 	}
 )

@@ -25,7 +25,7 @@ func (r *FacilityRepository) GetAll(ctx context.Context, query dto.FacilityQuery
 	var facilities []model.Facility
 	var total int64
 
-	db := r.db.WithContext(ctx).Model(&model.Facility{})
+	db := r.db.WithContext(ctx).Preload("Logo").Model(&model.Facility{})
 
 	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -47,7 +47,7 @@ func (r *FacilityRepository) GetAll(ctx context.Context, query dto.FacilityQuery
 func (r *FacilityRepository) GetByID(ctx context.Context, id uint) (*model.Facility, error) {
 	var facility model.Facility
 
-	if err := r.db.WithContext(ctx).First(&facility, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Logo").First(&facility, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
