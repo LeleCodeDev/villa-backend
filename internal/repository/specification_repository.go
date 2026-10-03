@@ -25,7 +25,7 @@ func (r *SpecificationRepository) GetAll(ctx context.Context, query dto.Specific
 	var specifications []model.Specification
 	var total int64
 
-	db := r.db.WithContext(ctx).Model(&model.Specification{})
+	db := r.db.WithContext(ctx).Preload("Logo").Model(&model.Specification{})
 
 	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -47,7 +47,7 @@ func (r *SpecificationRepository) GetAll(ctx context.Context, query dto.Specific
 func (r *SpecificationRepository) GetByID(ctx context.Context, id uint) (*model.Specification, error) {
 	var specification model.Specification
 
-	if err := r.db.WithContext(ctx).First(&specification, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Logo").First(&specification, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -68,6 +68,17 @@ func (r *SpecificationRepository) Update(ctx context.Context, specification *mod
 
 func (r *SpecificationRepository) Delete(ctx context.Context, specification *model.Specification) error {
 	return r.db.WithContext(ctx).Delete(specification).Error
+}
+
+func (r *SpecificationRepository) ExistByLogoID(ctx context.Context, logoID uint) (bool, error) {
+	var count int64
+
+	err := r.db.WithContext(ctx).
+		Model(&model.Specification{}).
+		Where("logo_id = ?", logoID).
+		Count(&count).Error
+
+	return count > 0, err
 }
 
 func (r *SpecificationRepository) GetMaxSortOrder(ctx context.Context) (int, error) {

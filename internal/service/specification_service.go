@@ -15,15 +15,18 @@ import (
 type SpecificationService struct {
 	txManager *repository.TxManager
 	repo      *repository.SpecificationRepository
+	logoRepo  *repository.LogoRepository
 }
 
 func NewSpecificationService(
 	txManager *repository.TxManager,
 	repo *repository.SpecificationRepository,
+	logoRepo *repository.LogoRepository,
 ) *SpecificationService {
 	return &SpecificationService{
 		txManager: txManager,
 		repo:      repo,
+		logoRepo:  logoRepo,
 	}
 }
 
@@ -58,6 +61,15 @@ func (s *SpecificationService) Create(ctx context.Context, req dto.Specification
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txLogoRepo := s.logoRepo.WithTx(tx)
+
+		logo, err := txLogoRepo.GetByID(ctx, req.LogoID)
+		if err != nil {
+			return err
+		}
+		if logo == nil {
+			return errors.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
+		}
 
 		var sortOrder int
 		if req.SortOrder == nil {
@@ -74,7 +86,7 @@ func (s *SpecificationService) Create(ctx context.Context, req dto.Specification
 			}
 		}
 
-		specification := mapper.ToSpecificationModel(req, sortOrder)
+		specification := mapper.ToSpecificationModel(req, sortOrder, logo)
 		if err := txRepo.Create(ctx, specification); err != nil {
 			return err
 		}
@@ -94,6 +106,7 @@ func (s *SpecificationService) Update(ctx context.Context, id uint, req dto.Spec
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txLogoRepo := s.logoRepo.WithTx(tx)
 
 		specification, err := txRepo.GetByID(ctx, id)
 		if err != nil {
@@ -101,6 +114,17 @@ func (s *SpecificationService) Update(ctx context.Context, id uint, req dto.Spec
 		}
 		if specification == nil {
 			return errors.NotFound(fmt.Sprintf("Specification not found with ID: %d", id))
+		}
+
+		logo := &specification.Logo
+		if specification.LogoID != req.LogoID {
+			logo, err = txLogoRepo.GetByID(ctx, req.LogoID)
+			if err != nil {
+				return err
+			}
+			if logo == nil {
+				return errors.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
+			}
 		}
 
 		oldOrder := specification.SortOrder
@@ -120,7 +144,7 @@ func (s *SpecificationService) Update(ctx context.Context, id uint, req dto.Spec
 			}
 		}
 
-		mapper.UpdateSpecificationModel(specification, req, *newOrder)
+		mapper.UpdateSpecificationModel(specification, req, logo, *newOrder)
 		if err := txRepo.Update(ctx, specification); err != nil {
 			return err
 		}

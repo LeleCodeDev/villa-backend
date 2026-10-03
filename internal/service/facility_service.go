@@ -15,15 +15,18 @@ import (
 type FacilityService struct {
 	txManager *repository.TxManager
 	repo      *repository.FacilityRepository
+	logoRepo  *repository.LogoRepository
 }
 
 func NewFacilityService(
 	txManager *repository.TxManager,
 	repo *repository.FacilityRepository,
+	logoRepo *repository.LogoRepository,
 ) *FacilityService {
 	return &FacilityService{
 		txManager: txManager,
 		repo:      repo,
+		logoRepo:  logoRepo,
 	}
 }
 
@@ -58,6 +61,15 @@ func (s *FacilityService) Create(ctx context.Context, req dto.FacilityRequest) (
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txLogoRepo := s.logoRepo.WithTx(tx)
+
+		logo, err := txLogoRepo.GetByID(ctx, req.LogoID)
+		if err != nil {
+			return err
+		}
+		if logo == nil {
+			return errors.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
+		}
 
 		var sortOrder int
 		if req.SortOrder == nil {
@@ -74,7 +86,7 @@ func (s *FacilityService) Create(ctx context.Context, req dto.FacilityRequest) (
 			}
 		}
 
-		facility := mapper.ToFacilityModel(req, sortOrder)
+		facility := mapper.ToFacilityModel(req, sortOrder, logo)
 		if err := txRepo.Create(ctx, facility); err != nil {
 			return err
 		}
@@ -94,6 +106,7 @@ func (s *FacilityService) Update(ctx context.Context, id uint, req dto.FacilityR
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txLogoRepo := s.logoRepo.WithTx(tx)
 
 		facility, err := txRepo.GetByID(ctx, id)
 		if err != nil {
@@ -101,6 +114,17 @@ func (s *FacilityService) Update(ctx context.Context, id uint, req dto.FacilityR
 		}
 		if facility == nil {
 			return errors.NotFound(fmt.Sprintf("Facility not found with ID: %d", id))
+		}
+
+		logo := &facility.Logo
+		if facility.LogoID != req.LogoID {
+			logo, err = txLogoRepo.GetByID(ctx, req.LogoID)
+			if err != nil {
+				return err
+			}
+			if logo == nil {
+				return errors.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
+			}
 		}
 
 		oldOrder := facility.SortOrder
@@ -120,7 +144,7 @@ func (s *FacilityService) Update(ctx context.Context, id uint, req dto.FacilityR
 			}
 		}
 
-		mapper.UpdateFacilityModel(facility, req, *newOrder)
+		mapper.UpdateFacilityModel(facility, req, logo, *newOrder)
 		if err := txRepo.Update(ctx, facility); err != nil {
 			return err
 		}

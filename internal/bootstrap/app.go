@@ -35,6 +35,7 @@ type App struct {
 	SpecificationGalleryHandler *handler.SpecificationGalleryHandler
 	AddonHandler                *handler.AddonHandler
 	AddonListHandler            *handler.AddonListHandler
+	LogoHandler                 *handler.LogoHandler
 }
 
 func NewApp() *App {
@@ -58,6 +59,7 @@ func NewApp() *App {
 	specificationGalleryRepo := repository.NewSpecificationGalleryRepository(db)
 	addonListRepo := repository.NewAddonListRepository(db)
 	addonRepo := repository.NewAddonRepository(db)
+	logoRepo := repository.NewLogoRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -68,11 +70,12 @@ func NewApp() *App {
 	villaPackageListService := service.NewVillaPackageListService(txManager, villaPackageListRepo, villaPackageRepo)
 	villaPackageService := service.NewVillaPackageService(txManager, villaPackageRepo, villaPackageListRepo)
 	pricelistService := service.NewPricelistService(txManager, pricelistRepo)
-	facilityService := service.NewFacilityService(txManager, facilityRepo)
-	specificationService := service.NewSpecificationService(txManager, specificationRepo)
+	facilityService := service.NewFacilityService(txManager, facilityRepo, logoRepo)
+	specificationService := service.NewSpecificationService(txManager, specificationRepo, logoRepo)
 	specificationGalleryService := service.NewSpecificationGalleryService(txManager, specificationGalleryRepo)
 	addonListService := service.NewAddonListService(txManager, addonListRepo, addonRepo)
 	addonService := service.NewAddonService(txManager, addonRepo, addonListRepo)
+	logoService := service.NewLogoService(txManager, logoRepo, specificationRepo, facilityRepo)
 
 	app := &App{
 		Router:                      r,
@@ -93,6 +96,7 @@ func NewApp() *App {
 		SpecificationGalleryHandler: handler.NewSpecificationGalleryHandler(specificationGalleryService),
 		AddonListHandler:            handler.NewAddonListHandler(addonListService),
 		AddonHandler:                handler.NewAddonHandler(addonService, addonListService),
+		LogoHandler:                 handler.NewLogoHandler(logoService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

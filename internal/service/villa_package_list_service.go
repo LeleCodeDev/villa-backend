@@ -130,12 +130,15 @@ func (s *VillaPackageListService) Update(ctx context.Context, id uint, req dto.V
 			return errors.NotFound(fmt.Sprintf("Villa package list not found with ID: %d", id))
 		}
 
-		villaPackage, err := txVillaPackageRepo.GetByID(ctx, req.VillaPackageID)
-		if err != nil {
-			return err
-		}
-		if villaPackage == nil {
-			return errors.NotFound(fmt.Sprintf("Villa package not found with ID : %d", req.VillaPackageID))
+		villaPackage := &villaPackageList.VillaPackage
+		if req.VillaPackageID != villaPackageList.VillaPackageID {
+			villaPackage, err = txVillaPackageRepo.GetByID(ctx, req.VillaPackageID)
+			if err != nil {
+				return err
+			}
+			if villaPackage == nil {
+				return errors.NotFound(fmt.Sprintf("Villa package not found with ID : %d", req.VillaPackageID))
+			}
 		}
 
 		oldOrder := villaPackageList.SortOrder

@@ -10,25 +10,26 @@ func ToFacilityResponse(facility *model.Facility) dto.FacilityResponse {
 		ID:          facility.ID,
 		Title:       facility.Title,
 		Description: facility.Description,
-		Logo:        facility.Logo,
+		Logo:        ToLogoResponse(&facility.Logo),
 		SortOrder:   facility.SortOrder,
 		CreatedAt:   facility.CreatedAt,
 		UpdatedAt:   facility.UpdatedAt,
 	}
 }
 
-func ToFacilityModel(req dto.FacilityRequest, sortOrder int) *model.Facility {
+func ToFacilityModel(req dto.FacilityRequest, sortOrder int, logo *model.Logo) *model.Facility {
 	return &model.Facility{
 		Title:       req.Title,
 		Description: req.Description,
-		Logo:        req.Logo,
+		Logo:        *logo,
 		SortOrder:   sortOrder,
 	}
 }
 
-func UpdateFacilityModel(facility *model.Facility, req dto.FacilityRequest, sortOrder int) {
+func UpdateFacilityModel(facility *model.Facility, req dto.FacilityRequest, logo *model.Logo, sortOrder int) {
 	facility.Title = req.Title
 	facility.Description = req.Description
-	facility.Logo = req.Logo
+	facility.LogoID = req.LogoID
+	facility.Logo = *logo
 	facility.SortOrder = sortOrder
 }

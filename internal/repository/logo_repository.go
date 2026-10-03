@@ -17,6 +17,10 @@ func NewLogoRepository(db *gorm.DB) *LogoRepository {
 	return &LogoRepository{db: db}
 }
 
+func (r *LogoRepository) WithTx(tx *gorm.DB) *LogoRepository {
+	return &LogoRepository{db: tx}
+}
+
 func (r *LogoRepository) GetAll(ctx context.Context, query dto.LogoQuery) ([]model.Logo, int64, error) {
 	var logos []model.Logo
 	var total int64
