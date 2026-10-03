@@ -11,8 +11,8 @@ type (
 		Title       string    `json:"title"`
 		Logo        *string   `json:"logo"`
 		PhoneNumber string    `json:"phone_number"`
-		CreatedAt   time.Time `json:"createdAt"`
-		UpdatedAt   time.Time `json:"updatedAt"`
+		CreatedAt   time.Time `json:"created_at"`
+		UpdatedAt   time.Time `json:"updated_at"`
 	}
 
 	ApplicationRequest struct {

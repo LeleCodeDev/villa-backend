@@ -13,7 +13,7 @@ type (
 		Email     string         `json:"email"`
 		Phone     string         `json:"phone"`
 		Role      model.UserRole `json:"role"`
-		CreatedAt time.Time      `json:"createdAt"`
-		UpdatedAt time.Time      `json:"updatedAt"`
+		CreatedAt time.Time      `json:"created_at"`
+		UpdatedAt time.Time      `json:"updated_at"`
 	}
 )

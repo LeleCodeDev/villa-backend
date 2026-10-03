@@ -182,7 +182,7 @@ func (s *AddonListService) Delete(ctx context.Context, id uint) error {
 			return errors.NotFound(fmt.Sprintf("Addon list not found with ID: %d", id))
 		}
 
-		maxOrder, err := txRepo.GetMaxSortOrder(ctx, addonList.ID)
+		maxOrder, err := txRepo.GetMaxSortOrder(ctx, addonList.AddonID)
 		if err != nil {
 			return err
 		}

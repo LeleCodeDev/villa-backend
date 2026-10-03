@@ -24,7 +24,7 @@ type (
 		WeekendPrice     float64   `json:"weekend_price"`
 		LongWeekendPrice float64   `json:"long_weekend_price"`
 		HighSeasonPrice  float64   `json:"high_season_price"`
-		CreatedAt        time.Time `json:"createdAt"`
-		UpdatedAt        time.Time `json:"updatedAt"`
+		CreatedAt        time.Time `json:"created_at"`
+		UpdatedAt        time.Time `json:"updated_at"`
 	}
 )

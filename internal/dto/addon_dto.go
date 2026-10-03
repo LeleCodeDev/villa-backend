@@ -19,8 +19,8 @@ type (
 		Price       float64             `json:"price"`
 		Lists       []AddonListResponse `json:"lists"`
 		SortOrder   int                 `json:"sort_order"`
-		CreatedAt   time.Time           `json:"createdAt"`
-		UpdatedAt   time.Time           `json:"updatedAt"`
+		CreatedAt   time.Time           `json:"created_at"`
+		UpdatedAt   time.Time           `json:"updated_at"`
 	}
 
 	AddonRequest struct {

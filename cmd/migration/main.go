@@ -33,6 +33,7 @@ func main() {
 		&model.VillaPackageList{},
 		&model.Reason{},
 		&model.RentalOption{},
+		&model.Logo{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {

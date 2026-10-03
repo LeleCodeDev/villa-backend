@@ -11,8 +11,8 @@ type (
 		Image1    *string   `json:"image1"`
 		Image2    *string   `json:"image2"`
 		Image3    *string   `json:"image3"`
-		CreatedAt time.Time `json:"createdAt"`
-		UpdatedAt time.Time `json:"updatedAt"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
 	}
 
 	SpecificationGalleryRequest struct {

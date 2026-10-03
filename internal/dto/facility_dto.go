@@ -17,8 +17,8 @@ type (
 		Description string    `json:"description"`
 		Logo        string    `json:"logo"`
 		SortOrder   int       `json:"sort_order"`
-		CreatedAt   time.Time `json:"createdAt"`
-		UpdatedAt   time.Time `json:"updatedAt"`
+		CreatedAt   time.Time `json:"created_at"`
+		UpdatedAt   time.Time `json:"updated_at"`
 	}
 
 	FacilityRequest struct {
