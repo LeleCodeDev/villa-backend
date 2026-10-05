@@ -62,6 +62,9 @@ func (a *App) RegisterRoute() {
 
 		// Logo
 		public.GET("/logos", a.LogoHandler.GetAllLogos)
+
+		// Message
+		public.POST("/messages", a.MessageHandler.CreateMessage)
 	}
 
 	authenticated := api.Group("")
@@ -147,10 +150,14 @@ func (a *App) RegisterRoute() {
 		admin.PUT("/addon-lists/:id", a.AddonListHandler.UpdateAddonList)
 		admin.DELETE("/addon-lists/:id", a.AddonListHandler.DeleteAddonList)
 
-		// Addon
+		// Logo
 		admin.GET("/logos/:id", a.LogoHandler.GetLogoByID)
 		admin.POST("/logos", a.LogoHandler.CreateLogo)
 		admin.PUT("/logos/:id", a.LogoHandler.UpdateLogo)
 		admin.DELETE("/logos/:id", a.LogoHandler.DeleteLogo)
+
+		// Message
+		admin.GET("/messages", a.MessageHandler.GetAllMessages)
+		admin.GET("/messages/:id", a.MessageHandler.GetMessageByID)
 	}
 }
