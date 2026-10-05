@@ -61,11 +61,3 @@ func (r *MessageRepository) GetByID(ctx context.Context, id uint) (*model.Messag
 func (r *MessageRepository) Create(ctx context.Context, message *model.Message) error {
 	return r.db.WithContext(ctx).Create(message).Error
 }
-
-func (r *MessageRepository) Update(ctx context.Context, message *model.Message) error {
-	return r.db.WithContext(ctx).Save(message).Error
-}
-
-func (r *MessageRepository) Delete(ctx context.Context, message *model.Message) error {
-	return r.db.WithContext(ctx).Delete(message).Error
-}
