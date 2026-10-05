@@ -64,7 +64,6 @@ func (a *App) RegisterRoute() {
 		public.GET("/logos", a.LogoHandler.GetAllLogos)
 
 		// Message
-		public.GET("/messages", a.MessageHandler.GetAllMessages)
 		public.POST("/messages", a.MessageHandler.CreateMessage)
 	}
 
@@ -158,6 +157,7 @@ func (a *App) RegisterRoute() {
 		admin.DELETE("/logos/:id", a.LogoHandler.DeleteLogo)
 
 		// Message
+		admin.GET("/messages", a.MessageHandler.GetAllMessages)
 		admin.GET("/messages/:id", a.MessageHandler.GetMessageByID)
 	}
 }
