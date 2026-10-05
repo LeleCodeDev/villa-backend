@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
+
 	"gorm.io/gorm"
 )
 
@@ -65,7 +66,7 @@ func (s *VillaPackageService) GetByID(ctx context.Context, id uint) (dto.VillaPa
 		return dto.VillaPackageResponse{}, err
 	}
 	if villaPackage == nil {
-		return dto.VillaPackageResponse{}, errors.NotFound(fmt.Sprintf("Villa package not found with ID: %d", id))
+		return dto.VillaPackageResponse{}, appError.NotFound(fmt.Sprintf("Villa package not found with ID: %d", id))
 	}
 
 	lists, err := s.listRepo.GetAllByVillaPackageID(ctx, villaPackage.ID)
@@ -123,7 +124,7 @@ func (s *VillaPackageService) Update(ctx context.Context, id uint, req dto.Villa
 			return err
 		}
 		if villaPackage == nil {
-			return errors.NotFound(fmt.Sprintf("Villa package not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Villa package not found with ID: %d", id))
 		}
 
 		oldOrder := villaPackage.SortOrder
@@ -168,7 +169,7 @@ func (s *VillaPackageService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if villaPackage == nil {
-			return errors.NotFound(fmt.Sprintf("Villa package not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Villa package not found with ID: %d", id))
 		}
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)

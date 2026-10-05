@@ -1,11 +1,12 @@
+// Package jwt
 package jwt
 
 import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/config"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
 )
 
 func GenerateToken(userID uint) (string, error) {
@@ -20,7 +21,7 @@ func GenerateToken(userID uint) (string, error) {
 func ExtractToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.Unauthorized("Invalid signind method!")
+			return nil, appError.Unauthorized("Invalid signind method!")
 		}
 		return []byte(config.Env.JWTSecret), nil
 	})
@@ -30,7 +31,7 @@ func ExtractToken(tokenString string) (jwt.MapClaims, error) {
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, errors.Unauthorized("Invalid token claims!")
+		return nil, appError.Unauthorized("Invalid token claims!")
 	}
 
 	return claims, nil
@@ -39,7 +40,7 @@ func ExtractToken(tokenString string) (jwt.MapClaims, error) {
 func ExtractUserID(claims jwt.MapClaims) (uint, error) {
 	userID, ok := claims["user_id"].(float64)
 	if !ok {
-		return 0, errors.Unauthorized("Invalid user id in token!")
+		return 0, appError.Unauthorized("Invalid user id in token!")
 	}
 
 	return uint(userID), nil

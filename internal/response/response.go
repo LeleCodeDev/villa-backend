@@ -1,3 +1,4 @@
+// Package response
 package response
 
 import (
@@ -5,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 )
 
 type Response[T any] struct {
@@ -56,7 +57,7 @@ func Error(c *gin.Context, code int, message string, err any) {
 }
 
 func HandleServiceError(c *gin.Context, err error) {
-	if serviceError, ok := err.(*errors.ServiceError); ok {
+	if serviceError, ok := err.(*appError.ServiceError); ok {
 		Error(c, serviceError.StatusCode, serviceError.Message, nil)
 		return
 	}
@@ -66,7 +67,7 @@ func HandleServiceError(c *gin.Context, err error) {
 
 func HandleValidationError(c *gin.Context, err error) {
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
-		Error(c, http.StatusBadRequest, "Validation failed!", errors.GetValidationError(validationErrors))
+		Error(c, http.StatusBadRequest, "Validation failed!", appError.GetValidationError(validationErrors))
 		return
 	}
 

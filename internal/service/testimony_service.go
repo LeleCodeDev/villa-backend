@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
+
 	"gorm.io/gorm"
 )
 
@@ -47,7 +48,7 @@ func (s *TestimonyService) GetByID(ctx context.Context, id uint) (dto.TestimonyR
 		return dto.TestimonyResponse{}, err
 	}
 	if testimony == nil {
-		return dto.TestimonyResponse{}, errors.NotFound(fmt.Sprintf("Testimony not found with ID : %d", id))
+		return dto.TestimonyResponse{}, appError.NotFound(fmt.Sprintf("Testimony not found with ID : %d", id))
 	}
 
 	return mapper.ToTestimonyResponse(testimony), nil
@@ -100,7 +101,7 @@ func (s *TestimonyService) Update(ctx context.Context, req dto.TestimonyRequest,
 			return err
 		}
 		if testimony == nil {
-			return errors.NotFound(fmt.Sprintf("Testimony not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Testimony not found with ID: %d", id))
 		}
 
 		oldOrder := testimony.SortOrder
@@ -144,7 +145,7 @@ func (s *TestimonyService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if testimony == nil {
-			return errors.NotFound(fmt.Sprintf("Testimony not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Testimony not found with ID: %d", id))
 		}
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)

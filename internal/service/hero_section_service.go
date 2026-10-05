@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
+
 	"gorm.io/gorm"
 )
 
@@ -32,7 +33,7 @@ func (s *HeroSectionService) Get(ctx context.Context) (dto.HeroSectionResponse, 
 		return dto.HeroSectionResponse{}, err
 	}
 	if heroSection == nil {
-		return dto.HeroSectionResponse{}, errors.NotFound("Hero section data not found!")
+		return dto.HeroSectionResponse{}, appError.NotFound("Hero section data not found!")
 	}
 
 	return mapper.ToHeroSectionResponse(heroSection), nil
@@ -49,7 +50,7 @@ func (s *HeroSectionService) Create(ctx context.Context, req dto.HeroSectionRequ
 			return err
 		}
 		if exist {
-			return errors.AlreadyExist("Hero section data already exist!")
+			return appError.AlreadyExist("Hero section data already exist!")
 		}
 
 		heroSection := mapper.ToHeroSectionModel(req)
@@ -78,7 +79,7 @@ func (s *HeroSectionService) Update(ctx context.Context, req dto.HeroSectionRequ
 			return err
 		}
 		if heroSection == nil {
-			return errors.NotFound("Hero section data not found!")
+			return appError.NotFound("Hero section data not found!")
 		}
 
 		mapper.UpdateHeroSectionModel(heroSection, req)
@@ -105,7 +106,7 @@ func (s *HeroSectionService) Delete(ctx context.Context) error {
 			return err
 		}
 		if heroSection == nil {
-			return errors.NotFound("Hero section data not found!")
+			return appError.NotFound("Hero section data not found!")
 		}
 
 		return txRepo.Delete(ctx, heroSection)

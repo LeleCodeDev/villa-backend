@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
+	"github.com/lelecodedev/villa-backend/internal/image"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
+
 	"gorm.io/gorm"
 )
 
@@ -53,7 +55,7 @@ func (s *LogoService) GetByID(ctx context.Context, id uint) (dto.LogoResponse, e
 		return dto.LogoResponse{}, err
 	}
 	if logo == nil {
-		return dto.LogoResponse{}, errors.NotFound(fmt.Sprintf("Logo not found with ID: %d", id))
+		return dto.LogoResponse{}, appError.NotFound(fmt.Sprintf("Logo not found with ID: %d", id))
 	}
 
 	return mapper.ToLogoResponse(logo), nil
@@ -65,7 +67,12 @@ func (s *LogoService) Create(ctx context.Context, req dto.LogoRequest) (dto.Logo
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
-		logo := mapper.ToLogoModel(req)
+		imagePath, err := image.SaveImage("uploads/logos", req.Image, image.DefaultOptions())
+		if err != nil {
+			return err
+		}
+
+		logo := mapper.ToLogoModel(imagePath)
 		if err := txRepo.Create(ctx, logo); err != nil {
 			return err
 		}
@@ -91,10 +98,22 @@ func (s *LogoService) Update(ctx context.Context, id uint, req dto.LogoRequest) 
 			return err
 		}
 		if logo == nil {
-			return errors.NotFound(fmt.Sprintf("Logo not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Logo not found with ID: %d", id))
 		}
 
-		mapper.UpdateLogoModel(logo, req)
+		imagePath := logo.Image
+		if req.Image != nil {
+			image.DeleteImage(logo.Image)
+
+			path, err := image.SaveImage("uploads/logos", req.Image, image.DefaultOptions())
+			if err != nil {
+				return err
+			}
+
+			imagePath = path
+		}
+
+		mapper.UpdateLogoModel(logo, imagePath)
 		if err := txRepo.Update(ctx, logo); err != nil {
 			return err
 		}
@@ -120,7 +139,7 @@ func (s *LogoService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if logo == nil {
-			return errors.NotFound(fmt.Sprintf("Logo not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Logo not found with ID: %d", id))
 		}
 
 		specExist, err := txSpecRepo.ExistByLogoID(ctx, logo.ID)
@@ -134,7 +153,7 @@ func (s *LogoService) Delete(ctx context.Context, id uint) error {
 		}
 
 		if facExist || specExist {
-			return errors.Conflict("Logo is still used by specifications or facilities")
+			return appError.Conflict("Logo is still used by specifications or facilities")
 		}
 
 		return txRepo.Delete(ctx, logo)

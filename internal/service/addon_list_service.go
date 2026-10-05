@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -64,7 +64,7 @@ func (s *AddonListService) GetByID(ctx context.Context, id uint) (dto.AddonListR
 		return dto.AddonListResponse{}, err
 	}
 	if addonList == nil {
-		return dto.AddonListResponse{}, errors.NotFound(fmt.Sprintf("Addon list not found with ID: %d", id))
+		return dto.AddonListResponse{}, appError.NotFound(fmt.Sprintf("Addon list not found with ID: %d", id))
 	}
 
 	return mapper.ToAddonListResponse(addonList), nil
@@ -82,7 +82,7 @@ func (s *AddonListService) Create(ctx context.Context, req dto.AddonListRequest)
 			return err
 		}
 		if addon == nil {
-			return errors.NotFound(fmt.Sprintf("Addon not found with ID : %d", req.AddonID))
+			return appError.NotFound(fmt.Sprintf("Addon not found with ID : %d", req.AddonID))
 		}
 
 		var sortOrder int
@@ -127,7 +127,7 @@ func (s *AddonListService) Update(ctx context.Context, id uint, req dto.AddonLis
 			return err
 		}
 		if addonList == nil {
-			return errors.NotFound(fmt.Sprintf("Addon list not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Addon list not found with ID: %d", id))
 		}
 
 		addon := &addonList.Addon
@@ -137,7 +137,7 @@ func (s *AddonListService) Update(ctx context.Context, id uint, req dto.AddonLis
 				return err
 			}
 			if addon == nil {
-				return errors.NotFound(fmt.Sprintf("Addon not found with ID : %d", req.AddonID))
+				return appError.NotFound(fmt.Sprintf("Addon not found with ID : %d", req.AddonID))
 			}
 		}
 
@@ -182,7 +182,7 @@ func (s *AddonListService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if addonList == nil {
-			return errors.NotFound(fmt.Sprintf("Addon list not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Addon list not found with ID: %d", id))
 		}
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx, addonList.AddonID)

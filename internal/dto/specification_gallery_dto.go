@@ -16,8 +16,8 @@ type (
 	}
 
 	SpecificationGalleryRequest struct {
-		Image1 *multipart.FileHeader `form:"image1" binding:"omitempty"`
-		Image2 *multipart.FileHeader `form:"image2" binding:"omitempty"`
-		Image3 *multipart.FileHeader `form:"image3" binding:"omitempty"`
+		Image1 *multipart.FileHeader `json:"image1" form:"image1" binding:"omitempty"`
+		Image2 *multipart.FileHeader `json:"image2" form:"image2" binding:"omitempty"`
+		Image3 *multipart.FileHeader `json:"image3" form:"image3" binding:"omitempty"`
 	}
 )

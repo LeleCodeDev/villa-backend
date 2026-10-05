@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -65,7 +65,7 @@ func (s *AddonService) GetByID(ctx context.Context, id uint) (dto.AddonResponse,
 		return dto.AddonResponse{}, err
 	}
 	if addon == nil {
-		return dto.AddonResponse{}, errors.NotFound(fmt.Sprintf("Addon not found with ID : %d", id))
+		return dto.AddonResponse{}, appError.NotFound(fmt.Sprintf("Addon not found with ID : %d", id))
 	}
 
 	lists, err := s.listRepo.GetAllByAddonID(ctx, addon.ID)
@@ -123,7 +123,7 @@ func (s *AddonService) Update(ctx context.Context, id uint, req dto.AddonRequest
 			return err
 		}
 		if addon == nil {
-			return errors.NotFound(fmt.Sprintf("Addon not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Addon not found with ID: %d", id))
 		}
 
 		oldOrder := addon.SortOrder
@@ -168,7 +168,7 @@ func (s *AddonService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if addon == nil {
-			return errors.NotFound(fmt.Sprintf("Addon not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Addon not found with ID: %d", id))
 		}
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)

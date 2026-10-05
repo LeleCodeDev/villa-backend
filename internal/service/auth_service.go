@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
-	"github.com/lelecodedev/villa-backend/pkg/jwt"
+
+	"github.com/lelecodedev/villa-backend/internal/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -33,7 +34,7 @@ func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (dt
 			return err
 		}
 		if exist {
-			return errors.AlreadyExist("User email already exist!")
+			return appError.AlreadyExist("User email already exist!")
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -67,11 +68,11 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (dto.Auth
 		return dto.AuthResponse{}, err
 	}
 	if user == nil {
-		return dto.AuthResponse{}, errors.Unauthorized("Incorrect email or password!")
+		return dto.AuthResponse{}, appError.Unauthorized("Incorrect email or password!")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return dto.AuthResponse{}, errors.Unauthorized("Incorrect email or password!")
+		return dto.AuthResponse{}, appError.Unauthorized("Incorrect email or password!")
 	}
 
 	token, err := jwt.GenerateToken(user.ID)

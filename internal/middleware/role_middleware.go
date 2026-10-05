@@ -1,3 +1,4 @@
+// Package middleware
 package middleware
 
 import (
@@ -6,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lelecodedev/villa-backend/internal/model"
-	"github.com/lelecodedev/villa-backend/pkg/response"
+	"github.com/lelecodedev/villa-backend/internal/response"
 )
 
 func RoleMiddleware(roles ...model.UserRole) gin.HandlerFunc {

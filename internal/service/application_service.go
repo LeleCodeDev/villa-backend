@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
-	"github.com/lelecodedev/villa-backend/pkg/image"
+	"github.com/lelecodedev/villa-backend/internal/image"
 	"gorm.io/gorm"
 )
 
@@ -33,7 +33,7 @@ func (s *ApplicationService) Get(ctx context.Context) (dto.ApplicationResponse, 
 		return dto.ApplicationResponse{}, err
 	}
 	if application == nil {
-		return dto.ApplicationResponse{}, errors.NotFound("Application data not found!")
+		return dto.ApplicationResponse{}, appError.NotFound("Application data not found!")
 	}
 
 	return mapper.ToApplicationResponse(application), nil
@@ -50,7 +50,7 @@ func (s *ApplicationService) Create(ctx context.Context, req dto.ApplicationRequ
 			return err
 		}
 		if exist {
-			return errors.AlreadyExist("Application data already exist!")
+			return appError.AlreadyExist("Application data already exist!")
 		}
 
 		var imagePath *string
@@ -90,7 +90,7 @@ func (s *ApplicationService) Update(ctx context.Context, req dto.ApplicationRequ
 			return err
 		}
 		if application == nil {
-			return errors.NotFound("Application data not found!")
+			return appError.NotFound("Application data not found!")
 		}
 
 		imagepath := application.Logo
@@ -132,7 +132,7 @@ func (s *ApplicationService) Delete(ctx context.Context) error {
 			return err
 		}
 		if application == nil {
-			return errors.NotFound("Application data not found!")
+			return appError.NotFound("Application data not found!")
 		}
 
 		return txRepo.Delete(ctx, application)

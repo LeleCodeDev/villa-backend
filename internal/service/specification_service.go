@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
+
 	"gorm.io/gorm"
 )
 
@@ -50,7 +51,7 @@ func (s *SpecificationService) GetByID(ctx context.Context, id uint) (dto.Specif
 		return dto.SpecificationResponse{}, err
 	}
 	if specification == nil {
-		return dto.SpecificationResponse{}, errors.NotFound(fmt.Sprintf("Specification not found with ID: %d", id))
+		return dto.SpecificationResponse{}, appError.NotFound(fmt.Sprintf("Specification not found with ID: %d", id))
 	}
 
 	return mapper.ToSpecificationResponse(specification), nil
@@ -68,7 +69,7 @@ func (s *SpecificationService) Create(ctx context.Context, req dto.Specification
 			return err
 		}
 		if logo == nil {
-			return errors.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
+			return appError.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
 		}
 
 		var sortOrder int
@@ -113,7 +114,7 @@ func (s *SpecificationService) Update(ctx context.Context, id uint, req dto.Spec
 			return err
 		}
 		if specification == nil {
-			return errors.NotFound(fmt.Sprintf("Specification not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Specification not found with ID: %d", id))
 		}
 
 		logo := &specification.Logo
@@ -123,7 +124,7 @@ func (s *SpecificationService) Update(ctx context.Context, id uint, req dto.Spec
 				return err
 			}
 			if logo == nil {
-				return errors.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
+				return appError.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
 			}
 		}
 
@@ -168,7 +169,7 @@ func (s *SpecificationService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if specification == nil {
-			return errors.NotFound(fmt.Sprintf("Specification not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Specification not found with ID: %d", id))
 		}
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)

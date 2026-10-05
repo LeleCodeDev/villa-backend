@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
-	"github.com/lelecodedev/villa-backend/pkg/image"
+
+	"github.com/lelecodedev/villa-backend/internal/image"
 	"gorm.io/gorm"
 )
 
@@ -48,7 +49,7 @@ func (s *GalleryService) GetByID(ctx context.Context, id uint) (dto.GalleryRespo
 		return dto.GalleryResponse{}, err
 	}
 	if gallery == nil {
-		return dto.GalleryResponse{}, errors.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
+		return dto.GalleryResponse{}, appError.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
 	}
 
 	return mapper.ToGalleryResponse(gallery), nil
@@ -112,7 +113,7 @@ func (s *GalleryService) Update(ctx context.Context, req dto.GalleryRequest, id 
 			return err
 		}
 		if gallery == nil {
-			return errors.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
 		}
 
 		oldOrder := gallery.SortOrder
@@ -170,7 +171,7 @@ func (s *GalleryService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if gallery == nil {
-			return errors.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
 		}
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)

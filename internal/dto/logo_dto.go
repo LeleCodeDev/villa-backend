@@ -1,6 +1,9 @@
 package dto
 
-import "time"
+import (
+	"mime/multipart"
+	"time"
+)
 
 type (
 	LogoQuery struct {
@@ -11,13 +14,13 @@ type (
 
 	LogoResponse struct {
 		ID        uint      `json:"id"`
-		Text      string    `json:"text"`
+		Image     string    `json:"image"`
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 	}
 
 	LogoRequest struct {
-		Text string `json:"text" form:"text" binding:"required"`
+		Image *multipart.FileHeader `json:"image" form:"image" binding:"required"`
 	}
 )
 

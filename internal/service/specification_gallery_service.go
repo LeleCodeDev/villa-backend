@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
-	"github.com/lelecodedev/villa-backend/pkg/image"
+
+	"github.com/lelecodedev/villa-backend/internal/image"
 	"gorm.io/gorm"
 )
 
@@ -33,7 +34,7 @@ func (s *SpecificationGalleryService) Get(ctx context.Context) (dto.Specificatio
 		return dto.SpecificationGalleryResponse{}, err
 	}
 	if specificationGallery == nil {
-		return dto.SpecificationGalleryResponse{}, errors.NotFound("Specification gallery data not found!")
+		return dto.SpecificationGalleryResponse{}, appError.NotFound("Specification gallery data not found!")
 	}
 
 	return mapper.ToSpecificationGalleryResponse(specificationGallery), nil
@@ -50,7 +51,7 @@ func (s *SpecificationGalleryService) Create(ctx context.Context, req dto.Specif
 			return err
 		}
 		if exist {
-			return errors.AlreadyExist("Specification gallery data already exist!")
+			return appError.AlreadyExist("Specification gallery data already exist!")
 		}
 
 		var imagePath1 *string
@@ -112,7 +113,7 @@ func (s *SpecificationGalleryService) Update(ctx context.Context, req dto.Specif
 			return err
 		}
 		if specificationGallery == nil {
-			return errors.NotFound("Specification gallery data not found!")
+			return appError.NotFound("Specification gallery data not found!")
 		}
 
 		imagepath1 := specificationGallery.Image1
@@ -181,7 +182,7 @@ func (s *SpecificationGalleryService) Delete(ctx context.Context) error {
 			return err
 		}
 		if specificationGallery == nil {
-			return errors.NotFound("Specification gallery data not found!")
+			return appError.NotFound("Specification gallery data not found!")
 		}
 
 		if specificationGallery.Image1 != nil {
