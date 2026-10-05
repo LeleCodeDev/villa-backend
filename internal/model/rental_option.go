@@ -13,7 +13,7 @@ type RentalOption struct {
 	Description string  `gorm:"not null"`
 	RoomCount   int     `gorm:"not null"`
 	MaxCapacity int     `gorm:"not null"`
-	Order       int     `gorm:"not null"`
+	SortOrder   int     `gorm:"not null"`
 	Image       *string `gorm:"type:varchar(255)"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
