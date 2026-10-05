@@ -2,23 +2,17 @@
 package mapper
 
 import (
-	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/dto"
+	"github.com/lelecodedev/villa-backend/internal/image"
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
 func ToApplicationResponse(application *model.Application) dto.ApplicationResponse {
-	var imageURL *string
-	if application.Logo != nil {
-		url := config.Env.BaseURL + "/api/" + *application.Logo
-		imageURL = &url
-	}
-
 	return dto.ApplicationResponse{
 		ID:          application.ID,
 		Title:       application.Title,
 		PhoneNumber: application.PhoneNumber,
-		Logo:        imageURL,
+		Logo:        image.BuildURLPtr(application.Logo),
 		CreatedAt:   application.CreatedAt,
 		UpdatedAt:   application.UpdatedAt,
 	}

@@ -7,8 +7,8 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/service"
 	"github.com/lelecodedev/villa-backend/internal/util"
-	"github.com/lelecodedev/villa-backend/pkg/pagination"
-	"github.com/lelecodedev/villa-backend/pkg/response"
+	"github.com/lelecodedev/villa-backend/internal/pagination"
+	"github.com/lelecodedev/villa-backend/internal/response"
 )
 
 type GalleryHandler struct {

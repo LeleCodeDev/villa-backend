@@ -5,11 +5,12 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
+
 	"gorm.io/gorm"
 )
 
@@ -48,7 +49,7 @@ func (s *FaqService) GetByID(ctx context.Context, id uint) (dto.FaqResponse, err
 		return dto.FaqResponse{}, err
 	}
 	if faq == nil {
-		return dto.FaqResponse{}, errors.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
+		return dto.FaqResponse{}, appError.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
 	}
 
 	return mapper.ToFaqResponse(faq), nil
@@ -101,7 +102,7 @@ func (s *FaqService) Update(ctx context.Context, id uint, req dto.FaqRequest) (d
 			return err
 		}
 		if faq == nil {
-			return errors.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
 		}
 
 		oldOrder := faq.SortOrder
@@ -145,7 +146,7 @@ func (s *FaqService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if faq == nil {
-			return errors.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Faq not found with ID: %d", id))
 		}
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)

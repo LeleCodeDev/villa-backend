@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
+
 	"gorm.io/gorm"
 )
 
@@ -47,7 +48,7 @@ func (s *PricelistService) GetByID(ctx context.Context, id uint) (dto.PricelistR
 		return dto.PricelistResponse{}, err
 	}
 	if pricelist == nil {
-		return dto.PricelistResponse{}, errors.NotFound(fmt.Sprintf("Pricelist not found with ID: %d", id))
+		return dto.PricelistResponse{}, appError.NotFound(fmt.Sprintf("Pricelist not found with ID: %d", id))
 	}
 
 	return mapper.ToPricelistResponse(pricelist), nil
@@ -85,7 +86,7 @@ func (s *PricelistService) Update(ctx context.Context, id uint, req dto.Pricelis
 			return err
 		}
 		if pricelist == nil {
-			return errors.NotFound(fmt.Sprintf("Pricelist not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Pricelist not found with ID: %d", id))
 		}
 
 		mapper.UpdatePricelistModel(pricelist, req)
@@ -112,7 +113,7 @@ func (s *PricelistService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if pricelist == nil {
-			return errors.NotFound(fmt.Sprintf("Pricelist not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Pricelist not found with ID: %d", id))
 		}
 
 		return txRepo.Delete(ctx, pricelist)

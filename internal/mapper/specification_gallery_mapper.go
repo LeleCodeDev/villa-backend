@@ -1,33 +1,17 @@
 package mapper
 
 import (
-	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/dto"
+	"github.com/lelecodedev/villa-backend/internal/image"
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
 func ToSpecificationGalleryResponse(specificationGallery *model.SpecificationGallery) dto.SpecificationGalleryResponse {
-	var imageURL1 *string
-	var imageURL2 *string
-	var imageURL3 *string
-	if specificationGallery.Image1 != nil {
-		url := config.Env.BaseURL + "/api/" + *specificationGallery.Image1
-		imageURL1 = &url
-	}
-	if specificationGallery.Image2 != nil {
-		url := config.Env.BaseURL + "/api/" + *specificationGallery.Image2
-		imageURL2 = &url
-	}
-	if specificationGallery.Image3 != nil {
-		url := config.Env.BaseURL + "/api/" + *specificationGallery.Image3
-		imageURL3 = &url
-	}
-
 	return dto.SpecificationGalleryResponse{
 		ID:        specificationGallery.ID,
-		Image1:    imageURL1,
-		Image2:    imageURL2,
-		Image3:    imageURL3,
+		Image1:    image.BuildURLPtr(specificationGallery.Image1),
+		Image2:    image.BuildURLPtr(specificationGallery.Image2),
+		Image3:    image.BuildURLPtr(specificationGallery.Image3),
 		CreatedAt: specificationGallery.CreatedAt,
 		UpdatedAt: specificationGallery.UpdatedAt,
 	}

@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -50,7 +50,7 @@ func (s *FacilityService) GetByID(ctx context.Context, id uint) (dto.FacilityRes
 		return dto.FacilityResponse{}, err
 	}
 	if facility == nil {
-		return dto.FacilityResponse{}, errors.NotFound(fmt.Sprintf("Facility not found with ID: %d", id))
+		return dto.FacilityResponse{}, appError.NotFound(fmt.Sprintf("Facility not found with ID: %d", id))
 	}
 
 	return mapper.ToFacilityResponse(facility), nil
@@ -68,7 +68,7 @@ func (s *FacilityService) Create(ctx context.Context, req dto.FacilityRequest) (
 			return err
 		}
 		if logo == nil {
-			return errors.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
+			return appError.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
 		}
 
 		var sortOrder int
@@ -113,7 +113,7 @@ func (s *FacilityService) Update(ctx context.Context, id uint, req dto.FacilityR
 			return err
 		}
 		if facility == nil {
-			return errors.NotFound(fmt.Sprintf("Facility not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Facility not found with ID: %d", id))
 		}
 
 		logo := &facility.Logo
@@ -123,7 +123,7 @@ func (s *FacilityService) Update(ctx context.Context, id uint, req dto.FacilityR
 				return err
 			}
 			if logo == nil {
-				return errors.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
+				return appError.NotFound(fmt.Sprintf("Logo not found with ID : %d", req.LogoID))
 			}
 		}
 
@@ -168,7 +168,7 @@ func (s *FacilityService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if facility == nil {
-			return errors.NotFound(fmt.Sprintf("Facility not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Facility not found with ID: %d", id))
 		}
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)

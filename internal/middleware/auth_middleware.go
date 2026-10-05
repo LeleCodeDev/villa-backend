@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lelecodedev/villa-backend/internal/jwt"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-	"github.com/lelecodedev/villa-backend/pkg/jwt"
-	"github.com/lelecodedev/villa-backend/pkg/response"
+	"github.com/lelecodedev/villa-backend/internal/response"
 )
 
 func extractToken(c *gin.Context) *string {

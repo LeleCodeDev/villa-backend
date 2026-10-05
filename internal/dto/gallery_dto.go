@@ -26,7 +26,7 @@ type (
 		Title       string                `json:"title" form:"title" binding:"required"`
 		Description string                `json:"description" form:"description" binding:"required"`
 		SortOrder   *int                  `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
-		Image       *multipart.FileHeader `form:"image" binding:"omitempty"`
+		Image       *multipart.FileHeader `json:"image" form:"image" binding:"omitempty"`
 	}
 )
 

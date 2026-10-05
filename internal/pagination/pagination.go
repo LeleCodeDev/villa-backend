@@ -4,7 +4,7 @@ package pagination
 import (
 	"math"
 
-	"github.com/lelecodedev/villa-backend/pkg/response"
+	"github.com/lelecodedev/villa-backend/internal/response"
 )
 
 func BuildPagination(page int, size int, total int64) response.PaginationData {

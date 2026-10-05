@@ -15,9 +15,8 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	_ "golang.org/x/image/webp"
-
-	"github.com/lelecodedev/villa-backend/pkg/errors"
 )
 
 type SaveOptions struct {
@@ -38,12 +37,12 @@ func DefaultOptions() SaveOptions {
 
 func validateImage(file *multipart.FileHeader, opts SaveOptions) (image.Image, error) {
 	if file.Size > opts.MaxSizeBytes {
-		return nil, errors.BadRequest(fmt.Sprintf("File must be under %d MB", opts.MaxSizeBytes/1024/1024))
+		return nil, appError.BadRequest(fmt.Sprintf("File must be under %d MB", opts.MaxSizeBytes/1024/1024))
 	}
 
 	ext := filepath.Ext(file.Filename)
 	if !slices.Contains(opts.AllowedExts, strings.TrimPrefix(ext, ".")) {
-		return nil, errors.BadRequest(fmt.Sprintf("File must be: %v", strings.Join(opts.AllowedExts, ", ")))
+		return nil, appError.BadRequest(fmt.Sprintf("File must be: %v", strings.Join(opts.AllowedExts, ", ")))
 	}
 
 	src, err := file.Open()
@@ -56,7 +55,7 @@ func validateImage(file *multipart.FileHeader, opts SaveOptions) (image.Image, e
 
 	img, _, err := image.Decode(limitedReader)
 	if err != nil {
-		return nil, errors.BadRequest("Uploaded file is not a valid image")
+		return nil, appError.BadRequest("Uploaded file is not a valid image")
 	}
 
 	return img, nil

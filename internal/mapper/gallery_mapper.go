@@ -1,23 +1,17 @@
 package mapper
 
 import (
-	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/dto"
+	"github.com/lelecodedev/villa-backend/internal/image"
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
 func ToGalleryResponse(gallery *model.Gallery) dto.GalleryResponse {
-	var imageURL *string
-	if gallery.Image != nil {
-		url := config.Env.BaseURL + "/api/" + *gallery.Image
-		imageURL = &url
-	}
-
 	return dto.GalleryResponse{
 		ID:          gallery.ID,
 		Title:       gallery.Title,
 		Description: gallery.Description,
-		Image:       imageURL,
+		Image:       image.BuildURLPtr(gallery.Image),
 		SortOrder:   gallery.SortOrder,
 		CreatedAt:   gallery.CreatedAt,
 		UpdatedAt:   gallery.UpdatedAt,

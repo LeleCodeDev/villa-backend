@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/service"
-	"github.com/lelecodedev/villa-backend/pkg/response"
+	"github.com/lelecodedev/villa-backend/internal/response"
 )
 
 type HeroSectionHandler struct {
