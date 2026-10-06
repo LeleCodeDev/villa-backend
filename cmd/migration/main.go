@@ -34,6 +34,8 @@ func main() {
 		&model.Reason{},
 		&model.RentalOption{},
 		&model.Logo{},
+		&model.Attraction{},
+		&model.Transport{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {

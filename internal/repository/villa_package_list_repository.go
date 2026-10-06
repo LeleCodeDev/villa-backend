@@ -72,7 +72,7 @@ func (r *VillaPackageListRepository) GetAllByVillaPackageIDWithQuery(ctx context
 func (r *VillaPackageListRepository) GetByID(ctx context.Context, id uint) (*model.VillaPackageList, error) {
 	var villaPackageList model.VillaPackageList
 
-	if err := r.db.WithContext(ctx).First(&villaPackageList, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("VillaPackage").First(&villaPackageList, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

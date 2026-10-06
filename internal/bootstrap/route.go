@@ -68,6 +68,12 @@ func (a *App) RegisterRoute() {
 
 		// Rental Option
 		public.GET("/rental-options", a.RentalOptionHandler.GetAllRentalOptions)
+
+		// Attraction
+		public.GET("/attractions", a.AttractionHandler.GetAllAttractions)
+
+		// Transport
+		public.GET("/transports", a.TransportHandler.GetAllTransports)
 	}
 
 	authenticated := api.Group("")
@@ -168,5 +174,18 @@ func (a *App) RegisterRoute() {
 		public.POST("/rental-options", a.RentalOptionHandler.CreateRentalOption)
 		public.PUT("/rental-options/:id", a.RentalOptionHandler.UpdateRentalOption)
 		public.DELETE("/rental-options/:id", a.RentalOptionHandler.DeleteRentalOption)
+
+		// Attraction
+		admin.GET("/attractions/:id", a.AttractionHandler.GetAttractionByID)
+		admin.POST("/attractions", a.AttractionHandler.CreateAttraction)
+		admin.PUT("/attractions/:id", a.AttractionHandler.UpdateAttraction)
+		admin.DELETE("/attractions/:id", a.AttractionHandler.DeleteAttraction)
+		admin.GET("/attractions/:id/transports", a.AttractionHandler.GetAllAttractionTransportsByID)
+
+		// Transport
+		admin.GET("/transports/:id", a.TransportHandler.GetTransportByID)
+		admin.POST("/transports", a.TransportHandler.CreateTransport)
+		admin.DELETE("/transports/:id", a.TransportHandler.DeleteTransport)
+		admin.PUT("/transports/:id", a.TransportHandler.UpdateTransport)
 	}
 }
