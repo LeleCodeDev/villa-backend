@@ -38,6 +38,8 @@ type App struct {
 	LogoHandler                 *handler.LogoHandler
 	MessageHandler              *handler.MessageHandler
 	RentalOptionHandler         *handler.RentalOptionHandler
+	AttractionHandler           *handler.AttractionHandler
+	TransportHandler            *handler.TransportHandler
 }
 
 func NewApp() *App {
@@ -64,6 +66,8 @@ func NewApp() *App {
 	logoRepo := repository.NewLogoRepository(db)
 	messageRepo := repository.NewMessageRepository(db)
 	rentalOptionRepo := repository.NewRentalOptionRepository(db)
+	attractionRepo := repository.NewAttractionRepository(db)
+	transportRepo := repository.NewTransportRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -82,6 +86,8 @@ func NewApp() *App {
 	logoService := service.NewLogoService(txManager, logoRepo, specificationRepo, facilityRepo)
 	messageService := service.NewMessageService(txManager, messageRepo)
 	rentalOptionService := service.NewRentalOptionService(txManager, rentalOptionRepo)
+	attractionService := service.NewAttractionService(txManager, attractionRepo, transportRepo)
+	transportService := service.NewTransportService(txManager, transportRepo, attractionRepo)
 
 	app := &App{
 		Router:                      r,
@@ -105,6 +111,8 @@ func NewApp() *App {
 		LogoHandler:                 handler.NewLogoHandler(logoService),
 		MessageHandler:              handler.NewMessageHandler(messageService),
 		RentalOptionHandler:         handler.NewRentalOptionHandler(rentalOptionService),
+		AttractionHandler:           handler.NewAttractionHandler(attractionService, transportService),
+		TransportHandler:            handler.NewTransportHandler(transportService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

@@ -72,7 +72,7 @@ func (r *AddonListRepository) GetAllByAddonIDWithQuery(ctx context.Context, addo
 func (r *AddonListRepository) GetByID(ctx context.Context, id uint) (*model.AddonList, error) {
 	var addonList model.AddonList
 
-	if err := r.db.WithContext(ctx).First(&addonList, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Addon").First(&addonList, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

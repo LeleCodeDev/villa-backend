@@ -72,7 +72,7 @@ func (r *TransportRepository) GetAllByAttractionIDWithQuery(ctx context.Context,
 func (r *TransportRepository) GetByID(ctx context.Context, id uint) (*model.Transport, error) {
 	var transport model.Transport
 
-	if err := r.db.WithContext(ctx).First(&transport, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Attraction").First(&transport, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
