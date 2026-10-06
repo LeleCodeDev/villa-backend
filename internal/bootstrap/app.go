@@ -37,6 +37,7 @@ type App struct {
 	AddonListHandler            *handler.AddonListHandler
 	LogoHandler                 *handler.LogoHandler
 	MessageHandler              *handler.MessageHandler
+	RentalOptionHandler         *handler.RentalOptionHandler
 }
 
 func NewApp() *App {
@@ -62,6 +63,7 @@ func NewApp() *App {
 	addonRepo := repository.NewAddonRepository(db)
 	logoRepo := repository.NewLogoRepository(db)
 	messageRepo := repository.NewMessageRepository(db)
+	rentalOptionRepo := repository.NewRentalOptionRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -79,6 +81,7 @@ func NewApp() *App {
 	addonService := service.NewAddonService(txManager, addonRepo, addonListRepo)
 	logoService := service.NewLogoService(txManager, logoRepo, specificationRepo, facilityRepo)
 	messageService := service.NewMessageService(txManager, messageRepo)
+	rentalOptionService := service.NewRentalOptionService(txManager, rentalOptionRepo)
 
 	app := &App{
 		Router:                      r,
@@ -101,6 +104,7 @@ func NewApp() *App {
 		AddonHandler:                handler.NewAddonHandler(addonService, addonListService),
 		LogoHandler:                 handler.NewLogoHandler(logoService),
 		MessageHandler:              handler.NewMessageHandler(messageService),
+		RentalOptionHandler:         handler.NewRentalOptionHandler(rentalOptionService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

@@ -65,6 +65,9 @@ func (a *App) RegisterRoute() {
 
 		// Message
 		public.POST("/messages", a.MessageHandler.CreateMessage)
+
+		// Rental Option
+		public.GET("/rental-options", a.RentalOptionHandler.GetAllRentalOptions)
 	}
 
 	authenticated := api.Group("")
@@ -159,5 +162,11 @@ func (a *App) RegisterRoute() {
 		// Message
 		admin.GET("/messages", a.MessageHandler.GetAllMessages)
 		admin.GET("/messages/:id", a.MessageHandler.GetMessageByID)
+
+		// Rental Option
+		public.GET("/rental-options/:id", a.RentalOptionHandler.GetRentalOptionByID)
+		public.POST("/rental-options", a.RentalOptionHandler.CreateRentalOption)
+		public.PUT("/rental-options/:id", a.RentalOptionHandler.UpdateRentalOption)
+		public.DELETE("/rental-options/:id", a.RentalOptionHandler.DeleteRentalOption)
 	}
 }
