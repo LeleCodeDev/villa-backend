@@ -14,6 +14,7 @@ type Transport struct {
 	Distance     string     `gorm:"not null"`
 	TimeRequired string     `gorm:"not null"`
 	SortOrder    int        `gorm:"not null"`
+	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }

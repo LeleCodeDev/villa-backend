@@ -13,6 +13,7 @@ type Attraction struct {
 	Price     float64 `gorm:"type:numeric(10,2)"`
 	SortOrder int     `gorm:"not null"`
 	Image     *string `gorm:"type:varchar(255)"`
+	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
