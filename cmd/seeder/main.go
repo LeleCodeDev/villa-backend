@@ -22,14 +22,14 @@ func main() {
 }
 
 func seedAdmin(db *gorm.DB) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin#1234"), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(config.Env.AdminPass), bcrypt.DefaultCost)
 	if err != nil {
 		panic("Failed to seed admin")
 	}
 
 	admin := &model.User{
 		Username: "Admin",
-		Email:    "admin@email.xyz",
+		Email:    config.Env.AdminEmail,
 		Password: string(hashedPassword),
 		Phone:    "00000000000",
 		Role:     model.RoleAdmin,

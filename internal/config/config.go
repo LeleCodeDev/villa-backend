@@ -9,14 +9,16 @@ import (
 )
 
 type Config struct {
-	Port      string
-	BaseURL   string
-	DBHost    string
-	DBPort    string
-	DBUser    string
-	DBPass    string
-	DBName    string
-	JWTSecret string
+	Port       string
+	BaseURL    string
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPass     string
+	DBName     string
+	JWTSecret  string
+	AdminEmail string
+	AdminPass  string
 }
 
 var Env *Config
@@ -27,14 +29,16 @@ func LoadConfig() {
 	}
 
 	config := &Config{
-		Port:      getEnv("PORT", "3000"),
-		DBHost:    getEnv("DB_HOST", "localhost"),
-		DBPort:    getEnv("DB_PORT", "3306"),
-		DBUser:    getEnv("DB_USER", "root"),
-		DBPass:    getEnv("DB_PASS", ""),
-		DBName:    getEnv("DB_NAME", "villa_aira"),
-		BaseURL:   getEnv("BASE_URL", "http://localhost:3000"),
-		JWTSecret: getEnv("JWT_SECRET", "SECRET"),
+		Port:       getEnv("PORT", "3000"),
+		DBHost:     getEnv("DB_HOST", "localhost"),
+		DBPort:     getEnv("DB_PORT", "3306"),
+		DBUser:     getEnv("DB_USER", "root"),
+		DBPass:     getEnv("DB_PASS", ""),
+		DBName:     getEnv("DB_NAME", "villa_aira"),
+		BaseURL:    getEnv("BASE_URL", "http://localhost:3000"),
+		JWTSecret:  getEnv("JWT_SECRET", "SECRET"),
+		AdminEmail: getEnv("ADMIN_EMAIL", "admin@admin.com"),
+		AdminPass:  getEnv("ADMIN_PASS", ""),
 	}
 
 	Env = config
