@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    user: root
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: "5432"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - .:/app
+      - /app/tmp
+      - go-mod-cache:/go/pkg/mod
+      - ./uploads:/app/uploads
+    depends_on: !reset []
+
+  migration:
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: "5432"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on: !reset []
+
+  seeder:
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: "5432"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on: !reset []
+
+  db:
+    profiles: ["disabled"]
+
+volumes:
+  go-mod-cache:

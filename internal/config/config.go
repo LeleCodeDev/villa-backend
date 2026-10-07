@@ -2,7 +2,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -24,18 +23,16 @@ type Config struct {
 var Env *Config
 
 func LoadConfig() {
-	if err := godotenv.Load(); err != nil {
-		panic(fmt.Sprintf("Failed to load environment %v", err.Error()))
-	}
+	_ = godotenv.Load()
 
 	config := &Config{
-		Port:       getEnv("PORT", "3000"),
+		Port:       getEnv("PORT", "8080"),
 		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "3306"),
-		DBUser:     getEnv("DB_USER", "root"),
+		DBPort:     getEnv("DB_PORT", "5432"),
+		DBUser:     getEnv("DB_USER", "postgres"),
 		DBPass:     getEnv("DB_PASS", ""),
 		DBName:     getEnv("DB_NAME", "villa_aira"),
-		BaseURL:    getEnv("BASE_URL", "http://localhost:3000"),
+		BaseURL:    getEnv("BASE_URL", "http://localhost:8080"),
 		JWTSecret:  getEnv("JWT_SECRET", "SECRET"),
 		AdminEmail: getEnv("ADMIN_EMAIL", "admin@admin.com"),
 		AdminPass:  getEnv("ADMIN_PASS", ""),
