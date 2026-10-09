@@ -7,9 +7,6 @@ import (
 )
 
 func (a *App) RegisterRoute() {
-	// health handler
-	a.Router.GET("/health", a.HealthHandler.CheckHealth)
-
 	api := a.Router.Group("/api")
 
 	api.Static("/uploads", "uploads")
@@ -22,6 +19,9 @@ func (a *App) RegisterRoute() {
 
 	public := api.Group("")
 	{
+		// Health
+		public.GET("/health", a.HealthHandler.CheckHealth)
+
 		// Hero Section
 		public.GET("/hero-section", a.HeroSectionHandler.GetHeroSection)
 
