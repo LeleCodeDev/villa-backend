@@ -12,7 +12,7 @@ type ReasonRepository struct {
 	db *gorm.DB
 }
 
-func NewReasonREpository(db *gorm.DB) *ReasonRepository {
+func NewReasonRepository(db *gorm.DB) *ReasonRepository {
 	return &ReasonRepository{
 		db: db,
 	}

@@ -75,6 +75,9 @@ func (a *App) RegisterRoute() {
 
 		// Transport
 		public.GET("/transports", a.TransportHandler.GetAllTransports)
+
+		// Reasons
+		public.GET("/reasons", a.ReasonHandler.GetAllReasons)
 	}
 
 	authenticated := api.Group("")
@@ -188,5 +191,11 @@ func (a *App) RegisterRoute() {
 		admin.POST("/transports", a.TransportHandler.CreateTransport)
 		admin.DELETE("/transports/:id", a.TransportHandler.DeleteTransport)
 		admin.PUT("/transports/:id", a.TransportHandler.UpdateTransport)
+
+		// Reasons
+		public.GET("/reasons/:id", a.ReasonHandler.GetReasonByID)
+		public.POST("/reasons", a.ReasonHandler.CreateReason)
+		public.PUT("/reasons/:id", a.ReasonHandler.UpdateReason)
+		public.DELETE("/reasons/:id", a.ReasonHandler.DeleteReason)
 	}
 }

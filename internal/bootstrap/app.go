@@ -40,6 +40,7 @@ type App struct {
 	RentalOptionHandler         *handler.RentalOptionHandler
 	AttractionHandler           *handler.AttractionHandler
 	TransportHandler            *handler.TransportHandler
+	ReasonHandler               *handler.ReasonHandler
 }
 
 func NewApp() *App {
@@ -68,6 +69,7 @@ func NewApp() *App {
 	rentalOptionRepo := repository.NewRentalOptionRepository(db)
 	attractionRepo := repository.NewAttractionRepository(db)
 	transportRepo := repository.NewTransportRepository(db)
+	reasonRepo := repository.NewReasonRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -88,6 +90,7 @@ func NewApp() *App {
 	rentalOptionService := service.NewRentalOptionService(txManager, rentalOptionRepo)
 	attractionService := service.NewAttractionService(txManager, attractionRepo, transportRepo)
 	transportService := service.NewTransportService(txManager, transportRepo, attractionRepo)
+	reasonService := service.NewReasonService(txManager, reasonRepo)
 
 	app := &App{
 		Router:                      r,
@@ -113,6 +116,7 @@ func NewApp() *App {
 		RentalOptionHandler:         handler.NewRentalOptionHandler(rentalOptionService),
 		AttractionHandler:           handler.NewAttractionHandler(attractionService, transportService),
 		TransportHandler:            handler.NewTransportHandler(transportService),
+		ReasonHandler:               handler.NewReasonHandler(reasonService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
