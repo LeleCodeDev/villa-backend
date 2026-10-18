@@ -31,7 +31,7 @@ func (r *PricelistRepository) GetAll(ctx context.Context, query dto.PricelistQue
 		return nil, 0, err
 	}
 
-	db = db.Order("created_at" + string(query.Sort))
+	db = db.Order("created_at " + string(query.Sort))
 
 	if !query.Unpage {
 		db = db.Offset(query.GetOffset()).Limit(query.Size)
