@@ -3,6 +3,12 @@ package dto
 import "time"
 
 type (
+	PricelistQuery struct {
+		PaginationQuery
+		SortQuery
+		Unpage bool `form:"unpage"`
+	}
+
 	PricelistRequest struct {
 		Title            string  `json:"title" form:"title" binding:"required"`
 		Description      string  `json:"description" form:"description" binding:"required"`
@@ -28,3 +34,8 @@ type (
 		UpdatedAt        time.Time `json:"updated_at"`
 	}
 )
+
+func (pq *PricelistQuery) SetDefault() {
+	pq.setDefaultPagination()
+	pq.SetDefaultSort(SortAsc)
+}

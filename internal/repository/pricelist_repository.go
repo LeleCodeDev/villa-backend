@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"gorm.io/gorm"
 )
@@ -20,14 +21,27 @@ func (r *PricelistRepository) WithTx(tx *gorm.DB) *PricelistRepository {
 	return &PricelistRepository{db: tx}
 }
 
-func (r *PricelistRepository) GetAll(ctx context.Context) ([]model.Pricelist, error) {
+func (r *PricelistRepository) GetAll(ctx context.Context, query dto.PricelistQuery) ([]model.Pricelist, int64, error) {
 	var pricelists []model.Pricelist
+	var total int64
 
-	if err := r.db.WithContext(ctx).Find(&pricelists).Error; err != nil {
-		return nil, err
+	db := r.db.WithContext(ctx).Model(model.Pricelist{})
+
+	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return pricelists, nil
+	db = db.Order("created_at" + string(query.Sort))
+
+	if !query.Unpage {
+		db = db.Offset(query.GetOffset()).Limit(query.Size)
+	}
+
+	if err := db.Find(&pricelists).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return pricelists, total, nil
 }
 
 func (r *PricelistRepository) GetByID(ctx context.Context, id uint) (*model.Pricelist, error) {
