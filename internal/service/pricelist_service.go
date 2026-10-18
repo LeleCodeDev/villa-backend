@@ -28,10 +28,10 @@ func NewPricelistService(
 	}
 }
 
-func (s *PricelistService) GetAll(ctx context.Context) ([]dto.PricelistResponse, error) {
-	pricelists, err := s.repo.GetAll(ctx)
+func (s *PricelistService) GetAll(ctx context.Context, query dto.PricelistQuery) ([]dto.PricelistResponse, int64, error) {
+	pricelists, total, err := s.repo.GetAll(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	responses := make([]dto.PricelistResponse, 0, len(pricelists))
@@ -39,7 +39,7 @@ func (s *PricelistService) GetAll(ctx context.Context) ([]dto.PricelistResponse,
 		responses = append(responses, mapper.ToPricelistResponse(&pricelist))
 	}
 
-	return responses, nil
+	return responses, total, nil
 }
 
 func (s *PricelistService) GetByID(ctx context.Context, id uint) (dto.PricelistResponse, error) {
