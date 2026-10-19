@@ -17,11 +17,11 @@ dev-down:
 dev-logs:
 	$(DEV) logs -f app
 
-dev-migrate:
-	$(DEV) run --rm migration
-
-dev-seed:
-	$(DEV) run --rm seeder
+# dev-migrate:
+# 	$(DEV) run --rm migration
+#
+# dev-seed:
+# 	$(DEV) run --rm seeder
 
 dev-shell:
 	$(DEV) exec app sh
