@@ -8,10 +8,7 @@ import (
 func ToPricelistResponse(pricelist *model.Pricelist) dto.PricelistResponse {
 	return dto.PricelistResponse{
 		ID:               pricelist.ID,
-		Title:            pricelist.Title,
-		Description:      pricelist.Description,
-		MinCapacity:      pricelist.MinCapacity,
-		MaxCapacity:      pricelist.MaxCapacity,
+		RentalOption:     ToRentalOptionResponse(&pricelist.RentalOption),
 		WeekdayPrice:     pricelist.WeekdayPrice,
 		WeekendPrice:     pricelist.WeekdayPrice,
 		LongWeekendPrice: pricelist.LongWeekendPrice,
@@ -21,12 +18,10 @@ func ToPricelistResponse(pricelist *model.Pricelist) dto.PricelistResponse {
 	}
 }
 
-func ToPricelistModel(req dto.PricelistRequest) *model.Pricelist {
+func ToPricelistModel(req dto.PricelistRequest, rentalOption *model.RentalOption) *model.Pricelist {
 	return &model.Pricelist{
-		Title:            req.Title,
-		Description:      req.Description,
-		MinCapacity:      req.MinCapacity,
-		MaxCapacity:      req.MaxCapacity,
+		RentalOption:     *rentalOption,
+		RentalOptionID:   rentalOption.ID,
 		WeekdayPrice:     req.WeekdayPrice,
 		WeekendPrice:     req.WeekdayPrice,
 		LongWeekendPrice: req.LongWeekendPrice,
@@ -34,11 +29,9 @@ func ToPricelistModel(req dto.PricelistRequest) *model.Pricelist {
 	}
 }
 
-func UpdatePricelistModel(pricelist *model.Pricelist, req dto.PricelistRequest) {
-	pricelist.Title = req.Title
-	pricelist.Description = req.Description
-	pricelist.MinCapacity = req.MinCapacity
-	pricelist.MaxCapacity = req.MaxCapacity
+func UpdatePricelistModel(pricelist *model.Pricelist, req dto.PricelistRequest, rentalOption *model.RentalOption) {
+	pricelist.RentalOption = *rentalOption
+	pricelist.RentalOptionID = rentalOption.ID
 	pricelist.WeekdayPrice = req.WeekdayPrice
 	pricelist.WeekendPrice = req.WeekdayPrice
 	pricelist.LongWeekendPrice = req.LongWeekendPrice

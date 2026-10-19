@@ -25,7 +25,7 @@ func (r *PricelistRepository) GetAll(ctx context.Context, query dto.PricelistQue
 	var pricelists []model.Pricelist
 	var total int64
 
-	db := r.db.WithContext(ctx).Model(model.Pricelist{})
+	db := r.db.WithContext(ctx).Preload("RentalOption").Model(model.Pricelist{})
 
 	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -47,7 +47,7 @@ func (r *PricelistRepository) GetAll(ctx context.Context, query dto.PricelistQue
 func (r *PricelistRepository) GetByID(ctx context.Context, id uint) (*model.Pricelist, error) {
 	var pricelist model.Pricelist
 
-	if err := r.db.WithContext(ctx).First(&pricelist, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("RentalOption").First(&pricelist, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

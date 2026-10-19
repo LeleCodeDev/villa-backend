@@ -14,17 +14,20 @@ import (
 )
 
 type PricelistService struct {
-	txManager *repository.TxManager
-	repo      *repository.PricelistRepository
+	txManager        *repository.TxManager
+	repo             *repository.PricelistRepository
+	rentalOptionRepo *repository.RentalOptionRepository
 }
 
 func NewPricelistService(
 	txManager *repository.TxManager,
 	repo *repository.PricelistRepository,
+	rentalOptionRepo *repository.RentalOptionRepository,
 ) *PricelistService {
 	return &PricelistService{
-		txManager: txManager,
-		repo:      repo,
+		txManager:        txManager,
+		repo:             repo,
+		rentalOptionRepo: rentalOptionRepo,
 	}
 }
 
@@ -59,8 +62,17 @@ func (s *PricelistService) Create(ctx context.Context, req dto.PricelistRequest)
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txRentalOptionRepo := s.rentalOptionRepo.WithTx(tx)
 
-		pricelist := mapper.ToPricelistModel(req)
+		rentalOption, err := txRentalOptionRepo.GetByID(ctx, req.RentalOptionID)
+		if err != nil {
+			return err
+		}
+		if rentalOption == nil {
+			return appError.NotFound(fmt.Sprintf("Rental option not found with ID: %d", req.RentalOptionID))
+		}
+
+		pricelist := mapper.ToPricelistModel(req, rentalOption)
 		if err := txRepo.Create(ctx, pricelist); err != nil {
 			return err
 		}
@@ -80,6 +92,7 @@ func (s *PricelistService) Update(ctx context.Context, id uint, req dto.Pricelis
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txRentalOptionRepo := s.rentalOptionRepo.WithTx(tx)
 
 		pricelist, err := txRepo.GetByID(ctx, id)
 		if err != nil {
@@ -89,7 +102,19 @@ func (s *PricelistService) Update(ctx context.Context, id uint, req dto.Pricelis
 			return appError.NotFound(fmt.Sprintf("Pricelist not found with ID: %d", id))
 		}
 
-		mapper.UpdatePricelistModel(pricelist, req)
+		rentalOption := &pricelist.RentalOption
+		if pricelist.RentalOptionID != req.RentalOptionID {
+
+			rentalOption, err = txRentalOptionRepo.GetByID(ctx, req.RentalOptionID)
+			if err != nil {
+				return err
+			}
+			if rentalOption == nil {
+				return appError.NotFound(fmt.Sprintf("Rental option not found with ID: %d", req.RentalOptionID))
+			}
+		}
+
+		mapper.UpdatePricelistModel(pricelist, req, rentalOption)
 		if err := txRepo.Update(ctx, pricelist); err != nil {
 			return err
 		}
