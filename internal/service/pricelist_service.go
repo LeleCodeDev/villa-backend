@@ -104,15 +104,14 @@ func (s *PricelistService) Update(ctx context.Context, id uint, req dto.Pricelis
 
 		rentalOption := &pricelist.RentalOption
 		if pricelist.RentalOptionID != req.RentalOptionID {
-			newRentalOption, err := txRentalOptionRepo.GetByID(ctx, req.RentalOptionID)
+
+			rentalOption, err = txRentalOptionRepo.GetByID(ctx, req.RentalOptionID)
 			if err != nil {
 				return err
 			}
-			if newRentalOption == nil {
+			if rentalOption == nil {
 				return appError.NotFound(fmt.Sprintf("Rental option not found with ID: %d", req.RentalOptionID))
 			}
-
-			rentalOption = newRentalOption
 		}
 
 		mapper.UpdatePricelistModel(pricelist, req, rentalOption)
