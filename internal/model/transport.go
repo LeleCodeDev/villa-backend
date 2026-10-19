@@ -11,8 +11,8 @@ type Transport struct {
 	AttractionID uint       `gorm:"not null;index"`
 	Attraction   Attraction `gorm:"constraint:OnDelete:CASCADE"`
 	Vehicle      string     `gorm:"not null"`
-	Distance     string     `gorm:"not null"`
-	TimeRequired string     `gorm:"not null"`
+	Distance     float64    `gorm:"not null"`
+	TimeRequired int        `gorm:"not null"`
 	SortOrder    int        `gorm:"not null"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time

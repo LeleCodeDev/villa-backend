@@ -19,6 +19,7 @@ func ToAttractionResponse(attraction *model.Attraction, transports []model.Trans
 		Price:      attraction.Price,
 		Transports: transportResponses,
 		SortOrder:  attraction.SortOrder,
+		Map:        attraction.Map,
 		Image:      image.BuildURLPtr(attraction.Image),
 		CreatedAt:  attraction.CreatedAt,
 		UpdatedAt:  attraction.UpdatedAt,
@@ -31,6 +32,7 @@ func ToAttractionModel(req dto.AttractionRequest, sortOrder int, imagePath *stri
 		Subtitle:  req.Subtitle,
 		Price:     req.Price,
 		SortOrder: sortOrder,
+		Map:       req.Map,
 		Image:     imagePath,
 	}
 }
@@ -39,6 +41,7 @@ func UpdateAttractionModel(attraction *model.Attraction, req dto.AttractionReque
 	attraction.Title = req.Title
 	attraction.Subtitle = req.Subtitle
 	attraction.Price = req.Price
+	attraction.Map = req.Map
 	attraction.Image = imagePath
 	attraction.SortOrder = sortOrder
 }
