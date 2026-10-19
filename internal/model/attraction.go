@@ -12,6 +12,7 @@ type Attraction struct {
 	Subtitle  string  `gorm:"not null"`
 	Price     float64 `gorm:"type:numeric(10,2)"`
 	SortOrder int     `gorm:"not null"`
+	Map       string  `gorm:"not null"`
 	Image     *string `gorm:"type:varchar(255)"`
 	CreatedAt time.Time
 	UpdatedAt time.Time

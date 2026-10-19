@@ -19,6 +19,7 @@ type (
 		Price      float64             `json:"price"`
 		Transports []TransportResponse `json:"transports"`
 		SortOrder  int                 `json:"sort_order"`
+		Map        string              `json:"map"`
 		Image      *string             `json:"image"`
 		CreatedAt  time.Time           `json:"created_at"`
 		UpdatedAt  time.Time           `json:"updated_at"`
@@ -29,6 +30,7 @@ type (
 		Subtitle  string                `json:"subtitle" form:"subtitle" binding:"required"`
 		Price     float64               `json:"price" form:"price" binding:"required,gt=0"`
 		SortOrder *int                  `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
+		Map       string                `json:"map" form:"map" binding:"required"`
 		Image     *multipart.FileHeader `json:"image" form:"image" binding:"omitempty"`
 	}
 )
