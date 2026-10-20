@@ -30,7 +30,7 @@ func (r *ReasonRepository) GetAll(ctx context.Context, query dto.ReasonQuery) ([
 	db := r.db.WithContext(ctx).Model(&model.Reason{})
 
 	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
-		return nil, 0, nil
+		return nil, 0, err
 	}
 
 	db = db.Order("created_at " + string(query.Sort))
