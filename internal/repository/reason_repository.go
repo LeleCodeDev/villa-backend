@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"gorm.io/gorm"
 )
@@ -22,14 +23,27 @@ func (r *ReasonRepository) WithTx(tx *gorm.DB) *ReasonRepository {
 	return &ReasonRepository{db: tx}
 }
 
-func (r *ReasonRepository) GetAll(ctx context.Context) ([]model.Reason, error) {
+func (r *ReasonRepository) GetAll(ctx context.Context, query dto.ReasonQuery) ([]model.Reason, int64, error) {
 	var reasons []model.Reason
+	var total int64
 
-	if err := r.db.WithContext(ctx).Find(&reasons).Error; err != nil {
-		return nil, err
+	db := r.db.WithContext(ctx).Model(&model.Reason{})
+
+	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, 0, nil
 	}
 
-	return reasons, nil
+	db = db.Order("created_at " + string(query.Sort))
+
+	if !query.Unpage {
+		db = db.Offset(query.GetOffset()).Limit(query.Size)
+	}
+
+	if err := db.Find(&reasons).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return reasons, total, nil
 }
 
 func (r *ReasonRepository) GetByID(ctx context.Context, id uint) (*model.Reason, error) {

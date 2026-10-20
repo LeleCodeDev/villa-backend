@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lelecodedev/villa-backend/internal/dto"
-	"github.com/lelecodedev/villa-backend/internal/service"
-	"github.com/lelecodedev/villa-backend/internal/util"
 	"github.com/lelecodedev/villa-backend/internal/pagination"
 	"github.com/lelecodedev/villa-backend/internal/response"
+	"github.com/lelecodedev/villa-backend/internal/service"
+	"github.com/lelecodedev/villa-backend/internal/util"
 )
 
 type GalleryHandler struct {
@@ -36,7 +36,6 @@ func (h *GalleryHandler) GetAllGalleries(c *gin.Context) {
 	}
 
 	if query.Unpage {
-
 		response.Success(c, http.StatusOK, "All galleries successfully fetched!", galleries)
 		return
 	}

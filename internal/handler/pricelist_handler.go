@@ -37,6 +37,7 @@ func (h *PricelistHandler) GetAllPricelists(c *gin.Context) {
 
 	if query.Unpage {
 		response.Success(c, http.StatusOK, "All pricelists successfully fetched!", pricelists)
+		return
 	}
 
 	pagination := pagination.BuildPagination(query.Page, query.Size, total)

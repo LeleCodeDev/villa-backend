@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lelecodedev/villa-backend/internal/dto"
+	"github.com/lelecodedev/villa-backend/internal/pagination"
 	"github.com/lelecodedev/villa-backend/internal/response"
 	"github.com/lelecodedev/villa-backend/internal/service"
 	"github.com/lelecodedev/villa-backend/internal/util"
@@ -19,15 +20,29 @@ func NewReasonHandler(service *service.ReasonService) *ReasonHandler {
 }
 
 func (h *ReasonHandler) GetAllReasons(c *gin.Context) {
+	var query dto.ReasonQuery
+	if err := c.ShouldBind(&query); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	query.SetDefault()
 	ctx := c.Request.Context()
 
-	reasons, err := h.service.GetAll(ctx)
+	reasons, total, err := h.service.GetAll(ctx, query)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	response.Success(c, http.StatusOK, "All reasons successfully fetched!", reasons)
+	if query.Unpage {
+
+		response.Success(c, http.StatusOK, "All reasons successfully fetched!", reasons)
+		return
+	}
+
+	pagination := pagination.BuildPagination(query.Page, query.Size, total)
+	response.Paginated(c, http.StatusOK, "All reasons successfully fetched!", reasons, pagination)
 }
 
 func (h *ReasonHandler) GetReasonByID(c *gin.Context) {

@@ -3,6 +3,12 @@ package dto
 import "time"
 
 type (
+	ReasonQuery struct {
+		PaginationQuery
+		SortQuery
+		Unpage bool `form:"unpage"`
+	}
+
 	ReasonRequest struct {
 		Text string `json:"text" form:"text" binding:"required"`
 	}
@@ -14,3 +20,8 @@ type (
 		UpdatedAt time.Time `json:"updated_at"`
 	}
 )
+
+func (rq *ReasonQuery) SetDefault() {
+	rq.setDefaultPagination()
+	rq.SetDefaultSort(SortAsc)
+}
