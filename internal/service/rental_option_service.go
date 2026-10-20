@@ -15,17 +15,20 @@ import (
 )
 
 type RentalOptionService struct {
-	txManager *repository.TxManager
-	repo      *repository.RentalOptionRepository
+	txManager     *repository.TxManager
+	repo          *repository.RentalOptionRepository
+	pricelistRepo *repository.PricelistRepository
 }
 
 func NewRentalOptionService(
 	txManager *repository.TxManager,
 	repo *repository.RentalOptionRepository,
+	pricelistRepo *repository.PricelistRepository,
 ) *RentalOptionService {
 	return &RentalOptionService{
-		txManager: txManager,
-		repo:      repo,
+		txManager:     txManager,
+		repo:          repo,
+		pricelistRepo: pricelistRepo,
 	}
 }
 
@@ -57,7 +60,6 @@ func (s *RentalOptionService) GetByID(ctx context.Context, id uint) (dto.RentalO
 
 func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRequest) (dto.RentalOptionResponse, error) {
 	var createdRentalOption *model.RentalOption
-
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
@@ -165,6 +167,7 @@ func (s *RentalOptionService) Update(ctx context.Context, req dto.RentalOptionRe
 func (s *RentalOptionService) Delete(ctx context.Context, id uint) error {
 	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
+		txPricelistRepo := s.pricelistRepo.WithTx(tx)
 
 		rentalOption, err := txRepo.GetByID(ctx, id)
 		if err != nil {
@@ -179,6 +182,10 @@ func (s *RentalOptionService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if err := txRepo.UpdateSortOrderRange(ctx, rentalOption.SortOrder+1, maxOrder, -1); err != nil {
+			return err
+		}
+
+		if err := txPricelistRepo.DeleteByRentalOptionID(ctx, id); err != nil {
 			return err
 		}
 

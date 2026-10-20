@@ -47,7 +47,7 @@ func (s *WhatsappTemplateService) GetByID(ctx context.Context, id uint) (dto.Wha
 		return dto.WhatsappTemplateResponse{}, err
 	}
 	if whatsappTemplate == nil {
-		return dto.WhatsappTemplateResponse{}, appError.BadRequest(fmt.Sprintf("WhatsappTemplate not found with ID: %d", id))
+		return dto.WhatsappTemplateResponse{}, appError.BadRequest(fmt.Sprintf("Whatsapp template not found with ID: %d", id))
 	}
 
 	return mapper.ToWhatsappTemplateResponse(whatsappTemplate), nil
@@ -85,7 +85,7 @@ func (s *WhatsappTemplateService) Update(ctx context.Context, req dto.WhatsappTe
 			return err
 		}
 		if whatsappTemplate == nil {
-			return appError.NotFound(fmt.Sprintf("WhatsappTemplate not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Whatsapp template not found with ID: %d", id))
 		}
 
 		mapper.UpdateWhatsappTemplateModel(whatsappTemplate, req)
@@ -112,7 +112,7 @@ func (s *WhatsappTemplateService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 		if whatsappTemplate == nil {
-			return appError.NotFound(fmt.Sprintf("WhatsappTemplate not found with ID: %d", id))
+			return appError.NotFound(fmt.Sprintf("Whatsapp template not found with ID: %d", id))
 		}
 
 		return txRepo.Delete(ctx, whatsappTemplate)
