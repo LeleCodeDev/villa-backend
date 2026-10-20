@@ -27,10 +27,10 @@ func NewReasonService(
 	}
 }
 
-func (s *ReasonService) GetAll(ctx context.Context) ([]dto.ReasonResponse, error) {
-	reasons, err := s.repo.GetAll(ctx)
+func (s *ReasonService) GetAll(ctx context.Context, query dto.ReasonQuery) ([]dto.ReasonResponse, int64, error) {
+	reasons, total, err := s.repo.GetAll(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	reasonResponses := make([]dto.ReasonResponse, 0, len(reasons))
@@ -38,7 +38,7 @@ func (s *ReasonService) GetAll(ctx context.Context) ([]dto.ReasonResponse, error
 		reasonResponses = append(reasonResponses, mapper.ToReasonResponse(&reason))
 	}
 
-	return reasonResponses, nil
+	return reasonResponses, total, nil
 }
 
 func (s *ReasonService) GetByID(ctx context.Context, id uint) (dto.ReasonResponse, error) {
