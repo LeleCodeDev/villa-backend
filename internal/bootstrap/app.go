@@ -89,7 +89,7 @@ func NewApp() *App {
 	addonService := service.NewAddonService(txManager, addonRepo, addonListRepo)
 	logoService := service.NewLogoService(txManager, logoRepo, specificationRepo, facilityRepo)
 	messageService := service.NewMessageService(txManager, messageRepo)
-	rentalOptionService := service.NewRentalOptionService(txManager, rentalOptionRepo)
+	rentalOptionService := service.NewRentalOptionService(txManager, rentalOptionRepo, pricelistRepo)
 	attractionService := service.NewAttractionService(txManager, attractionRepo, transportRepo)
 	transportService := service.NewTransportService(txManager, transportRepo, attractionRepo)
 	reasonService := service.NewReasonService(txManager, reasonRepo)
