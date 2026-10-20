@@ -41,6 +41,7 @@ type App struct {
 	AttractionHandler           *handler.AttractionHandler
 	TransportHandler            *handler.TransportHandler
 	ReasonHandler               *handler.ReasonHandler
+	WhatsappTemplateHandler     *handler.WhatsappTemplateHandler
 }
 
 func NewApp() *App {
@@ -70,6 +71,7 @@ func NewApp() *App {
 	attractionRepo := repository.NewAttractionRepository(db)
 	transportRepo := repository.NewTransportRepository(db)
 	reasonRepo := repository.NewReasonRepository(db)
+	whatsappTemplateRepo := repository.NewWhatsappTemplateRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
@@ -91,6 +93,7 @@ func NewApp() *App {
 	attractionService := service.NewAttractionService(txManager, attractionRepo, transportRepo)
 	transportService := service.NewTransportService(txManager, transportRepo, attractionRepo)
 	reasonService := service.NewReasonService(txManager, reasonRepo)
+	whatsappTemplateService := service.NewWhatsappTemplateService(txManager, whatsappTemplateRepo)
 
 	app := &App{
 		Router:                      r,
@@ -117,6 +120,7 @@ func NewApp() *App {
 		AttractionHandler:           handler.NewAttractionHandler(attractionService, transportService),
 		TransportHandler:            handler.NewTransportHandler(transportService),
 		ReasonHandler:               handler.NewReasonHandler(reasonService),
+		WhatsappTemplateHandler:     handler.NewWhatsappTemplateHandler(whatsappTemplateService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

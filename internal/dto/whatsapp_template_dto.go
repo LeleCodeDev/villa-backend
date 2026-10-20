@@ -20,3 +20,8 @@ type (
 		UpdatedAt time.Time `json:"updated_at"`
 	}
 )
+
+func (wtq *WhatsappTemplateQuery) SetDefault() {
+	wtq.setDefaultPagination()
+	wtq.SetDefaultSort(SortAsc)
+}

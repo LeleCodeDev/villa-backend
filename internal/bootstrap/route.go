@@ -76,8 +76,11 @@ func (a *App) RegisterRoute() {
 		// Transport
 		public.GET("/transports", a.TransportHandler.GetAllTransports)
 
-		// Reasons
+		// Reason
 		public.GET("/reasons", a.ReasonHandler.GetAllReasons)
+
+		// Whatsapp Template
+		public.GET("/whatsapp-templates", a.WhatsappTemplateHandler.GetAllWhatsappTemplates)
 	}
 
 	authenticated := api.Group("")
@@ -192,10 +195,16 @@ func (a *App) RegisterRoute() {
 		admin.DELETE("/transports/:id", a.TransportHandler.DeleteTransport)
 		admin.PUT("/transports/:id", a.TransportHandler.UpdateTransport)
 
-		// Reasons
+		// Reason
 		public.GET("/reasons/:id", a.ReasonHandler.GetReasonByID)
 		public.POST("/reasons", a.ReasonHandler.CreateReason)
 		public.PUT("/reasons/:id", a.ReasonHandler.UpdateReason)
 		public.DELETE("/reasons/:id", a.ReasonHandler.DeleteReason)
+
+		// Whatsapp Template
+		public.GET("/whatsapp-templates/:id", a.WhatsappTemplateHandler.GetWhatsappTemplateByID)
+		public.POST("/whatsapp-templates", a.WhatsappTemplateHandler.CreateWhatsappTemplate)
+		public.PUT("/whatsapp-templates/:id", a.WhatsappTemplateHandler.UpdateWhatsappTemplate)
+		public.DELETE("/whatsapp-templates/:id", a.WhatsappTemplateHandler.DeleteWhatsappTemplate)
 	}
 }
