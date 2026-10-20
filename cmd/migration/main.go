@@ -36,6 +36,7 @@ func main() {
 		&model.Logo{},
 		&model.Attraction{},
 		&model.Transport{},
+		&model.WhatsappTemplate{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {
