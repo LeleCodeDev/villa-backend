@@ -90,6 +90,7 @@ func (a *App) RegisterRoute() {
 	admin.Use(middleware.RoleMiddleware(model.RoleAdmin))
 	{
 		// User
+		// tes
 		admin.GET("/users", a.UserHandler.GetAllUsers)
 		admin.GET("/users/:id", a.UserHandler.GetUserByID)
 		admin.POST("/users", a.UserHandler.CreateUser)
