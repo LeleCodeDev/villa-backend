@@ -64,7 +64,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	var req dto.UserRequest
+	var req dto.CreateUserRequest
 	if err := c.ShouldBind(&req); err != nil {
 		response.HandleValidationError(c, err)
 		return
@@ -78,5 +78,29 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "User successfully fetched!", user)
+	response.Success(c, http.StatusCreated, "User successfully created!", user)
+}
+
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	var req dto.UpdateUserRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	user, err := h.service.Update(ctx, id, req)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "User successfully updated!", user)
 }

@@ -14,11 +14,16 @@ type (
 		Search string `form:"search"`
 	}
 
-	UserRequest struct {
+	CreateUserRequest struct {
 		Username string `json:"username" form:"username" binding:"required"`
 		Email    string `json:"email" form:"email" binding:"required,email"`
 		Phone    string `json:"phone" form:"phone" binding:"required,min=12,max=12"`
 		Password string `json:"password" form:"password" binding:"required,min=8"`
+	}
+
+	UpdateUserRequest struct {
+		Username string `json:"username" form:"username" binding:"required"`
+		Phone    string `json:"phone" form:"phone" binding:"required,min=12,max=12"`
 	}
 
 	UserResponse struct {

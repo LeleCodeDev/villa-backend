@@ -51,7 +51,7 @@ func (s *UserService) GeyByID(ctx context.Context, id uint) (dto.UserResponse, e
 	return mapper.ToUserResponse(user), nil
 }
 
-func (s *UserService) Create(ctx context.Context, req dto.UserRequest) (dto.UserResponse, error) {
+func (s *UserService) Create(ctx context.Context, req dto.CreateUserRequest) (dto.UserResponse, error) {
 	var createdUser *model.User
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
@@ -83,4 +83,33 @@ func (s *UserService) Create(ctx context.Context, req dto.UserRequest) (dto.User
 	}
 
 	return mapper.ToUserResponse(createdUser), nil
+}
+
+func (s *UserService) Update(ctx context.Context, id uint, req dto.UpdateUserRequest) (dto.UserResponse, error) {
+	var updatedUser *model.User
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txRepo := s.repo.WithTx(tx)
+
+		user, err := txRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if user == nil {
+			return appError.NotFound(fmt.Sprintf("User not found with ID: %d", id))
+		}
+
+		mapper.UpdateUserModel(user, req)
+		if err := txRepo.Update(ctx, user); err != nil {
+			return err
+		}
+
+		updatedUser = user
+
+		return nil
+	}); err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	return mapper.ToUserResponse(updatedUser), nil
 }
