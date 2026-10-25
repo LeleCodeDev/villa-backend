@@ -22,6 +22,7 @@ type App struct {
 	AuthMiddleware              gin.HandlerFunc
 	HealthHandler               *handler.HealthHandler
 	AuthHandler                 *handler.AuthHandler
+	UserHandler                 *handler.UserHandler
 	ApplicationHandler          *handler.ApplicationHandler
 	HeroSectionHandler          *handler.HeroSectionHandler
 	FaqHandler                  *handler.FaqHandler
@@ -74,6 +75,7 @@ func NewApp() *App {
 	whatsappTemplateRepo := repository.NewWhatsappTemplateRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
+	userService := service.NewUserService(userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
 	heroSectionService := service.NewHeroSectionService(txManager, heroSectionRepo)
 	faqService := service.NewFaqService(txManager, faqRepo)
@@ -101,6 +103,7 @@ func NewApp() *App {
 		AuthMiddleware:              middleware.AuthMiddleware(userRepo),
 		HealthHandler:               handler.NewHealthHandler(),
 		AuthHandler:                 handler.NewAuthHandler(authService),
+		UserHandler:                 handler.NewUserHandler(userService),
 		ApplicationHandler:          handler.NewApplicationHandler(applicationService),
 		HeroSectionHandler:          handler.NewHeroSectionHandler(heroSectionService),
 		FaqHandler:                  handler.NewFaqHandler(faqService),

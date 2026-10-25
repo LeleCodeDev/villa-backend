@@ -89,6 +89,10 @@ func (a *App) RegisterRoute() {
 	admin := authenticated.Group("")
 	admin.Use(middleware.RoleMiddleware(model.RoleAdmin))
 	{
+		// User
+		admin.GET("/users", a.UserHandler.GetAllUsers)
+		admin.GET("/users/:id", a.UserHandler.GetUserByID)
+
 		// Hero Section
 		admin.POST("/hero-section", a.HeroSectionHandler.CreateHeroSection)
 		admin.PUT("/hero-section", a.HeroSectionHandler.UpdateHeroSection)
@@ -196,15 +200,15 @@ func (a *App) RegisterRoute() {
 		admin.PUT("/transports/:id", a.TransportHandler.UpdateTransport)
 
 		// Reason
-		public.GET("/reasons/:id", a.ReasonHandler.GetReasonByID)
-		public.POST("/reasons", a.ReasonHandler.CreateReason)
-		public.PUT("/reasons/:id", a.ReasonHandler.UpdateReason)
-		public.DELETE("/reasons/:id", a.ReasonHandler.DeleteReason)
+		admin.GET("/reasons/:id", a.ReasonHandler.GetReasonByID)
+		admin.POST("/reasons", a.ReasonHandler.CreateReason)
+		admin.PUT("/reasons/:id", a.ReasonHandler.UpdateReason)
+		admin.DELETE("/reasons/:id", a.ReasonHandler.DeleteReason)
 
 		// Whatsapp Template
-		public.GET("/whatsapp-templates/:id", a.WhatsappTemplateHandler.GetWhatsappTemplateByID)
-		public.POST("/whatsapp-templates", a.WhatsappTemplateHandler.CreateWhatsappTemplate)
-		public.PUT("/whatsapp-templates/:id", a.WhatsappTemplateHandler.UpdateWhatsappTemplate)
-		public.DELETE("/whatsapp-templates/:id", a.WhatsappTemplateHandler.DeleteWhatsappTemplate)
+		admin.GET("/whatsapp-templates/:id", a.WhatsappTemplateHandler.GetWhatsappTemplateByID)
+		admin.POST("/whatsapp-templates", a.WhatsappTemplateHandler.CreateWhatsappTemplate)
+		admin.PUT("/whatsapp-templates/:id", a.WhatsappTemplateHandler.UpdateWhatsappTemplate)
+		admin.DELETE("/whatsapp-templates/:id", a.WhatsappTemplateHandler.DeleteWhatsappTemplate)
 	}
 }

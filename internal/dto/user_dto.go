@@ -7,6 +7,20 @@ import (
 )
 
 type (
+	UserQuery struct {
+		PaginationQuery
+		SortQuery
+		Unpage bool   `form:"unpage"`
+		Search string `form:"search"`
+	}
+
+	UserRequest struct {
+		Username string `json:"username" form:"username" binding:"required"`
+		Email    string `json:"email" form:"email" binding:"required,email"`
+		Phone    string `json:"phone" form:"phone" binding:"required,min=11,max=11"`
+		Password string `json:"password" form:"password" binding:"required,min=8"`
+	}
+
 	UserResponse struct {
 		ID        uint           `json:"id"`
 		Username  string         `json:"username"`
@@ -17,3 +31,8 @@ type (
 		UpdatedAt time.Time      `json:"updated_at"`
 	}
 )
+
+func (uq *UserQuery) SetDefault() {
+	uq.setDefaultPagination()
+	uq.SetDefaultSort(SortAsc)
+}
