@@ -75,7 +75,7 @@ func NewApp() *App {
 	whatsappTemplateRepo := repository.NewWhatsappTemplateRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
 	heroSectionService := service.NewHeroSectionService(txManager, heroSectionRepo)
 	faqService := service.NewFaqService(txManager, faqRepo)

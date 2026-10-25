@@ -7,15 +7,22 @@ import (
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
+	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type UserService struct {
-	repo *repository.UserRepository
+	txManager *repository.TxManager
+	repo      *repository.UserRepository
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(txManager *repository.TxManager, repo *repository.UserRepository) *UserService {
+	return &UserService{
+		txManager: txManager,
+		repo:      repo,
+	}
 }
 
 func (s *UserService) GetAll(ctx context.Context, query dto.UserQuery) ([]dto.UserResponse, int64, error) {
@@ -42,4 +49,38 @@ func (s *UserService) GeyByID(ctx context.Context, id uint) (dto.UserResponse, e
 	}
 
 	return mapper.ToUserResponse(user), nil
+}
+
+func (s *UserService) Create(ctx context.Context, req dto.UserRequest) (dto.UserResponse, error) {
+	var createdUser *model.User
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txRepo := s.repo.WithTx(tx)
+
+		exist, err := txRepo.ExistByEmail(ctx, req.Email)
+		if err != nil {
+			return err
+		}
+		if exist {
+			return appError.AlreadyExist("User email already exist!")
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+
+		user := mapper.ToUserModel(req, string(hashedPassword))
+		if err := txRepo.Create(ctx, user); err != nil {
+			return err
+		}
+
+		createdUser = user
+
+		return nil
+	}); err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	return mapper.ToUserResponse(createdUser), nil
 }

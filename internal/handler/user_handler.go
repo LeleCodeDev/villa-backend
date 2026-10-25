@@ -62,3 +62,21 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, "User successfully fetched!", user)
 }
+
+func (h *UserHandler) CreateUser(c *gin.Context) {
+	var req dto.UserRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	user, err := h.service.Create(ctx, req)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "User successfully fetched!", user)
+}

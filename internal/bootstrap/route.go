@@ -92,6 +92,7 @@ func (a *App) RegisterRoute() {
 		// User
 		admin.GET("/users", a.UserHandler.GetAllUsers)
 		admin.GET("/users/:id", a.UserHandler.GetUserByID)
+		admin.POST("/users", a.UserHandler.CreateUser)
 
 		// Hero Section
 		admin.POST("/hero-section", a.HeroSectionHandler.CreateHeroSection)
