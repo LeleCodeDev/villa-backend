@@ -5,6 +5,16 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
+func ToUserModel(req dto.CreateUserRequest, hashedPassword string) *model.User {
+	return &model.User{
+		Username: req.Username,
+		Email:    req.Email,
+		Phone:    req.Phone,
+		Role:     model.RoleUser,
+		Password: hashedPassword,
+	}
+}
+
 func ToUserResponse(user *model.User) dto.UserResponse {
 	return dto.UserResponse{
 		ID:        user.ID,
@@ -15,4 +25,9 @@ func ToUserResponse(user *model.User) dto.UserResponse {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
+}
+
+func UpdateUserModel(user *model.User, req dto.UpdateUserRequest) {
+	user.Username = req.Username
+	user.Phone = req.Phone
 }
