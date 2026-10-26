@@ -21,7 +21,7 @@ func (r *RentalPriceRepository) WithTx(tx *gorm.DB) *RentalPriceRepository {
 	return &RentalPriceRepository{db: tx}
 }
 
-func (r *RentalPriceRepository) GetAll(ctx context.Context, query dto.RentalOptionQuery) ([]model.RentalPrice, int64, error) {
+func (r *RentalPriceRepository) GetAll(ctx context.Context, query dto.RentalPriceQuery) ([]model.RentalPrice, int64, error) {
 	var rentalPrices []model.RentalPrice
 	var total int64
 
@@ -60,7 +60,7 @@ func (r *RentalPriceRepository) GetAllByRentalOptionID(ctx context.Context, rent
 func (r *RentalPriceRepository) GetByID(ctx context.Context, id uint) (*model.RentalPrice, error) {
 	var rentalPrice model.RentalPrice
 
-	if err := r.db.WithContext(ctx).First(&rentalPrice, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("RentalOption").First(&rentalPrice, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -69,6 +69,16 @@ func (r *RentalPriceRepository) GetByID(ctx context.Context, id uint) (*model.Re
 	}
 
 	return &rentalPrice, nil
+}
+
+func (r *RentalPriceRepository) ExistByRentalOptionIDAndSeasonAndDayType(ctx context.Context, rentalOptionID uint, season model.SeasonType, dayType model.DayType) (bool, error) {
+	var count int64
+
+	err := r.db.WithContext(ctx).
+		Where("rental_option_id = ? AND season = ? AND day_type = ?", rentalOptionID, season, dayType).
+		Count(&count).Error
+
+	return count > 0, err
 }
 
 func (r *RentalPriceRepository) Create(ctx context.Context, rentalPrice *model.RentalPrice) error {
