@@ -184,6 +184,7 @@ func (a *App) RegisterRoute() {
 
 		// Rental Option
 		public.GET("/rental-options/:id", a.RentalOptionHandler.GetRentalOptionByID)
+		public.GET("/rental-options/:id/rental-prices", a.RentalOptionHandler.GetAllRentalPriceByRentalOptionID)
 		public.POST("/rental-options", a.RentalOptionHandler.CreateRentalOption)
 		public.PUT("/rental-options/:id", a.RentalOptionHandler.UpdateRentalOption)
 		public.DELETE("/rental-options/:id", a.RentalOptionHandler.DeleteRentalOption)

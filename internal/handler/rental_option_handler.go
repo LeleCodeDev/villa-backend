@@ -12,11 +12,18 @@ import (
 )
 
 type RentalOptionHandler struct {
-	service *service.RentalOptionService
+	service            *service.RentalOptionService
+	rentalPriceService *service.RentalPriceService
 }
 
-func NewRentalOptionHandler(service *service.RentalOptionService) *RentalOptionHandler {
-	return &RentalOptionHandler{service: service}
+func NewRentalOptionHandler(
+	service *service.RentalOptionService,
+	rentalPriceService *service.RentalPriceService,
+) *RentalOptionHandler {
+	return &RentalOptionHandler{
+		service:            service,
+		rentalPriceService: rentalPriceService,
+	}
 }
 
 func (h *RentalOptionHandler) GetAllRentalOptions(c *gin.Context) {
@@ -61,6 +68,24 @@ func (h *RentalOptionHandler) GetRentalOptionByID(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Rental option successfully fetched!", rentalOption)
+}
+
+func (h *RentalOptionHandler) GetAllRentalPriceByRentalOptionID(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	rentalPrices, err := h.rentalPriceService.GetAllByRentalOptionID(ctx, id)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "All rental prices successfully fetched!", rentalPrices)
 }
 
 func (h *RentalOptionHandler) CreateRentalOption(c *gin.Context) {

@@ -17,7 +17,7 @@ type (
 		Title      string              `json:"title"`
 		Subtitle   string              `json:"subtitle"`
 		Price      float64             `json:"price"`
-		Transports []TransportResponse `json:"transports"`
+		Transports []TransportResponse `json:"transports,omitempty"`
 		SortOrder  int                 `json:"sort_order"`
 		Map        string              `json:"map"`
 		Image      *string             `json:"image"`

@@ -6,9 +6,9 @@ import (
 )
 
 func ToAddonResponse(addon *model.Addon, lists []model.AddonList) dto.AddonResponse {
-	listResponses := make([]dto.AddonListResponse, 0, len(lists))
-	for _, list := range lists {
-		listResponses = append(listResponses, ToAddonListResponse(&list))
+	var listResponses []dto.AddonListResponse
+	for i := range lists {
+		listResponses = append(listResponses, ToAddonListResponse(&lists[i]))
 	}
 
 	return dto.AddonResponse{

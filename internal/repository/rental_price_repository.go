@@ -57,6 +57,19 @@ func (r *RentalPriceRepository) GetAllByRentalOptionID(ctx context.Context, rent
 	return rentalPrices, nil
 }
 
+func (r *RentalPriceRepository) GetAllByRentalOptionIDIn(ctx context.Context, rentalOptionIds []uint) ([]model.RentalPrice, error) {
+	var rentalPrices []model.RentalPrice
+
+	if err := r.db.WithContext(ctx).
+		Model(&model.RentalPrice{}).
+		Where("rental_option_id IN ?", rentalOptionIds).
+		Find(&rentalPrices).Error; err != nil {
+		return nil, err
+	}
+
+	return rentalPrices, nil
+}
+
 func (r *RentalPriceRepository) GetByID(ctx context.Context, id uint) (*model.RentalPrice, error) {
 	var rentalPrice model.RentalPrice
 

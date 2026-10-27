@@ -17,7 +17,7 @@ type (
 		Subtitle    string                     `json:"subtitle"`
 		MaxCapacity int                        `json:"max_capacity"`
 		Price       float64                    `json:"price"`
-		Lists       []VillaPackageListResponse `json:"lists"`
+		Lists       []VillaPackageListResponse `json:"lists,omitempty"`
 		SortOrder   int                        `json:"sort_order"`
 		CreatedAt   time.Time                  `json:"created_at"`
 		UpdatedAt   time.Time                  `json:"updated_at"`

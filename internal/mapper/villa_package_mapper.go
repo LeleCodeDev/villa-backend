@@ -6,9 +6,9 @@ import (
 )
 
 func ToVillaPackageResponse(villaPackage *model.VillaPackage, lists []model.VillaPackageList) dto.VillaPackageResponse {
-	listsResponse := make([]dto.VillaPackageListResponse, 0, len(lists))
-	for _, list := range lists {
-		listsResponse = append(listsResponse, ToVillaPackageListResponse(&list))
+	var listsResponse []dto.VillaPackageListResponse
+	for i := range lists {
+		listsResponse = append(listsResponse, ToVillaPackageListResponse(&lists[i]))
 	}
 
 	return dto.VillaPackageResponse{

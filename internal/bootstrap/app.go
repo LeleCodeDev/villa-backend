@@ -93,7 +93,7 @@ func NewApp() *App {
 	addonService := service.NewAddonService(txManager, addonRepo, addonListRepo)
 	logoService := service.NewLogoService(txManager, logoRepo, specificationRepo, facilityRepo)
 	messageService := service.NewMessageService(txManager, messageRepo)
-	rentalOptionService := service.NewRentalOptionService(txManager, rentalOptionRepo, pricelistRepo)
+	rentalOptionService := service.NewRentalOptionService(txManager, rentalOptionRepo, pricelistRepo, rentalPriceRepo)
 	attractionService := service.NewAttractionService(txManager, attractionRepo, transportRepo)
 	transportService := service.NewTransportService(txManager, transportRepo, attractionRepo)
 	reasonService := service.NewReasonService(txManager, reasonRepo)
@@ -122,7 +122,7 @@ func NewApp() *App {
 		AddonHandler:                handler.NewAddonHandler(addonService, addonListService),
 		LogoHandler:                 handler.NewLogoHandler(logoService),
 		MessageHandler:              handler.NewMessageHandler(messageService),
-		RentalOptionHandler:         handler.NewRentalOptionHandler(rentalOptionService),
+		RentalOptionHandler:         handler.NewRentalOptionHandler(rentalOptionService, rentalPriceService),
 		AttractionHandler:           handler.NewAttractionHandler(attractionService, transportService),
 		TransportHandler:            handler.NewTransportHandler(transportService),
 		ReasonHandler:               handler.NewReasonHandler(reasonService),

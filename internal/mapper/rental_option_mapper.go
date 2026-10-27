@@ -6,7 +6,12 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
-func ToRentalOptionResponse(rentalOption *model.RentalOption) dto.RentalOptionResponse {
+func ToRentalOptionResponse(rentalOption *model.RentalOption, prices []model.RentalPrice) dto.RentalOptionResponse {
+	var priceResponses []dto.RentalPriceResponse
+	for i := range prices {
+		priceResponses = append(priceResponses, ToRentalPriceResponse(&prices[i]))
+	}
+
 	return dto.RentalOptionResponse{
 		ID:          rentalOption.ID,
 		Title:       rentalOption.Title,
@@ -16,6 +21,7 @@ func ToRentalOptionResponse(rentalOption *model.RentalOption) dto.RentalOptionRe
 		MaxCapacity: rentalOption.MaxCapacity,
 		SortOrder:   rentalOption.SortOrder,
 		Image:       image.BuildURLPtr(rentalOption.Image),
+		Prices:      priceResponses,
 		CreatedAt:   rentalOption.CreatedAt,
 		UpdatedAt:   rentalOption.UpdatedAt,
 	}
