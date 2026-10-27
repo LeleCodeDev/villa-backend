@@ -38,6 +38,7 @@ func main() {
 		&model.Transport{},
 		&model.WhatsappTemplate{},
 		&model.RentalPrice{},
+		&model.SeasonPeriod{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {
