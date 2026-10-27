@@ -88,6 +88,7 @@ func (r *RentalPriceRepository) ExistByRentalOptionIDAndSeasonAndDayType(ctx con
 	var count int64
 
 	err := r.db.WithContext(ctx).
+		Model(&model.RentalPrice{}).
 		Where("rental_option_id = ? AND season = ? AND day_type = ?", rentalOptionID, season, dayType).
 		Count(&count).Error
 
