@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lelecodedev/villa-backend/internal/dto"
-	"github.com/lelecodedev/villa-backend/internal/service"
-	"github.com/lelecodedev/villa-backend/internal/util"
 	"github.com/lelecodedev/villa-backend/internal/pagination"
 	"github.com/lelecodedev/villa-backend/internal/response"
+	"github.com/lelecodedev/villa-backend/internal/service"
+	"github.com/lelecodedev/villa-backend/internal/util"
 )
 
 type TestimonyHandler struct {
@@ -24,7 +24,7 @@ func NewTestimonyHandler(service *service.TestimonyService) *TestimonyHandler {
 func (h *TestimonyHandler) GetAllTestimonies(c *gin.Context) {
 	var query dto.TestimonyQuery
 	if err := c.ShouldBind(&query); err != nil {
-		response.HandleServiceError(c, err)
+		response.HandleValidationError(c, err)
 		return
 	}
 

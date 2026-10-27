@@ -184,6 +184,7 @@ func (a *App) RegisterRoute() {
 
 		// Rental Option
 		public.GET("/rental-options/:id", a.RentalOptionHandler.GetRentalOptionByID)
+		public.GET("/rental-options/:id/rental-prices", a.RentalOptionHandler.GetAllRentalPriceByRentalOptionID)
 		public.POST("/rental-options", a.RentalOptionHandler.CreateRentalOption)
 		public.PUT("/rental-options/:id", a.RentalOptionHandler.UpdateRentalOption)
 		public.DELETE("/rental-options/:id", a.RentalOptionHandler.DeleteRentalOption)
@@ -212,5 +213,11 @@ func (a *App) RegisterRoute() {
 		admin.POST("/whatsapp-templates", a.WhatsappTemplateHandler.CreateWhatsappTemplate)
 		admin.PUT("/whatsapp-templates/:id", a.WhatsappTemplateHandler.UpdateWhatsappTemplate)
 		admin.DELETE("/whatsapp-templates/:id", a.WhatsappTemplateHandler.DeleteWhatsappTemplate)
+
+		// Rental Price
+		admin.GET("/rental-prices", a.RentalPriceHandler.GetAllRentalPrices)
+		admin.GET("/rental-prices/:id", a.RentalPriceHandler.GetRentalPriceByID)
+		admin.POST("/rental-prices", a.RentalPriceHandler.CreateRentalPrice)
+		admin.PUT("/rental-prices/:id", a.RentalPriceHandler.UpdateRentalPrice)
 	}
 }

@@ -13,16 +13,17 @@ type (
 	}
 
 	RentalOptionResponse struct {
-		ID          uint      `json:"id"`
-		Title       string    `json:"title"`
-		Subtitle    string    `json:"subtitle"`
-		Description string    `json:"description"`
-		RoomCount   int       `json:"room_count"`
-		MaxCapacity int       `json:"max_capacity"`
-		SortOrder   int       `json:"sort_order"`
-		Image       *string   `json:"image"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"updated_at"`
+		ID          uint                  `json:"id"`
+		Title       string                `json:"title"`
+		Subtitle    string                `json:"subtitle"`
+		Description string                `json:"description"`
+		RoomCount   int                   `json:"room_count"`
+		MaxCapacity int                   `json:"max_capacity"`
+		SortOrder   int                   `json:"sort_order"`
+		Image       *string               `json:"image"`
+		Prices      []RentalPriceResponse `json:"prices,omitempty"`
+		CreatedAt   time.Time             `json:"created_at"`
+		UpdatedAt   time.Time             `json:"updated_at"`
 	}
 
 	RentalOptionRequest struct {

@@ -7,9 +7,9 @@ import (
 )
 
 func ToAttractionResponse(attraction *model.Attraction, transports []model.Transport) dto.AttractionResponse {
-	transportResponses := make([]dto.TransportResponse, 0, len(transports))
-	for _, transport := range transports {
-		transportResponses = append(transportResponses, ToTransportResponse(&transport))
+	var transportResponses []dto.TransportResponse
+	for i := range transports {
+		transportResponses = append(transportResponses, ToTransportResponse(&transports[i]))
 	}
 
 	return dto.AttractionResponse{

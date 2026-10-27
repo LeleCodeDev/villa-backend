@@ -8,7 +8,7 @@ import (
 func ToPricelistResponse(pricelist *model.Pricelist) dto.PricelistResponse {
 	return dto.PricelistResponse{
 		ID:               pricelist.ID,
-		RentalOption:     ToRentalOptionResponse(&pricelist.RentalOption),
+		RentalOption:     ToRentalOptionResponse(&pricelist.RentalOption, nil),
 		WeekdayPrice:     pricelist.WeekdayPrice,
 		WeekendPrice:     pricelist.WeekdayPrice,
 		LongWeekendPrice: pricelist.LongWeekendPrice,

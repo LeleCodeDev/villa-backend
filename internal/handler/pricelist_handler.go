@@ -22,7 +22,7 @@ func NewPricelistHandler(service *service.PricelistService) *PricelistHandler {
 func (h *PricelistHandler) GetAllPricelists(c *gin.Context) {
 	var query dto.PricelistQuery
 	if err := c.ShouldBind(&query); err != nil {
-		response.HandleServiceError(c, err)
+		response.HandleValidationError(c, err)
 		return
 	}
 

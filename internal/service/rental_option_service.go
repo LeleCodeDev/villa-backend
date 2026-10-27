@@ -15,20 +15,23 @@ import (
 )
 
 type RentalOptionService struct {
-	txManager     *repository.TxManager
-	repo          *repository.RentalOptionRepository
-	pricelistRepo *repository.PricelistRepository
+	txManager       *repository.TxManager
+	repo            *repository.RentalOptionRepository
+	pricelistRepo   *repository.PricelistRepository
+	rentalPriceRepo *repository.RentalPriceRepository
 }
 
 func NewRentalOptionService(
 	txManager *repository.TxManager,
 	repo *repository.RentalOptionRepository,
 	pricelistRepo *repository.PricelistRepository,
+	rentalPriceRepo *repository.RentalPriceRepository,
 ) *RentalOptionService {
 	return &RentalOptionService{
-		txManager:     txManager,
-		repo:          repo,
-		pricelistRepo: pricelistRepo,
+		txManager:       txManager,
+		repo:            repo,
+		pricelistRepo:   pricelistRepo,
+		rentalPriceRepo: rentalPriceRepo,
 	}
 }
 
@@ -38,9 +41,24 @@ func (s *RentalOptionService) GetAll(ctx context.Context, query dto.RentalOption
 		return nil, 0, err
 	}
 
+	rentalOptionIds := make([]uint, 0, len(rentalOptions))
+	for _, rentalOption := range rentalOptions {
+		rentalOptionIds = append(rentalOptionIds, rentalOption.ID)
+	}
+
+	allPrices, err := s.rentalPriceRepo.GetAllByRentalOptionIDIn(ctx, rentalOptionIds)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	priceMap := make(map[uint][]model.RentalPrice, len(rentalOptions))
+	for _, price := range allPrices {
+		priceMap[price.RentalOptionID] = append(priceMap[price.RentalOptionID], price)
+	}
+
 	responses := make([]dto.RentalOptionResponse, 0, len(rentalOptions))
 	for _, rentalOption := range rentalOptions {
-		responses = append(responses, mapper.ToRentalOptionResponse(&rentalOption))
+		responses = append(responses, mapper.ToRentalOptionResponse(&rentalOption, priceMap[rentalOption.ID]))
 	}
 
 	return responses, total, nil
@@ -55,7 +73,12 @@ func (s *RentalOptionService) GetByID(ctx context.Context, id uint) (dto.RentalO
 		return dto.RentalOptionResponse{}, appError.NotFound(fmt.Sprintf("Rental option not found with ID: %d", id))
 	}
 
-	return mapper.ToRentalOptionResponse(rentalOption), nil
+	rentalPrices, err := s.rentalPriceRepo.GetAllByRentalOptionID(ctx, rentalOption.ID)
+	if err != nil {
+		return dto.RentalOptionResponse{}, err
+	}
+
+	return mapper.ToRentalOptionResponse(rentalOption, rentalPrices), nil
 }
 
 func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRequest) (dto.RentalOptionResponse, error) {
@@ -101,7 +124,7 @@ func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRe
 		return dto.RentalOptionResponse{}, err
 	}
 
-	return mapper.ToRentalOptionResponse(createdRentalOption), nil
+	return mapper.ToRentalOptionResponse(createdRentalOption, nil), nil
 }
 
 func (s *RentalOptionService) Update(ctx context.Context, req dto.RentalOptionRequest, id uint) (dto.RentalOptionResponse, error) {
@@ -161,7 +184,7 @@ func (s *RentalOptionService) Update(ctx context.Context, req dto.RentalOptionRe
 		return dto.RentalOptionResponse{}, err
 	}
 
-	return mapper.ToRentalOptionResponse(updatedRentalOption), nil
+	return mapper.ToRentalOptionResponse(updatedRentalOption, nil), nil
 }
 
 func (s *RentalOptionService) Delete(ctx context.Context, id uint) error {
