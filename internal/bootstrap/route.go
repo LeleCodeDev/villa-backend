@@ -212,5 +212,11 @@ func (a *App) RegisterRoute() {
 		admin.POST("/whatsapp-templates", a.WhatsappTemplateHandler.CreateWhatsappTemplate)
 		admin.PUT("/whatsapp-templates/:id", a.WhatsappTemplateHandler.UpdateWhatsappTemplate)
 		admin.DELETE("/whatsapp-templates/:id", a.WhatsappTemplateHandler.DeleteWhatsappTemplate)
+
+		// Rental Price
+		admin.GET("/rental-prices", a.RentalPriceHandler.GetAllRentalPrices)
+		admin.GET("/rental-prices/:id", a.RentalPriceHandler.GetRentalPriceByID)
+		admin.POST("/rental-prices", a.RentalPriceHandler.CreateRentalPrice)
+		admin.PUT("/rental-prices/:id", a.RentalPriceHandler.UpdateRentalPrice)
 	}
 }
