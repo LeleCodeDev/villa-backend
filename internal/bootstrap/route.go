@@ -45,6 +45,7 @@ func (a *App) RegisterRoute() {
 
 		// Pricelist
 		public.GET("/pricelists", a.PricelistHandler.GetAllPricelists)
+		public.GET("/pricelists/:id", a.PricelistHandler.GetPricelistByID)
 
 		// Facility
 		public.GET("/facilities", a.FacilityHandler.GetAllFacilities)
@@ -143,7 +144,6 @@ func (a *App) RegisterRoute() {
 		admin.DELETE("/villa-package-lists/:id", a.VillaPackageListHandler.DeleteVillaPackageList)
 
 		// Pricelist
-		admin.GET("/pricelists/:id", a.PricelistHandler.GetPricelistByID)
 		admin.POST("/pricelists", a.PricelistHandler.CreatePricelist)
 		admin.PUT("/pricelists/:id", a.PricelistHandler.UpdatePricelist)
 		admin.DELETE("/pricelists/:id", a.PricelistHandler.DeletePricelist)
