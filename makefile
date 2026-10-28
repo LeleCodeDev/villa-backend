@@ -21,7 +21,7 @@ dev-migrate:
 	$(DEV) run --rm --build migration
 
 dev-seed:
-	$(DEV) run --rm --build seeder
+	$(DEV) run --rm --build seeder $(args)
 
 dev-shell:
 	$(DEV) exec app sh
@@ -40,4 +40,4 @@ prod-migrate:
 	$(PROD) run --rm --build migration
 
 prod-seed:
-	$(PROD) run --rm --build seeder
+	$(PROD) run --rm --build seeder $(args)

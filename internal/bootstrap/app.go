@@ -44,6 +44,7 @@ type App struct {
 	ReasonHandler               *handler.ReasonHandler
 	WhatsappTemplateHandler     *handler.WhatsappTemplateHandler
 	RentalPriceHandler          *handler.RentalPriceHandler
+	SeasonPeriodHandler         *handler.SeasonPeriodHandler
 }
 
 func NewApp() *App {
@@ -75,6 +76,7 @@ func NewApp() *App {
 	reasonRepo := repository.NewReasonRepository(db)
 	whatsappTemplateRepo := repository.NewWhatsappTemplateRepository(db)
 	rentalPriceRepo := repository.NewRentalPriceRepository(db)
+	seasonPeriodRepo := repository.NewSeasonPeriodRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	userService := service.NewUserService(txManager, userRepo)
@@ -99,6 +101,7 @@ func NewApp() *App {
 	reasonService := service.NewReasonService(txManager, reasonRepo)
 	whatsappTemplateService := service.NewWhatsappTemplateService(txManager, whatsappTemplateRepo)
 	rentalPriceService := service.NewRentalPriceService(txManager, rentalPriceRepo, rentalOptionRepo)
+	seasonPeriodService := service.NewSeasionPeriodService(txManager, seasonPeriodRepo)
 
 	app := &App{
 		Router:                      r,
@@ -128,6 +131,7 @@ func NewApp() *App {
 		ReasonHandler:               handler.NewReasonHandler(reasonService),
 		WhatsappTemplateHandler:     handler.NewWhatsappTemplateHandler(whatsappTemplateService),
 		RentalPriceHandler:          handler.NewRentalPriceHandler(rentalPriceService),
+		SeasonPeriodHandler:         handler.NewSeasonPeriodHandler(seasonPeriodService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

@@ -58,7 +58,7 @@ func Error(c *gin.Context, code int, message string, err any) {
 
 func HandleServiceError(c *gin.Context, err error) {
 	if serviceError, ok := err.(*appError.ServiceError); ok {
-		Error(c, serviceError.StatusCode, serviceError.Message, nil)
+		Error(c, serviceError.StatusCode, serviceError.Message, serviceError.Errors)
 		return
 	}
 

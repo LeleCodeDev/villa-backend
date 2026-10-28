@@ -219,5 +219,11 @@ func (a *App) RegisterRoute() {
 		admin.GET("/rental-prices/:id", a.RentalPriceHandler.GetRentalPriceByID)
 		admin.POST("/rental-prices", a.RentalPriceHandler.CreateRentalPrice)
 		admin.PUT("/rental-prices/:id", a.RentalPriceHandler.UpdateRentalPrice)
+
+		// Season Period
+		admin.GET("/seasons", a.SeasonPeriodHandler.GetAllSeasonPeriods)
+		admin.GET("/seasons/:id", a.SeasonPeriodHandler.GetSeasonPeriodByID)
+		admin.POST("/seasons", a.SeasonPeriodHandler.CreateSeasonPeriod)
+		admin.PUT("/seasons/:id", a.SeasonPeriodHandler.UpdateSeasonPeriod)
 	}
 }
