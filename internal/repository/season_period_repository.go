@@ -62,10 +62,15 @@ func (r *SeasonPeriodRepository) GetByID(ctx context.Context, id uint) (*model.S
 func (r *SeasonPeriodRepository) GetSeasonConflict(ctx context.Context, startDate time.Time, endDate time.Time, excludeID uint) ([]model.SeasonPeriod, error) {
 	var conflicts []model.SeasonPeriod
 
-	if err := r.db.WithContext(ctx).
+	db := r.db.WithContext(ctx).
 		Model(&model.SeasonPeriod{}).
-		Where("start_date <= ? AND end_date >= ?", endDate, startDate).
-		Find(&conflicts).Error; err != nil {
+		Where("start_date <= ? AND end_date >= ?", endDate, startDate)
+
+	if excludeID > 0 {
+		db = db.Where("id != ?", excludeID)
+	}
+
+	if err := db.Find(&conflicts).Error; err != nil {
 		return nil, err
 	}
 

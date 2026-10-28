@@ -33,6 +33,17 @@ func GetValidationError(err validator.ValidationErrors) map[string]string {
 		case "oneof":
 			values := strings.Join(strings.Split(e.Param(), " "), ", ")
 			errors[field] = fmt.Sprintf("%s must be one of these values: %s", field, values)
+		case "datetime":
+			layouts := map[string]string{
+				"2006-01-02":          "YYYY-MM-DD",
+				"2006-01-02 15:04":    "YYYY-MM-DD HH:mm",
+				"2006-01-02 15:04:05": "YYYY-MM-DD HH:mm:ss",
+			}
+			format, ok := layouts[e.Param()]
+			if !ok {
+				format = e.Param()
+			}
+			errors[field] = fmt.Sprintf("%s must be a valid date in format %s", field, format)
 		default:
 			errors[field] = fmt.Sprintf("%v is invalid", field)
 		}
