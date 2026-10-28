@@ -37,6 +37,7 @@ func (h *SeasonPeriodHandler) GetAllSeasonPeriods(c *gin.Context) {
 
 	if query.Unpage {
 		response.Success(c, http.StatusOK, "All season period successfully fetched!", seasonPeriods)
+		return
 	}
 
 	pagination := pagination.BuildPagination(query.Page, query.Size, total)
