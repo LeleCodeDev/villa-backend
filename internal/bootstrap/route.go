@@ -189,9 +189,9 @@ func (a *App) RegisterRoute() {
 		admin.GET("/messages/:id", a.MessageHandler.GetMessageByID)
 
 		// Rental Option
-		public.POST("/rental-options", a.RentalOptionHandler.CreateRentalOption)
-		public.PUT("/rental-options/:id", a.RentalOptionHandler.UpdateRentalOption)
-		public.DELETE("/rental-options/:id", a.RentalOptionHandler.DeleteRentalOption)
+		admin.POST("/rental-options", a.RentalOptionHandler.CreateRentalOption)
+		admin.PUT("/rental-options/:id", a.RentalOptionHandler.UpdateRentalOption)
+		admin.DELETE("/rental-options/:id", a.RentalOptionHandler.DeleteRentalOption)
 
 		// Attraction
 		admin.GET("/attractions/:id", a.AttractionHandler.GetAttractionByID)

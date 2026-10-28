@@ -39,6 +39,8 @@ func main() {
 		&model.WhatsappTemplate{},
 		&model.RentalPrice{},
 		&model.SeasonPeriod{},
+		&model.Booking{},
+		&model.BookingAddon{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {
