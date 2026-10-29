@@ -7,6 +7,15 @@ import (
 )
 
 type (
+	BookingQuery struct {
+		PaginationQuery
+		SortQuery
+		Status    model.BookingStatus `json:"status" form:"status" binding:"omitempty,oneof=pending paid canceled completed expired refunded not_show"`
+		StartDate string              `json:"start_date" form:"start_date" binding:"datetime=2006-01-02"`
+		EndDate   string              `json:"end_date" form:"end_date" binding:"datetime=2006-01-02"`
+		Unpage    bool                `form:"unpage"`
+	}
+
 	BookingCreateRequest struct {
 		GuestCount     int    `json:"guest_count" form:"guest_count" binding:"required,gt=0"`
 		RentalOptionID uint   `json:"rental_option_id" form:"rental_option_id" binding:"required,gt=0"`
@@ -33,3 +42,8 @@ type (
 		UpdatedAt             time.Time            `json:"updated_at"`
 	}
 )
+
+func (bq *BookingQuery) SetDefault() {
+	bq.setDefaultPagination()
+	bq.SetDefaultSort(SortAsc)
+}

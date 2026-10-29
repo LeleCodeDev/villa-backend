@@ -6,6 +6,7 @@ import (
 	"time"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
+	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
@@ -55,19 +56,18 @@ func (s *SeasonPeriodService) GetByID(ctx context.Context, id uint) (dto.SeasonP
 }
 
 func parseDates(startDate string, endDate string) (time.Time, time.Time, error) {
-	loc, err := time.LoadLocation("Asia/Jakarta")
-	if err != nil {
-		return time.Time{}, time.Time{}, err
-	}
+	loc := config.Env.Location
 
 	start, err := time.ParseInLocation("2006-01-02", startDate, loc)
 	if err != nil {
 		return time.Time{}, time.Time{}, appError.BadRequest("invalid start_date, expected YYYY-MM-DD")
 	}
+
 	end, err := time.ParseInLocation("2006-01-02", endDate, loc)
 	if err != nil {
 		return time.Time{}, time.Time{}, appError.BadRequest("invalid end_date, expected YYYY-MM-DD")
 	}
+
 	if end.Before(start) {
 		return time.Time{}, time.Time{}, appError.BadRequest("end_date must be on or after start_date")
 	}

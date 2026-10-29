@@ -2,7 +2,10 @@
 package config
 
 import (
+	"log"
 	"os"
+	"time"
+	_ "time/tzdata"
 
 	"github.com/joho/godotenv"
 )
@@ -18,6 +21,7 @@ type Config struct {
 	JWTSecret  string
 	AdminEmail string
 	AdminPass  string
+	Location   *time.Location
 }
 
 var Env *Config
@@ -25,7 +29,7 @@ var Env *Config
 func LoadConfig() {
 	_ = godotenv.Load()
 
-	config := &Config{
+	Env = &Config{
 		Port:       getEnv("PORT", "8080"),
 		DBHost:     getEnv("DB_HOST", "localhost"),
 		DBPort:     getEnv("DB_PORT", "5432"),
@@ -36,16 +40,22 @@ func LoadConfig() {
 		JWTSecret:  getEnv("JWT_SECRET", "SECRET"),
 		AdminEmail: getEnv("ADMIN_EMAIL", "admin@admin.com"),
 		AdminPass:  getEnv("ADMIN_PASS", ""),
+		Location:   getLocation(),
 	}
-
-	Env = config
 }
 
-func getEnv(key string, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		value = defaultValue
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
 	}
+	return defaultValue
+}
 
-	return value
+func getLocation() *time.Location {
+	name := getEnv("APP_TIMEZONE", "Asia/Jakarta")
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatalf("invalid APP_TIMEZONE %q: %v", name, err)
+	}
+	return loc
 }
