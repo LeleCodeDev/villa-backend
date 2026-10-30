@@ -25,7 +25,11 @@ func (r *BookingRepository) GetAll(ctx context.Context, query dto.BookingQuery) 
 	var bookings []model.Booking
 	var total int64
 
-	db := r.db.WithContext(ctx).Model(&model.Booking{})
+	db := r.db.WithContext(ctx).
+		Preload("User").
+		Preload("RentalOption").
+		Preload("Reason").
+		Model(&model.Booking{})
 
 	if query.Status != "" {
 		db = db.Where("status = ?", query.Status)
@@ -72,4 +76,12 @@ func (r *BookingRepository) GetByID(ctx context.Context, id uint) (*model.Bookin
 
 func (r *BookingRepository) Create(ctx context.Context, booking *model.Booking) error {
 	return r.db.WithContext(ctx).Create(booking).Error
+}
+
+func (r *BookingRepository) Update(ctx context.Context, booking *model.Booking) error {
+	return r.db.WithContext(ctx).Save(booking).Error
+}
+
+func (r *BookingRepository) Delete(ctx context.Context, booking *model.Booking) error {
+	return r.db.WithContext(ctx).Delete(booking).Error
 }

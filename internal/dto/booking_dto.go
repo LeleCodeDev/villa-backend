@@ -25,7 +25,7 @@ type (
 	}
 
 	BookingResponse struct {
-		ID                    int                  `json:"id"`
+		ID                    uint                 `json:"id"`
 		User                  UserResponse         `json:"user"`
 		GuestCount            int                  `json:"guest_count"`
 		RentalOption          RentalOptionResponse `json:"rental_option"`
@@ -33,11 +33,12 @@ type (
 		Status                model.BookingStatus  `json:"status"`
 		CheckInDate           time.Time            `json:"check_in_date"`
 		CheckOutDate          time.Time            `json:"check_out_date"`
+		BookingPrice          float64              `json:"booking_price"`
 		TotalPrice            float64              `json:"total_price"`
 		CheckInAt             *time.Time           `json:"check_in_at"`
 		CheckOutAt            *time.Time           `json:"check_out_at"`
 		ConfirmationExpiresAt *time.Time           `json:"confirmation_expires_at,omitempty"`
-		Addons                []AddonResponse      `json:"addons"`
+		Addons                []AddonResponse      `json:"addons,omitempty"`
 		CreatedAt             time.Time            `json:"created_at"`
 		UpdatedAt             time.Time            `json:"updated_at"`
 	}
