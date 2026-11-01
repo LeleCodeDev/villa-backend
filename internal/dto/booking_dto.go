@@ -17,11 +17,12 @@ type (
 	}
 
 	BookingCreateRequest struct {
-		GuestCount     int    `json:"guest_count" form:"guest_count" binding:"required,gt=0"`
-		RentalOptionID uint   `json:"rental_option_id" form:"rental_option_id" binding:"required,gt=0"`
-		ReasonID       uint   `json:"reason_id" form:"reason_id" binding:"required,gt=0"`
-		CheckInDate    string `json:"check_in_date" form:"check_in_date" binding:"required,datetime=2006-01-02"`
-		CheckOutDate   string `json:"check_out_date" form:"check_out_date" binding:"required,datetime=2006-01-02"`
+		GuestCount     int                   `json:"guest_count" form:"guest_count" binding:"required,gt=0"`
+		RentalOptionID uint                  `json:"rental_option_id" form:"rental_option_id" binding:"required,gt=0"`
+		ReasonID       uint                  `json:"reason_id" form:"reason_id" binding:"required,gt=0"`
+		CheckInDate    string                `json:"check_in_date" form:"check_in_date" binding:"required,datetime=2006-01-02"`
+		CheckOutDate   string                `json:"check_out_date" form:"check_out_date" binding:"required,datetime=2006-01-02"`
+		BookingAddons  []BookingAddonRequest `json:"booking_addons" form:"booking_addons"`
 	}
 
 	BookingResponse struct {

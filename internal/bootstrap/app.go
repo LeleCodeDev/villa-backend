@@ -45,6 +45,7 @@ type App struct {
 	WhatsappTemplateHandler     *handler.WhatsappTemplateHandler
 	RentalPriceHandler          *handler.RentalPriceHandler
 	SeasonPeriodHandler         *handler.SeasonPeriodHandler
+	BookingHandler              *handler.BookingHandler
 }
 
 func NewApp() *App {
@@ -77,6 +78,8 @@ func NewApp() *App {
 	whatsappTemplateRepo := repository.NewWhatsappTemplateRepository(db)
 	rentalPriceRepo := repository.NewRentalPriceRepository(db)
 	seasonPeriodRepo := repository.NewSeasonPeriodRepository(db)
+	bookingRepo := repository.NewBookingRepository(db)
+	bookingAddonRepo := repository.NewBookingAddonRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	userService := service.NewUserService(txManager, userRepo)
@@ -102,6 +105,7 @@ func NewApp() *App {
 	whatsappTemplateService := service.NewWhatsappTemplateService(txManager, whatsappTemplateRepo)
 	rentalPriceService := service.NewRentalPriceService(txManager, rentalPriceRepo, rentalOptionRepo)
 	seasonPeriodService := service.NewSeasionPeriodService(txManager, seasonPeriodRepo)
+	bookingService := service.NewBookingService(txManager, bookingRepo, bookingAddonRepo)
 
 	app := &App{
 		Router:                      r,
@@ -132,6 +136,7 @@ func NewApp() *App {
 		WhatsappTemplateHandler:     handler.NewWhatsappTemplateHandler(whatsappTemplateService),
 		RentalPriceHandler:          handler.NewRentalPriceHandler(rentalPriceService),
 		SeasonPeriodHandler:         handler.NewSeasonPeriodHandler(seasonPeriodService),
+		BookingHandler:              handler.NewBookingHandler(bookingService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
@@ -155,6 +160,9 @@ func setupValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterTagNameFunc(func(field reflect.StructField) string {
 			name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
+			if name == "" || name == "-" {
+				return field.Name
+			}
 			return name
 		})
 	}

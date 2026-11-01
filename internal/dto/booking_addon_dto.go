@@ -12,4 +12,9 @@ type (
 		CreatedAt time.Time     `json:"created_at"`
 		UpdatedAt time.Time     `json:"updated_at"`
 	}
+
+	BookingAddonRequest struct {
+		AddonID  uint `json:"addon_id" form:"addon_id" binding:"required,gt=0"`
+		Quantity int  `json:"quantity" form:"quantity" binding:"required,gt=0"`
+	}
 )

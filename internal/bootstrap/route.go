@@ -227,5 +227,8 @@ func (a *App) RegisterRoute() {
 		admin.GET("/seasons/:id", a.SeasonPeriodHandler.GetSeasonPeriodByID)
 		admin.POST("/seasons", a.SeasonPeriodHandler.CreateSeasonPeriod)
 		admin.PUT("/seasons/:id", a.SeasonPeriodHandler.UpdateSeasonPeriod)
+
+		// Booking
+		admin.GET("/bookings", a.BookingHandler.GetAllBookings)
 	}
 }
