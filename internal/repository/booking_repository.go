@@ -63,7 +63,11 @@ func (r *BookingRepository) GetAll(ctx context.Context, query dto.BookingQuery) 
 func (r *BookingRepository) GetByID(ctx context.Context, id uint) (*model.Booking, error) {
 	var booking model.Booking
 
-	if err := r.db.WithContext(ctx).First(&booking, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Preload("User").
+		Preload("RentalOption").
+		Preload("Reason").
+		First(&booking, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

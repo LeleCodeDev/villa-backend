@@ -12,6 +12,7 @@ type BookingAddon struct {
 	Booking   Booking `gorm:"constraint:OnDelete:CASCADE"`
 	AddonID   uint    `gorm:"not null;index"`
 	Addon     Addon   `gorm:"constraint:OnDelete:CASCADE"`
+	Quantity  int     `gorm:"not null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
