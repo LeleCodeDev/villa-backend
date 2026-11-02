@@ -2,6 +2,7 @@
 package response
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -66,10 +67,16 @@ func HandleServiceError(c *gin.Context, err error) {
 }
 
 func HandleValidationError(c *gin.Context, err error) {
-	if validationErrors, ok := err.(validator.ValidationErrors); ok {
+	if validationErrors, ok := errors.AsType[validator.ValidationErrors](err); ok {
 		Error(c, http.StatusBadRequest, "Validation failed!", appError.GetValidationError(validationErrors))
 		return
 	}
 
-	Error(c, http.StatusInternalServerError, "Server error", err.Error())
+	if bindErrors, ok := appError.GetBindError(err); ok {
+		Error(c, http.StatusBadRequest, "Invalid request body!", bindErrors)
+		return
+	}
+
+	_ = c.Error(err)
+	Error(c, http.StatusInternalServerError, "Server error", nil)
 }

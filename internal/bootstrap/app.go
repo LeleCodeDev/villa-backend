@@ -105,7 +105,16 @@ func NewApp() *App {
 	whatsappTemplateService := service.NewWhatsappTemplateService(txManager, whatsappTemplateRepo)
 	rentalPriceService := service.NewRentalPriceService(txManager, rentalPriceRepo, rentalOptionRepo)
 	seasonPeriodService := service.NewSeasionPeriodService(txManager, seasonPeriodRepo)
-	bookingService := service.NewBookingService(txManager, bookingRepo, bookingAddonRepo)
+	bookingService := service.NewBookingService(
+		txManager,
+		bookingRepo,
+		bookingAddonRepo,
+		rentalOptionRepo,
+		reasonRepo,
+		rentalPriceRepo,
+		seasonPeriodRepo,
+		addonRepo,
+	)
 
 	app := &App{
 		Router:                      r,

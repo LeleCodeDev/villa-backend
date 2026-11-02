@@ -16,3 +16,13 @@ func ToBookingAddonResponse(bookingAddon *model.BookingAddon) dto.BookingAddonRe
 		UpdatedAt: bookingAddon.UpdatedAt,
 	}
 }
+
+func ToBookingAddonModel(req dto.BookingAddonRequest, booking model.Booking, addon model.Addon) *model.BookingAddon {
+	return &model.BookingAddon{
+		BookingID: booking.ID,
+		Booking:   booking,
+		AddonID:   addon.ID,
+		Addon:     addon,
+		Quantity:  req.Quantity,
+	}
+}

@@ -93,6 +93,12 @@ func (a *App) RegisterRoute() {
 	authenticated := api.Group("")
 	authenticated.Use(a.AuthMiddleware)
 
+	user := authenticated.Group("")
+	user.Use(middleware.RoleMiddleware(model.RoleUser))
+	{
+		user.POST("/my-bookings", a.BookingHandler.CreateBooking)
+	}
+
 	admin := authenticated.Group("")
 	admin.Use(middleware.RoleMiddleware(model.RoleAdmin))
 	{

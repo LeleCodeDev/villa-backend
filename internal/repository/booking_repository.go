@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
@@ -88,4 +89,24 @@ func (r *BookingRepository) Update(ctx context.Context, booking *model.Booking) 
 
 func (r *BookingRepository) Delete(ctx context.Context, booking *model.Booking) error {
 	return r.db.WithContext(ctx).Delete(booking).Error
+}
+
+func (r *BookingRepository) GetBookingConflicts(ctx context.Context, optionID uint, in time.Time, out time.Time, excludeID uint) ([]model.Booking, error) {
+	var conflicts []model.Booking
+	db := r.db.WithContext(ctx).
+		Where("rental_option_id = ?", optionID).
+		Where("status NOT IN ?", []model.BookingStatus{
+			model.BookingStatusCanceled, model.BookingStatusExpired, model.BookingStatusRefunded,
+		}).
+		Where("check_in_date <= ? AND check_out_date >= ?", out, in)
+
+	if excludeID > 0 {
+		db = db.Where("id != ?", excludeID)
+	}
+
+	if err := db.Find(&conflicts).Error; err != nil {
+		return nil, err
+	}
+
+	return conflicts, nil
 }

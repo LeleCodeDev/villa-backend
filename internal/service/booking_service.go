@@ -3,29 +3,47 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
+	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
+	"gorm.io/gorm"
 )
 
 type BookingService struct {
 	txManager        *repository.TxManager
 	repo             *repository.BookingRepository
 	bookingAddonRepo *repository.BookingAddonRepository
+	rentalOptionRepo *repository.RentalOptionRepository
+	reasonRepo       *repository.ReasonRepository
+	rentalPriceRepo  *repository.RentalPriceRepository
+	seasonPeriodRepo *repository.SeasonPeriodRepository
+	addonRepo        *repository.AddonRepository
 }
 
 func NewBookingService(
 	txManager *repository.TxManager,
 	repo *repository.BookingRepository,
 	bookingAddonRepo *repository.BookingAddonRepository,
+	rentalOptionRepo *repository.RentalOptionRepository,
+	reasonRepo *repository.ReasonRepository,
+	rentalPriceRepo *repository.RentalPriceRepository,
+	seasonPeriodRepo *repository.SeasonPeriodRepository,
+	addonRepo *repository.AddonRepository,
 ) *BookingService {
 	return &BookingService{
 		txManager:        txManager,
 		repo:             repo,
 		bookingAddonRepo: bookingAddonRepo,
+		rentalOptionRepo: rentalOptionRepo,
+		reasonRepo:       reasonRepo,
+		rentalPriceRepo:  rentalPriceRepo,
+		seasonPeriodRepo: seasonPeriodRepo,
+		addonRepo:        addonRepo,
 	}
 }
 
@@ -73,4 +91,214 @@ func (s *BookingService) GetByID(ctx context.Context, id uint) (dto.BookingRespo
 	}
 
 	return mapper.ToBookingResponse(booking, bookingAddons), nil
+}
+
+func parseBookingDates(in, out string) (time.Time, time.Time, error) {
+	checkIn, checkOut, err := parseDates(in, out)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+	if checkOut.Before(checkIn) {
+		return time.Time{}, time.Time{}, appError.BadRequest("check_out_date must be after check_in_date")
+	}
+
+	now := time.Now().In(config.Env.Location)
+	y, m, d := now.Date()
+	today := time.Date(y, m, d, 0, 0, 0, 0, config.Env.Location)
+
+	if checkIn.Before(today) {
+		return time.Time{}, time.Time{}, appError.BadRequest("check_in_date cannot be in the past")
+	}
+
+	return checkIn, checkOut, nil
+}
+
+type priceKey struct {
+	Season  model.SeasonType
+	DayType model.DayType
+}
+
+func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPeriod, checkIn, checkOut time.Time) (float64, error) {
+	priceMap := make(map[priceKey]float64, len(prices))
+	for _, r := range prices {
+		priceMap[priceKey{Season: r.Season, DayType: r.DayType}] = r.Price
+		fmt.Println(priceMap[priceKey{Season: r.Season, DayType: r.DayType}])
+	}
+
+	var total float64
+	for d := checkIn; !d.Equal(checkOut); d = d.AddDate(0, 0, 1) {
+
+		season := model.SeasonReguler
+		for _, sp := range seasonPeriods {
+			if !d.Before(sp.StartDate) && !d.After(sp.EndDate) {
+				season = model.SeasonHigh
+				break
+			}
+		}
+
+		dayType := model.DayWeekday
+		switch d.Weekday() {
+		case time.Friday, time.Saturday, time.Sunday:
+			dayType = model.DayWeekend
+		}
+
+		price, ok := priceMap[priceKey{Season: season, DayType: dayType}]
+		if !ok {
+			return 0, appError.BadRequest(fmt.Sprintf("no %s %s price configured for this rental option", season, dayType))
+		}
+		total += price
+		fmt.Println(total)
+	}
+	return total, nil
+}
+
+type conflictBooking struct {
+	CheckInDate  time.Time `json:"check_in_date"`
+	CheckOutDate time.Time `json:"check_out_date"`
+}
+
+func (s *BookingService) Create(ctx context.Context, currentUser model.User, req dto.BookingCreateRequest) (dto.BookingResponse, error) {
+	// parse req time from string to time.Time
+	checkIn, checkOut, err := parseBookingDates(req.CheckInDate, req.CheckOutDate)
+	if err != nil {
+		return dto.BookingResponse{}, err
+	}
+
+	// check addon duplicate
+	seen := make(map[uint]struct{}, len(req.BookingAddons))
+	addonIDs := make([]uint, 0, len(req.BookingAddons))
+	for _, a := range req.BookingAddons {
+		if _, dup := seen[a.AddonID]; dup {
+			return dto.BookingResponse{}, appError.BadRequest("duplicate addon in booking_addons")
+		}
+		seen[a.AddonID] = struct{}{}
+		addonIDs = append(addonIDs, a.AddonID)
+	}
+
+	var created *model.Booking
+	var createdAddons []model.BookingAddon
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txBookingRepo := s.repo.WithTx(tx)
+		txBookingAddonRepo := s.bookingAddonRepo.WithTx(tx)
+		txRentalOptionRepo := s.rentalOptionRepo.WithTx(tx)
+		txReasonRepo := s.reasonRepo.WithTx(tx)
+		txRentalPriceRepo := s.rentalPriceRepo.WithTx(tx)
+		txSeasonPeriodRepo := s.seasonPeriodRepo.WithTx(tx)
+		txAddonRepo := s.addonRepo.WithTx(tx)
+
+		// get rental option
+		rentalOption, err := txRentalOptionRepo.GetByID(ctx, req.RentalOptionID)
+		if err != nil {
+			return err
+		}
+		if rentalOption == nil {
+			return appError.NotFound(fmt.Sprintf("Rental option not found with ID: %d", req.RentalOptionID))
+		}
+
+		// get reason
+		reason, err := txReasonRepo.GetByID(ctx, req.ReasonID)
+		if err != nil {
+			return err
+		}
+		if reason == nil {
+			return appError.NotFound(fmt.Sprintf("Reason not found with ID: %d", req.ReasonID))
+		}
+
+		// check booking conflict
+		conflicts, err := txBookingRepo.GetBookingConflicts(ctx, rentalOption.ID, checkIn, checkOut, 0)
+		if err != nil {
+			return err
+		}
+		if len(conflicts) > 0 {
+			conflictResponses := make([]conflictBooking, 0, len(conflicts))
+			for _, conflict := range conflicts {
+				conflictResponses = append(conflictResponses, conflictBooking{CheckInDate: conflict.CheckInDate, CheckOutDate: conflict.CheckOutDate})
+			}
+
+			return appError.Conflict("rental option is already booked for these dates").
+				WithErrors(conflictResponses)
+		}
+
+		// get rental prices
+		prices, err := txRentalPriceRepo.GetAllByRentalOptionID(ctx, rentalOption.ID)
+		if err != nil {
+			return err
+		}
+
+		for _, price := range prices {
+			fmt.Println("id :", price.ID)
+			fmt.Println("rental option id :", price.RentalOptionID)
+			fmt.Println("season :", price.Season)
+			fmt.Println("day type :", price.DayType)
+			fmt.Println("price :", price.Price)
+			fmt.Println("")
+		}
+
+		// get season periods
+		seasonPeriods, err := txSeasonPeriodRepo.GetSeasonConflict(ctx, checkIn, checkOut, 0)
+		if err != nil {
+			return err
+		}
+
+		// calculate booking price
+		bookingPrice, err := calculateStay(prices, seasonPeriods, checkIn, checkOut)
+		if err != nil {
+			return err
+		}
+
+		// get addons and calculate addon price
+		addons, err := txAddonRepo.GetAllInIds(ctx, addonIDs)
+		if err != nil {
+			return err
+		}
+		addonMap := make(map[uint]model.Addon, len(addons))
+		for _, a := range addons {
+			addonMap[a.ID] = a
+		}
+
+		var addonTotal float64
+		for _, ba := range req.BookingAddons {
+			a, ok := addonMap[ba.AddonID]
+			if !ok {
+				return appError.NotFound(fmt.Sprintf("addon not found with id: %d", ba.AddonID))
+			}
+			addonTotal += a.Price * float64(ba.Quantity)
+		}
+
+		// create booking
+		booking := mapper.ToBookingModel(
+			req,
+			currentUser,
+			*rentalOption,
+			*reason,
+			checkIn,
+			checkOut,
+			bookingPrice,
+			bookingPrice+addonTotal,
+		)
+		if err := txBookingRepo.Create(ctx, booking); err != nil {
+			return err
+		}
+
+		// create booking addons
+		bookingAddons := make([]model.BookingAddon, 0, len(req.BookingAddons))
+		if len(req.BookingAddons) > 0 {
+			for _, ar := range req.BookingAddons {
+				ba := mapper.ToBookingAddonModel(ar, *booking, addonMap[ar.AddonID])
+				bookingAddons = append(bookingAddons, *ba)
+			}
+			if err := txBookingAddonRepo.Creates(ctx, bookingAddons); err != nil {
+				return err
+			}
+		}
+
+		created = booking
+		createdAddons = bookingAddons
+		return nil
+	}); err != nil {
+		return dto.BookingResponse{}, err
+	}
+
+	return mapper.ToBookingResponse(created, createdAddons), nil
 }

@@ -44,3 +44,7 @@ func (r *BookingAddonRepository) GetAllInBookingIds(ctx context.Context, booking
 
 	return bookingAddons, nil
 }
+
+func (r *BookingAddonRepository) Creates(ctx context.Context, bookingAddons []model.BookingAddon) error {
+	return r.db.WithContext(ctx).Create(bookingAddons).Error
+}

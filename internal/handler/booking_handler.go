@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lelecodedev/villa-backend/internal/dto"
+	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/pagination"
 	"github.com/lelecodedev/villa-backend/internal/response"
 	"github.com/lelecodedev/villa-backend/internal/service"
@@ -60,4 +61,23 @@ func (h *BookingHandler) GetBookingByID(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, "Booking successfully fetched!", booking)
+}
+
+func (h *BookingHandler) CreateBooking(c *gin.Context) {
+	var req dto.BookingCreateRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+	currentUser := c.MustGet("user").(model.User)
+
+	booking, err := h.service.Create(ctx, currentUser, req)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Booking successfully created", booking)
 }

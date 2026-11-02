@@ -11,8 +11,8 @@ type (
 		PaginationQuery
 		SortQuery
 		Status    model.BookingStatus `json:"status" form:"status" binding:"omitempty,oneof=pending paid canceled completed expired refunded not_show"`
-		StartDate string              `json:"start_date" form:"start_date" binding:"datetime=2006-01-02"`
-		EndDate   string              `json:"end_date" form:"end_date" binding:"datetime=2006-01-02"`
+		StartDate string              `json:"start_date" form:"start_date" binding:"omitempty,datetime=2006-01-02"`
+		EndDate   string              `json:"end_date" form:"end_date" binding:"omitempty,datetime=2006-01-02"`
 		Unpage    bool                `form:"unpage"`
 	}
 
@@ -22,7 +22,7 @@ type (
 		ReasonID       uint                  `json:"reason_id" form:"reason_id" binding:"required,gt=0"`
 		CheckInDate    string                `json:"check_in_date" form:"check_in_date" binding:"required,datetime=2006-01-02"`
 		CheckOutDate   string                `json:"check_out_date" form:"check_out_date" binding:"required,datetime=2006-01-02"`
-		BookingAddons  []BookingAddonRequest `json:"booking_addons" form:"booking_addons"`
+		BookingAddons  []BookingAddonRequest `json:"booking_addons" form:"booking_addons" binding:"omitempty,dive"`
 	}
 
 	BookingResponse struct {
