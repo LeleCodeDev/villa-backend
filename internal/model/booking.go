@@ -14,8 +14,8 @@ const (
 	BookingStatusCanceled  BookingStatus = "canceled"
 	BookingStatusCompleted BookingStatus = "completed"
 	BookingStatusExpired   BookingStatus = "expired"
-	BookingStatusRefunded  BookingStatus = "refunded"
-	BookingStatusNotShow   BookingStatus = "not_show"
+	// BookingStatusRefunded  BookingStatus = "refunded"
+	BookingStatusNotShow BookingStatus = "not_show"
 )
 
 type Booking struct {
@@ -23,11 +23,11 @@ type Booking struct {
 	UserID         uint          `gorm:"not null;index"`
 	User           User          `gorm:"constraint:OnDelete:CASCADE"`
 	GuestCount     int           `gorm:"not null"`
-	RentalOptionID uint          `gorm:"not null;index"`
-	RentalOption   RentalOption  `gorm:"constraint:OnDelete:CASCADE"`
+	RentalOptionID *uint         `gorm:"index"`
+	RentalOption   *RentalOption `gorm:"constraint:OnDelete:SET NULL"`
 	ReasonID       uint          `gorm:"not null;index"`
 	Reason         Reason        `gorm:"constraint:OnDelete:CASCADE"`
-	Status         BookingStatus `gorm:"type:varchar(20);not null;default:'pending';check:status IN ('pending','paid','canceled','completed','expired','refunded','not_show')"`
+	Status         BookingStatus `gorm:"type:varchar(20);not null;default:'pending';check:status IN ('pending','paid','canceled','completed','expired','not_show')"`
 	CheckInDate    time.Time     `gorm:"not null;type:date"`
 	CheckOutDate   time.Time     `gorm:"not null;type:date"`
 	BookingPrice   float64       `gorm:"type:numeric(10,2);not null"`

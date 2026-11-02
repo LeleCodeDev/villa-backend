@@ -94,10 +94,18 @@ func (s *BookingService) GetByID(ctx context.Context, id uint) (dto.BookingRespo
 }
 
 func parseBookingDates(in, out string) (time.Time, time.Time, error) {
-	checkIn, checkOut, err := parseDates(in, out)
+	loc := config.Env.Location
+
+	checkIn, err := time.ParseInLocation("2006-01-02", in, loc)
 	if err != nil {
-		return time.Time{}, time.Time{}, err
+		return time.Time{}, time.Time{}, appError.BadRequest("invalid check_in_date, expected YYYY-MM-DD")
 	}
+
+	checkOut, err := time.ParseInLocation("2006-01-02", out, loc)
+	if err != nil {
+		return time.Time{}, time.Time{}, appError.BadRequest("invalid check_out_date, expected YYYY-MM-DD")
+	}
+
 	if checkOut.Before(checkIn) {
 		return time.Time{}, time.Time{}, appError.BadRequest("check_out_date must be after check_in_date")
 	}
@@ -126,7 +134,7 @@ func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPerio
 	}
 
 	var total float64
-	for d := checkIn; !d.Equal(checkOut); d = d.AddDate(0, 0, 1) {
+	for d := checkIn; !d.After(checkOut); d = d.AddDate(0, 0, 1) {
 
 		season := model.SeasonReguler
 		for _, sp := range seasonPeriods {
@@ -147,7 +155,6 @@ func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPerio
 			return 0, appError.BadRequest(fmt.Sprintf("no %s %s price configured for this rental option", season, dayType))
 		}
 		total += price
-		fmt.Println(total)
 	}
 	return total, nil
 }
@@ -226,15 +233,6 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			return err
 		}
 
-		for _, price := range prices {
-			fmt.Println("id :", price.ID)
-			fmt.Println("rental option id :", price.RentalOptionID)
-			fmt.Println("season :", price.Season)
-			fmt.Println("day type :", price.DayType)
-			fmt.Println("price :", price.Price)
-			fmt.Println("")
-		}
-
 		// get season periods
 		seasonPeriods, err := txSeasonPeriodRepo.GetSeasonConflict(ctx, checkIn, checkOut, 0)
 		if err != nil {
@@ -301,4 +299,41 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 	}
 
 	return mapper.ToBookingResponse(created, createdAddons), nil
+}
+
+func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
+	var canceledBooking *model.Booking
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txBookingRepo := s.repo.WithTx(tx)
+
+		booking, err := txBookingRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if booking == nil {
+			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
+		}
+
+		if booking.UserID != currentUser.ID {
+			return appError.Unauthorized("You are not authorized to access this booking!")
+		}
+
+		if booking.Status != model.BookingStatusPending {
+			return appError.BadRequest("Booking status is not pending")
+		}
+
+		booking.Status = model.BookingStatusCanceled
+		if err := txBookingRepo.Update(ctx, booking); err != nil {
+			return err
+		}
+
+		canceledBooking = booking
+
+		return nil
+	}); err != nil {
+		return dto.BookingResponse{}, err
+	}
+
+	return mapper.ToBookingResponse(canceledBooking, nil), nil
 }

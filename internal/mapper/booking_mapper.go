@@ -14,11 +14,17 @@ func ToBookingResponse(booking *model.Booking, bookingAddons []model.BookingAddo
 		BookingAddonResponses = append(BookingAddonResponses, ToBookingAddonResponse(&bookingAddons[i]))
 	}
 
+	var rentalOption *dto.RentalOptionResponse
+	if booking.RentalOption != nil {
+		rentalOptionResponse := ToRentalOptionResponse(booking.RentalOption, nil)
+		rentalOption = &rentalOptionResponse
+	}
+
 	return dto.BookingResponse{
 		ID:            booking.ID,
 		User:          ToUserResponse(&booking.User),
 		GuestCount:    booking.GuestCount,
-		RentalOption:  ToRentalOptionResponse(&booking.RentalOption, nil),
+		RentalOption:  rentalOption,
 		Reason:        ToReasonResponse(&booking.Reason),
 		Status:        booking.Status,
 		CheckInDate:   booking.CheckInDate,
@@ -50,8 +56,8 @@ func ToBookingModel(
 		UserID:         user.ID,
 		User:           user,
 		GuestCount:     req.GuestCount,
-		RentalOptionID: rentalOption.ID,
-		RentalOption:   rentalOption,
+		RentalOptionID: &rentalOption.ID,
+		RentalOption:   &rentalOption,
 		ReasonID:       reason.ID,
 		Reason:         reason,
 		Status:         model.BookingStatusPending,

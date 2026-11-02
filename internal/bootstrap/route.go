@@ -97,6 +97,7 @@ func (a *App) RegisterRoute() {
 	user.Use(middleware.RoleMiddleware(model.RoleUser))
 	{
 		user.POST("/my-bookings", a.BookingHandler.CreateBooking)
+		user.PUT("/my-bookings/:id/cancel", a.BookingHandler.CanceledBooking)
 	}
 
 	admin := authenticated.Group("")

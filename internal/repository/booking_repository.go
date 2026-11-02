@@ -96,7 +96,7 @@ func (r *BookingRepository) GetBookingConflicts(ctx context.Context, optionID ui
 	db := r.db.WithContext(ctx).
 		Where("rental_option_id = ?", optionID).
 		Where("status NOT IN ?", []model.BookingStatus{
-			model.BookingStatusCanceled, model.BookingStatusExpired, model.BookingStatusRefunded,
+			model.BookingStatusCanceled, model.BookingStatusExpired,
 		}).
 		Where("check_in_date <= ? AND check_out_date >= ?", out, in)
 

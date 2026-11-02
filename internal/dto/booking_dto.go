@@ -29,7 +29,7 @@ type (
 		ID            uint                   `json:"id"`
 		User          UserResponse           `json:"user"`
 		GuestCount    int                    `json:"guest_count"`
-		RentalOption  RentalOptionResponse   `json:"rental_option"`
+		RentalOption  *RentalOptionResponse  `json:"rental_option"`
 		Reason        ReasonResponse         `json:"reason"`
 		Status        model.BookingStatus    `json:"status"`
 		CheckInDate   time.Time              `json:"check_in_date"`

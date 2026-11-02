@@ -79,5 +79,24 @@ func (h *BookingHandler) CreateBooking(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Booking successfully created", booking)
+	response.Success(c, http.StatusCreated, "Booking successfully created!", booking)
+}
+
+func (h *BookingHandler) CanceledBooking(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+	currentUser := c.MustGet("user").(model.User)
+
+	booking, err := h.service.Cancel(ctx, currentUser, id)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Booking successfully canceled!", booking)
 }

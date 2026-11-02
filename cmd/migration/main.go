@@ -26,7 +26,6 @@ func main() {
 		&model.Facility{},
 		&model.Testimony{},
 		&model.Message{},
-		&model.Pricelist{},
 		&model.Addon{},
 		&model.AddonList{},
 		&model.VillaPackage{},
