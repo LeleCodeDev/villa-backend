@@ -81,6 +81,40 @@ func (s *RentalOptionService) GetByID(ctx context.Context, id uint) (dto.RentalO
 	return mapper.ToRentalOptionResponse(rentalOption, rentalPrices), nil
 }
 
+func (s *RentalOptionService) GetAvailable(ctx context.Context, query dto.BookingAvailableRequest) ([]dto.RentalOptionResponse, error) {
+	checkIn, checkOut, err := parseBookingDates(query.CheckInDate, query.CheckOutDate)
+	if err != nil {
+		return nil, err
+	}
+
+	rentalOptions, err := s.repo.GetAvailable(ctx, checkIn, checkOut, query.GuestCount)
+	if err != nil {
+		return nil, err
+	}
+
+	rentalOptionIds := make([]uint, 0, len(rentalOptions))
+	for _, rentalOption := range rentalOptions {
+		rentalOptionIds = append(rentalOptionIds, rentalOption.ID)
+	}
+
+	allPrices, err := s.rentalPriceRepo.GetAllByRentalOptionIDIn(ctx, rentalOptionIds)
+	if err != nil {
+		return nil, err
+	}
+
+	priceMap := make(map[uint][]model.RentalPrice, len(rentalOptions))
+	for _, price := range allPrices {
+		priceMap[price.RentalOptionID] = append(priceMap[price.RentalOptionID], price)
+	}
+
+	responses := make([]dto.RentalOptionResponse, 0, len(rentalOptions))
+	for _, rentalOption := range rentalOptions {
+		responses = append(responses, mapper.ToRentalOptionResponse(&rentalOption, priceMap[rentalOption.ID]))
+	}
+
+	return responses, nil
+}
+
 func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRequest) (dto.RentalOptionResponse, error) {
 	var createdRentalOption *model.RentalOption
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {

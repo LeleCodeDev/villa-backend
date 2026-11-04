@@ -30,7 +30,33 @@ func (h *BookingHandler) GetAllBookings(c *gin.Context) {
 	ctx := c.Request.Context()
 	query.SetDefault()
 
-	bookings, total, err := h.service.GetAll(ctx, query)
+	bookings, total, err := h.service.GetAll(ctx, query, nil)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	if query.Unpage {
+		response.Success(c, http.StatusOK, "All booking successfully fetched!", bookings)
+		return
+	}
+
+	pagination := pagination.BuildPagination(query.Page, query.Size, total)
+	response.Paginated(c, http.StatusOK, "All booking successfully fetched!", bookings, pagination)
+}
+
+func (h *BookingHandler) GetMyBookings(c *gin.Context) {
+	var query dto.BookingQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	currentUser := c.MustGet("user").(model.User)
+	ctx := c.Request.Context()
+	query.SetDefault()
+
+	bookings, total, err := h.service.GetAll(ctx, query, &currentUser.ID)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return

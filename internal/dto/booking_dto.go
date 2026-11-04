@@ -43,6 +43,17 @@ type (
 		CreatedAt     time.Time              `json:"created_at"`
 		UpdatedAt     time.Time              `json:"updated_at"`
 	}
+
+	BookingAvailableRequest struct {
+		CheckInDate  string `json:"check_in_date" form:"check_in_date" binding:"required,datetime=2006-01-02"`
+		CheckOutDate string `json:"check_out_date" form:"check_out_date" binding:"required,datetime=2006-01-02"`
+		GuestCount   int    `json:"guest_count" form:"guest_count" binding:"required,gt=0"`
+	}
+
+	BookingConflict struct {
+		CheckInDate  time.Time `json:"check_in_date"`
+		CheckOutDate time.Time `json:"check_out_date"`
+	}
 )
 
 func (bq *BookingQuery) SetDefault() {

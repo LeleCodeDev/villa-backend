@@ -47,10 +47,10 @@ func NewBookingService(
 	}
 }
 
-func (s *BookingService) GetAll(ctx context.Context, query dto.BookingQuery) ([]dto.BookingResponse, int64, error) {
-	bookings, total, err := s.repo.GetAll(ctx, query)
+func (s *BookingService) GetAll(ctx context.Context, query dto.BookingQuery, userID *uint) ([]dto.BookingResponse, int64, error) {
+	bookings, total, err := s.repo.GetAll(ctx, query, userID)
 	if err != nil {
-		return nil, 0, nil
+		return nil, 0, err
 	}
 
 	bookingIds := make([]uint, 0, len(bookings))
@@ -159,11 +159,6 @@ func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPerio
 	return total, nil
 }
 
-type conflictBooking struct {
-	CheckInDate  time.Time `json:"check_in_date"`
-	CheckOutDate time.Time `json:"check_out_date"`
-}
-
 func (s *BookingService) Create(ctx context.Context, currentUser model.User, req dto.BookingCreateRequest) (dto.BookingResponse, error) {
 	// parse req time from string to time.Time
 	checkIn, checkOut, err := parseBookingDates(req.CheckInDate, req.CheckOutDate)
@@ -203,6 +198,10 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			return appError.NotFound(fmt.Sprintf("Rental option not found with ID: %d", req.RentalOptionID))
 		}
 
+		if rentalOption.MaxCapacity < req.GuestCount {
+			return appError.BadRequest(fmt.Sprintf("Max capacity is %d guest", rentalOption.MaxCapacity))
+		}
+
 		// get reason
 		reason, err := txReasonRepo.GetByID(ctx, req.ReasonID)
 		if err != nil {
@@ -218,9 +217,9 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			return err
 		}
 		if len(conflicts) > 0 {
-			conflictResponses := make([]conflictBooking, 0, len(conflicts))
+			conflictResponses := make([]dto.BookingConflict, 0, len(conflicts))
 			for _, conflict := range conflicts {
-				conflictResponses = append(conflictResponses, conflictBooking{CheckInDate: conflict.CheckInDate, CheckOutDate: conflict.CheckOutDate})
+				conflictResponses = append(conflictResponses, dto.BookingConflict{CheckInDate: conflict.CheckInDate, CheckOutDate: conflict.CheckOutDate})
 			}
 
 			return appError.Conflict("rental option is already booked for these dates").
@@ -315,7 +314,7 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
 		}
 
-		if booking.UserID != currentUser.ID {
+		if currentUser.Role != model.RoleAdmin && booking.UserID != currentUser.ID {
 			return appError.Unauthorized("You are not authorized to access this booking!")
 		}
 

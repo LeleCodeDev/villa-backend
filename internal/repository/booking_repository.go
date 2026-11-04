@@ -22,7 +22,7 @@ func (r *BookingRepository) WithTx(tx *gorm.DB) *BookingRepository {
 	return &BookingRepository{db: tx}
 }
 
-func (r *BookingRepository) GetAll(ctx context.Context, query dto.BookingQuery) ([]model.Booking, int64, error) {
+func (r *BookingRepository) GetAll(ctx context.Context, query dto.BookingQuery, userID *uint) ([]model.Booking, int64, error) {
 	var bookings []model.Booking
 	var total int64
 
@@ -31,6 +31,10 @@ func (r *BookingRepository) GetAll(ctx context.Context, query dto.BookingQuery) 
 		Preload("RentalOption").
 		Preload("Reason").
 		Model(&model.Booking{})
+
+	if userID != nil {
+		db = db.Where("user_id = ?", userID)
+	}
 
 	if query.Status != "" {
 		db = db.Where("status = ?", query.Status)

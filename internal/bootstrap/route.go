@@ -70,6 +70,7 @@ func (a *App) RegisterRoute() {
 
 		// Rental Option
 		public.GET("/rental-options", a.RentalOptionHandler.GetAllRentalOptions)
+		public.GET("/rental-options/available", a.RentalOptionHandler.GetAvailableRentalOptions)
 		public.GET("/rental-options/:id", a.RentalOptionHandler.GetRentalOptionByID)
 		public.GET("/rental-options/:id/rental-prices", a.RentalOptionHandler.GetAllRentalPriceByRentalOptionID)
 
@@ -96,6 +97,8 @@ func (a *App) RegisterRoute() {
 	user := authenticated.Group("")
 	user.Use(middleware.RoleMiddleware(model.RoleUser))
 	{
+		// Booking
+		user.GET("/my-bookings", a.BookingHandler.GetMyBookings)
 		user.POST("/my-bookings", a.BookingHandler.CreateBooking)
 		user.PUT("/my-bookings/:id/cancel", a.BookingHandler.CanceledBooking)
 	}
