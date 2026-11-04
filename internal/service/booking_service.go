@@ -10,7 +10,9 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
+	"github.com/lelecodedev/villa-backend/internal/payment"
 	"github.com/lelecodedev/villa-backend/internal/repository"
+	"github.com/midtrans/midtrans-go"
 	"gorm.io/gorm"
 )
 
@@ -23,6 +25,7 @@ type BookingService struct {
 	rentalPriceRepo  *repository.RentalPriceRepository
 	seasonPeriodRepo *repository.SeasonPeriodRepository
 	addonRepo        *repository.AddonRepository
+	gateaway         *payment.MidtransGateway
 }
 
 func NewBookingService(
@@ -34,6 +37,7 @@ func NewBookingService(
 	rentalPriceRepo *repository.RentalPriceRepository,
 	seasonPeriodRepo *repository.SeasonPeriodRepository,
 	addonRepo *repository.AddonRepository,
+	gateaway *payment.MidtransGateway,
 ) *BookingService {
 	return &BookingService{
 		txManager:        txManager,
@@ -44,6 +48,7 @@ func NewBookingService(
 		rentalPriceRepo:  rentalPriceRepo,
 		seasonPeriodRepo: seasonPeriodRepo,
 		addonRepo:        addonRepo,
+		gateaway:         gateaway,
 	}
 }
 
@@ -70,7 +75,7 @@ func (s *BookingService) GetAll(ctx context.Context, query dto.BookingQuery, use
 
 	responses := make([]dto.BookingResponse, 0, len(bookings))
 	for _, booking := range bookings {
-		responses = append(responses, mapper.ToBookingResponse(&booking, bookingAddonMap[booking.ID]))
+		responses = append(responses, mapper.ToBookingResponse(&booking, bookingAddonMap[booking.ID], nil))
 	}
 
 	return responses, total, nil
@@ -90,7 +95,7 @@ func (s *BookingService) GetByID(ctx context.Context, id uint) (dto.BookingRespo
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(booking, bookingAddons), nil
+	return mapper.ToBookingResponse(booking, bookingAddons, nil), nil
 }
 
 func parseBookingDates(in, out string) (time.Time, time.Time, error) {
@@ -130,7 +135,6 @@ func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPerio
 	priceMap := make(map[priceKey]int64, len(prices))
 	for _, r := range prices {
 		priceMap[priceKey{Season: r.Season, DayType: r.DayType}] = r.Price
-		fmt.Println(priceMap[priceKey{Season: r.Season, DayType: r.DayType}])
 	}
 
 	var total int64
@@ -177,8 +181,12 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 		addonIDs = append(addonIDs, a.AddonID)
 	}
 
-	var created *model.Booking
+	const paymentWindow = 60 * time.Minute
+
+	var createdBooking *model.Booking
 	var createdAddons []model.BookingAddon
+	var items []midtrans.ItemDetails
+	var snapRedirect *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txBookingRepo := s.repo.WithTx(tx)
@@ -263,6 +271,23 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			addonTotal += a.Price * int64(ba.Quantity)
 		}
 
+		items = append(items, midtrans.ItemDetails{
+			ID:    fmt.Sprintf("STAY-%d", rentalOption.ID),
+			Name:  rentalOption.Title,
+			Price: bookingPrice,
+			Qty:   1,
+		})
+
+		for _, ba := range req.BookingAddons {
+			a := addonMap[ba.AddonID]
+			items = append(items, midtrans.ItemDetails{
+				ID:    fmt.Sprintf("ADDON-%d", a.ID),
+				Name:  a.Title,
+				Price: a.Price,
+				Qty:   int32(ba.Quantity),
+			})
+		}
+
 		// create booking
 		booking := mapper.ToBookingModel(
 			req,
@@ -290,14 +315,36 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			}
 		}
 
-		created = booking
+		orderID := fmt.Sprintf("BOOKING-%d", booking.ID)
+		token, redirectURL, err := s.gateaway.CreateSnapToken(
+			orderID,
+			booking.TotalPrice,
+			items,
+			&midtrans.CustomerDetails{
+				FName: currentUser.Username,
+				Email: currentUser.Email,
+				Phone: currentUser.Phone,
+			},
+			int(paymentWindow.Minutes()))
+		if err != nil {
+			return appError.BadGateway("failed to start payment, please try again")
+		}
+
+		booking.PaymentOrderID = &orderID
+		booking.SnapToken = &token
+		if err := txBookingRepo.Update(ctx, booking); err != nil {
+			return err
+		}
+
+		createdBooking = booking
 		createdAddons = bookingAddons
+		snapRedirect = &redirectURL
 		return nil
 	}); err != nil {
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(created, createdAddons), nil
+	return mapper.ToBookingResponse(createdBooking, createdAddons, snapRedirect), nil
 }
 
 func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
@@ -334,7 +381,7 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(canceledBooking, nil), nil
+	return mapper.ToBookingResponse(canceledBooking, nil, nil), nil
 }
 
 func (s *BookingService) Paid(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
@@ -371,7 +418,7 @@ func (s *BookingService) Paid(ctx context.Context, currentUser model.User, id ui
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(paidBooking, nil), nil
+	return mapper.ToBookingResponse(paidBooking, nil, nil), nil
 }
 
 func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
@@ -409,7 +456,7 @@ func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(paidBooking, nil), nil
+	return mapper.ToBookingResponse(paidBooking, nil, nil), nil
 }
 
 func (s *BookingService) Complete(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
@@ -448,5 +495,5 @@ func (s *BookingService) Complete(ctx context.Context, currentUser model.User, i
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(completeBooking, nil), nil
+	return mapper.ToBookingResponse(completeBooking, nil, nil), nil
 }

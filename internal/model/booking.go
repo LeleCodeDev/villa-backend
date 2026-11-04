@@ -20,6 +20,7 @@ const (
 
 type Booking struct {
 	ID             uint          `gorm:"primaryKey"`
+	PaymentOrderID *string       `gorm:"type:varchar(64);uniqueIndex"`
 	UserID         uint          `gorm:"not null;index"`
 	User           User          `gorm:"constraint:OnDelete:CASCADE"`
 	GuestCount     int           `gorm:"not null"`
@@ -32,6 +33,8 @@ type Booking struct {
 	CheckOutDate   time.Time     `gorm:"not null;type:date"`
 	BookingPrice   int64         `gorm:"type:numeric(10,2);not null"`
 	TotalPrice     int64         `gorm:"type:numeric(10,2);not null"`
+	SnapToken      *string       `gorm:"type:varchar(100)"`
+	PaidAt         *time.Time
 	CheckInAt      *time.Time
 	CheckOutAt     *time.Time
 	ExpiresAt      *time.Time

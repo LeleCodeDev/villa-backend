@@ -58,9 +58,23 @@ func Unauthorized(message string) *ServiceError {
 	}
 }
 
+func Forbidden(message string) *ServiceError {
+	return &ServiceError{
+		Message:    message,
+		StatusCode: http.StatusForbidden,
+	}
+}
+
 func BadRequest(message string) *ServiceError {
 	return &ServiceError{
 		Message:    message,
 		StatusCode: http.StatusBadRequest,
+	}
+}
+
+func BadGateway(message string) *ServiceError {
+	return &ServiceError{
+		Message:    message,
+		StatusCode: http.StatusBadGateway,
 	}
 }

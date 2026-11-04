@@ -11,6 +11,7 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/database"
 	"github.com/lelecodedev/villa-backend/internal/handler"
 	"github.com/lelecodedev/villa-backend/internal/middleware"
+	"github.com/lelecodedev/villa-backend/internal/payment"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 	"github.com/lelecodedev/villa-backend/internal/service"
 	"gorm.io/gorm"
@@ -46,6 +47,7 @@ type App struct {
 	RentalPriceHandler          *handler.RentalPriceHandler
 	SeasonPeriodHandler         *handler.SeasonPeriodHandler
 	BookingHandler              *handler.BookingHandler
+	PaymentHandler              *handler.PaymentHandler
 }
 
 func NewApp() *App {
@@ -54,6 +56,7 @@ func NewApp() *App {
 	r := gin.Default()
 	db := database.NewDB()
 	txManager := repository.NewTxManager(db)
+	gateaway := payment.NewMidtransGateway()
 
 	applicationRepo := repository.NewApplicationRepository(db)
 	userRepo := repository.NewUserRepository(db)
@@ -114,7 +117,9 @@ func NewApp() *App {
 		rentalPriceRepo,
 		seasonPeriodRepo,
 		addonRepo,
+		gateaway,
 	)
+	paymentService := service.NewPaymentService(bookingRepo, gateaway)
 
 	app := &App{
 		Router:                      r,
@@ -146,6 +151,7 @@ func NewApp() *App {
 		RentalPriceHandler:          handler.NewRentalPriceHandler(rentalPriceService),
 		SeasonPeriodHandler:         handler.NewSeasonPeriodHandler(seasonPeriodService),
 		BookingHandler:              handler.NewBookingHandler(bookingService),
+		PaymentHandler:              handler.NewPaymentHandler(paymentService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

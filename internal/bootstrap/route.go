@@ -9,6 +9,9 @@ import (
 func (a *App) RegisterRoute() {
 	api := a.Router.Group("/api")
 
+	api.POST("/payments/midtrans/notification", a.PaymentHandler.Notification)
+	api.GET("/payments/midtrans/notification", a.PaymentHandler.Notification)
+
 	api.Static("/uploads", "uploads")
 
 	auth := api.Group("/auth")
