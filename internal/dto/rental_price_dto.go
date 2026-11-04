@@ -18,7 +18,7 @@ type (
 		RentalOptionID uint             `json:"rental_option_id"`
 		Season         model.SeasonType `json:"season"`
 		DayType        model.DayType    `json:"day_type"`
-		Price          float64          `json:"price"`
+		Price          int64            `json:"price"`
 		CreatedAt      time.Time        `json:"created_at"`
 		UpdatedAt      time.Time        `json:"updated_at"`
 	}
@@ -27,7 +27,7 @@ type (
 		RentalOptionID uint             `json:"rental_option_id" form:"rental_option_id" binding:"required,gt=0"`
 		Season         model.SeasonType `json:"season" form:"season" binding:"required,oneof=reguler high"`
 		DayType        model.DayType    `json:"day_type" form:"day_type" binding:"required,oneof=weekday weekend"`
-		Price          float64          `json:"price" form:"price" binding:"required,gt=0"`
+		Price          int64            `json:"price" form:"price" binding:"required,gt=0"`
 	}
 )
 

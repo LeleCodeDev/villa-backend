@@ -16,7 +16,7 @@ type (
 		Title       string              `json:"title"`
 		Subtitle    string              `json:"subtitle"`
 		Description string              `json:"description"`
-		Price       float64             `json:"price"`
+		Price       int64               `json:"price"`
 		Lists       []AddonListResponse `json:"lists,omitempty"`
 		SortOrder   int                 `json:"sort_order"`
 		CreatedAt   time.Time           `json:"created_at"`
@@ -24,11 +24,11 @@ type (
 	}
 
 	AddonRequest struct {
-		Title       string  `json:"title" form:"title" binding:"required"`
-		Subtitle    string  `json:"subtitle" form:"subtitle" binding:"required"`
-		Description string  `json:"description" form:"description" binding:"required"`
-		Price       float64 `json:"price" form:"price" binding:"required,gt=0"`
-		SortOrder   *int    `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
+		Title       string `json:"title" form:"title" binding:"required"`
+		Subtitle    string `json:"subtitle" form:"subtitle" binding:"required"`
+		Description string `json:"description" form:"description" binding:"required"`
+		Price       int64  `json:"price" form:"price" binding:"required,gt=0"`
+		SortOrder   *int   `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
 	}
 )
 

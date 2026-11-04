@@ -16,7 +16,7 @@ type (
 		ID         uint                `json:"id"`
 		Title      string              `json:"title"`
 		Subtitle   string              `json:"subtitle"`
-		Price      float64             `json:"price"`
+		Price      int64               `json:"price"`
 		Transports []TransportResponse `json:"transports,omitempty"`
 		SortOrder  int                 `json:"sort_order"`
 		Map        string              `json:"map"`
@@ -28,7 +28,7 @@ type (
 	AttractionRequest struct {
 		Title     string                `json:"title" form:"title" binding:"required"`
 		Subtitle  string                `json:"subtitle" form:"subtitle" binding:"required"`
-		Price     float64               `json:"price" form:"price" binding:"required,gt=0"`
+		Price     int64                 `json:"price" form:"price" binding:"required,gt=0"`
 		SortOrder *int                  `json:"sort_order" form:"sort_order" binding:"omitempty,gt=0"`
 		Map       string                `json:"map" form:"map" binding:"required"`
 		Image     *multipart.FileHeader `json:"image" form:"image" binding:"omitempty"`

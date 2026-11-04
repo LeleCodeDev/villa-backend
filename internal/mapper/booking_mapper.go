@@ -47,8 +47,8 @@ func ToBookingModel(
 	reason model.Reason,
 	checkInDate time.Time,
 	checkOutDate time.Time,
-	bookingPrice float64,
-	totalPrice float64,
+	bookingPrice int64,
+	totalPrice int64,
 ) *model.Booking {
 	expireAt := time.Now().In(config.Env.Location).Add(time.Hour)
 

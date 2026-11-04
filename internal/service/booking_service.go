@@ -126,14 +126,14 @@ type priceKey struct {
 	DayType model.DayType
 }
 
-func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPeriod, checkIn, checkOut time.Time) (float64, error) {
-	priceMap := make(map[priceKey]float64, len(prices))
+func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPeriod, checkIn, checkOut time.Time) (int64, error) {
+	priceMap := make(map[priceKey]int64, len(prices))
 	for _, r := range prices {
 		priceMap[priceKey{Season: r.Season, DayType: r.DayType}] = r.Price
 		fmt.Println(priceMap[priceKey{Season: r.Season, DayType: r.DayType}])
 	}
 
-	var total float64
+	var total int64
 	for d := checkIn; !d.After(checkOut); d = d.AddDate(0, 0, 1) {
 
 		season := model.SeasonReguler
@@ -254,13 +254,13 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			addonMap[a.ID] = a
 		}
 
-		var addonTotal float64
+		var addonTotal int64
 		for _, ba := range req.BookingAddons {
 			a, ok := addonMap[ba.AddonID]
 			if !ok {
 				return appError.NotFound(fmt.Sprintf("addon not found with id: %d", ba.AddonID))
 			}
-			addonTotal += a.Price * float64(ba.Quantity)
+			addonTotal += a.Price * int64(ba.Quantity)
 		}
 
 		// create booking
@@ -335,4 +335,118 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 	}
 
 	return mapper.ToBookingResponse(canceledBooking, nil), nil
+}
+
+func (s *BookingService) Paid(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
+	var paidBooking *model.Booking
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txBookingRepo := s.repo.WithTx(tx)
+
+		booking, err := txBookingRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if booking == nil {
+			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
+		}
+
+		if currentUser.Role != model.RoleAdmin && booking.UserID != currentUser.ID {
+			return appError.Unauthorized("You are not authorized to access this booking!")
+		}
+
+		if booking.Status != model.BookingStatusPending {
+			return appError.BadRequest("Booking status is not pending")
+		}
+
+		booking.Status = model.BookingStatusPaid
+		if err := txBookingRepo.Update(ctx, booking); err != nil {
+			return err
+		}
+
+		paidBooking = booking
+
+		return nil
+	}); err != nil {
+		return dto.BookingResponse{}, err
+	}
+
+	return mapper.ToBookingResponse(paidBooking, nil), nil
+}
+
+func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
+	var paidBooking *model.Booking
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txBookingRepo := s.repo.WithTx(tx)
+
+		booking, err := txBookingRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if booking == nil {
+			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
+		}
+
+		if booking.UserID != currentUser.ID {
+			return appError.Unauthorized("You are not authorized to access this booking!")
+		}
+
+		if booking.Status != model.BookingStatusPaid {
+			return appError.BadRequest("Booking status is not paid")
+		}
+
+		now := time.Now()
+		booking.CheckInAt = &now
+		if err := txBookingRepo.Update(ctx, booking); err != nil {
+			return err
+		}
+
+		paidBooking = booking
+
+		return nil
+	}); err != nil {
+		return dto.BookingResponse{}, err
+	}
+
+	return mapper.ToBookingResponse(paidBooking, nil), nil
+}
+
+func (s *BookingService) Complete(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
+	var completeBooking *model.Booking
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txBookingRepo := s.repo.WithTx(tx)
+
+		booking, err := txBookingRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if booking == nil {
+			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
+		}
+
+		if booking.UserID != currentUser.ID {
+			return appError.Unauthorized("You are not authorized to access this booking!")
+		}
+
+		if booking.Status != model.BookingStatusPaid {
+			return appError.BadRequest("Booking status is not paid")
+		}
+
+		now := time.Now()
+		booking.CheckOutAt = &now
+		booking.Status = model.BookingStatusCompleted
+		if err := txBookingRepo.Update(ctx, booking); err != nil {
+			return err
+		}
+
+		completeBooking = booking
+
+		return nil
+	}); err != nil {
+		return dto.BookingResponse{}, err
+	}
+
+	return mapper.ToBookingResponse(completeBooking, nil), nil
 }

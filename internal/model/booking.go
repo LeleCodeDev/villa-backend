@@ -30,8 +30,8 @@ type Booking struct {
 	Status         BookingStatus `gorm:"type:varchar(20);not null;default:'pending';check:status IN ('pending','paid','canceled','completed','expired','not_show')"`
 	CheckInDate    time.Time     `gorm:"not null;type:date"`
 	CheckOutDate   time.Time     `gorm:"not null;type:date"`
-	BookingPrice   float64       `gorm:"type:numeric(10,2);not null"`
-	TotalPrice     float64       `gorm:"type:numeric(10,2);not null"`
+	BookingPrice   int64         `gorm:"type:numeric(10,2);not null"`
+	TotalPrice     int64         `gorm:"type:numeric(10,2);not null"`
 	CheckInAt      *time.Time
 	CheckOutAt     *time.Time
 	ExpiresAt      *time.Time

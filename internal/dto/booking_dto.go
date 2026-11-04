@@ -34,8 +34,8 @@ type (
 		Status        model.BookingStatus    `json:"status"`
 		CheckInDate   time.Time              `json:"check_in_date"`
 		CheckOutDate  time.Time              `json:"check_out_date"`
-		BookingPrice  float64                `json:"booking_price"`
-		TotalPrice    float64                `json:"total_price"`
+		BookingPrice  int64                  `json:"booking_price"`
+		TotalPrice    int64                  `json:"total_price"`
 		CheckInAt     *time.Time             `json:"check_in_at"`
 		CheckOutAt    *time.Time             `json:"check_out_at"`
 		ExpiresAt     *time.Time             `json:"expires_at,omitempty"`

@@ -124,5 +124,62 @@ func (h *BookingHandler) CanceledBooking(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, http.StatusCreated, "Booking successfully canceled!", booking)
+	response.Success(c, http.StatusOK, "Booking successfully canceled!", booking)
+}
+
+func (h *BookingHandler) PaidBooking(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+	currentUser := c.MustGet("user").(model.User)
+
+	booking, err := h.service.Paid(ctx, currentUser, id)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Booking successfully paid!", booking)
+}
+
+func (h *BookingHandler) CheckInBooking(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+	currentUser := c.MustGet("user").(model.User)
+
+	booking, err := h.service.CheckIn(ctx, currentUser, id)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Booking successfully check in!", booking)
+}
+
+func (h *BookingHandler) CompletedBooking(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+	currentUser := c.MustGet("user").(model.User)
+
+	booking, err := h.service.Complete(ctx, currentUser, id)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Booking successfully completed!", booking)
 }
