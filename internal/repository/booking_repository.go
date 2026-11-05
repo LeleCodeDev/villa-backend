@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/lelecodedev/villa-backend/internal/dto"
@@ -101,8 +102,16 @@ func (r *BookingRepository) TransitionStatus(ctx context.Context, id uint, from,
 	updates := map[string]any{"status": to}
 	if to == model.BookingStatusPaid {
 		updates["paid_at"] = time.Now()
+	}
+
+	if slices.Contains([]model.BookingStatus{
+		model.BookingStatusPaid,
+		model.BookingStatusExpired,
+		model.BookingStatusCanceled,
+	}, to) {
 		updates["expires_at"] = nil
 	}
+
 	res := r.db.WithContext(ctx).Model(&model.Booking{}).
 		Where("id = ? AND status = ?", id, from).
 		Updates(updates)
