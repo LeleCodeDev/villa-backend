@@ -101,6 +101,7 @@ func (r *BookingRepository) TransitionStatus(ctx context.Context, id uint, from,
 	updates := map[string]any{"status": to}
 	if to == model.BookingStatusPaid {
 		updates["paid_at"] = time.Now()
+		updates["expires_at"] = nil
 	}
 	res := r.db.WithContext(ctx).Model(&model.Booking{}).
 		Where("id = ? AND status = ?", id, from).

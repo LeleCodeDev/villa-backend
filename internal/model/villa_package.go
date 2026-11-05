@@ -11,7 +11,7 @@ type VillaPackage struct {
 	Title       string `gorm:"not null"`
 	Subtitle    string `gorm:"not null"`
 	MaxCapacity int    `gorm:"not null"`
-	Price       int64  `gorm:"type:numeric(10,2)"`
+	Price       int64  `gorm:"not null"`
 	SortOrder   int    `gorm:"not null"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

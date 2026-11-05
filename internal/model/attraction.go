@@ -10,7 +10,7 @@ type Attraction struct {
 	ID        uint    `gorm:"primaryKey"`
 	Title     string  `gorm:"not null"`
 	Subtitle  string  `gorm:"not null"`
-	Price     int64   `gorm:"type:numeric(10,2)"`
+	Price     int64   `gorm:"not null"`
 	SortOrder int     `gorm:"not null"`
 	Map       string  `gorm:"not null"`
 	Image     *string `gorm:"type:varchar(255)"`

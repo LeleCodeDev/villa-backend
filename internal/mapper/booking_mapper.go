@@ -3,12 +3,11 @@ package mapper
 import (
 	"time"
 
-	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
-func ToBookingResponse(booking *model.Booking, bookingAddons []model.BookingAddon, RedirectURL *string) dto.BookingResponse {
+func ToBookingResponse(booking *model.Booking, bookingAddons []model.BookingAddon) dto.BookingResponse {
 	var BookingAddonResponses []dto.BookingAddonResponse
 	for i := range bookingAddons {
 		BookingAddonResponses = append(BookingAddonResponses, ToBookingAddonResponse(&bookingAddons[i]))
@@ -33,7 +32,7 @@ func ToBookingResponse(booking *model.Booking, bookingAddons []model.BookingAddo
 		BookingPrice:   booking.BookingPrice,
 		TotalPrice:     booking.TotalPrice,
 		SnapToken:      booking.SnapToken,
-		RedirectURL:    RedirectURL,
+		RedirectURL:    booking.RedirectURL,
 		PaidAt:         booking.PaidAt,
 		CheckInAt:      booking.CheckInAt,
 		CheckOutAt:     booking.CheckOutAt,
@@ -53,9 +52,8 @@ func ToBookingModel(
 	checkOutDate time.Time,
 	bookingPrice int64,
 	totalPrice int64,
+	expireAt time.Time,
 ) *model.Booking {
-	expireAt := time.Now().In(config.Env.Location).Add(time.Hour)
-
 	return &model.Booking{
 		UserID:         user.ID,
 		PaymentOrderID: nil,
@@ -71,6 +69,7 @@ func ToBookingModel(
 		BookingPrice:   bookingPrice,
 		TotalPrice:     totalPrice,
 		SnapToken:      nil,
+		RedirectURL:    nil,
 		PaidAt:         nil,
 		CheckInAt:      nil,
 		CheckOutAt:     nil,

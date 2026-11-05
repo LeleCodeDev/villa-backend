@@ -35,10 +35,6 @@ func NewPaymentService(
 }
 
 func (s *PaymentService) HandleNotification(ctx context.Context, n dto.MidtransNotification) error {
-	// if !s.gateway.VerifySignature(n.OrderID, n.StatusCode, n.GrossAmount, n.SignatureKey) {
-	// 	return ErrInvalidSignature
-	// }
-
 	booking, err := s.repo.GetByOrderID(ctx, n.OrderID)
 	if err != nil {
 		return err
@@ -47,12 +43,17 @@ func (s *PaymentService) HandleNotification(ctx context.Context, n dto.MidtransN
 		return ErrBookingNotFound
 	}
 
+	status, err := s.gateway.CheckTransaction(ctx, n.OrderID)
+	if err != nil {
+		return err
+	}
+
 	gross, err := strconv.ParseFloat(n.GrossAmount, 64)
 	if err != nil || int64(math.Round(gross)) != booking.TotalPrice {
 		return ErrAmountMismatch
 	}
 
-	target, ok := mapStatus(n.TransactionStatus, n.FraudStatus)
+	target, ok := mapStatus(status.TransactionStatus, status.FraudStatus)
 	if !ok || booking.Status == target {
 		return nil
 	}

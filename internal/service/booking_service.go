@@ -75,7 +75,7 @@ func (s *BookingService) GetAll(ctx context.Context, query dto.BookingQuery, use
 
 	responses := make([]dto.BookingResponse, 0, len(bookings))
 	for _, booking := range bookings {
-		responses = append(responses, mapper.ToBookingResponse(&booking, bookingAddonMap[booking.ID], nil))
+		responses = append(responses, mapper.ToBookingResponse(&booking, bookingAddonMap[booking.ID]))
 	}
 
 	return responses, total, nil
@@ -95,7 +95,7 @@ func (s *BookingService) GetByID(ctx context.Context, id uint) (dto.BookingRespo
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(booking, bookingAddons, nil), nil
+	return mapper.ToBookingResponse(booking, bookingAddons), nil
 }
 
 func parseBookingDates(in, out string) (time.Time, time.Time, error) {
@@ -186,7 +186,6 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 	var createdBooking *model.Booking
 	var createdAddons []model.BookingAddon
 	var items []midtrans.ItemDetails
-	var snapRedirect *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txBookingRepo := s.repo.WithTx(tx)
@@ -298,6 +297,7 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			checkOut,
 			bookingPrice,
 			bookingPrice+addonTotal,
+			time.Now().Add(paymentWindow),
 		)
 		if err := txBookingRepo.Create(ctx, booking); err != nil {
 			return err
@@ -332,19 +332,19 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 
 		booking.PaymentOrderID = &orderID
 		booking.SnapToken = &token
+		booking.RedirectURL = &redirectURL
 		if err := txBookingRepo.Update(ctx, booking); err != nil {
 			return err
 		}
 
 		createdBooking = booking
 		createdAddons = bookingAddons
-		snapRedirect = &redirectURL
 		return nil
 	}); err != nil {
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(createdBooking, createdAddons, snapRedirect), nil
+	return mapper.ToBookingResponse(createdBooking, createdAddons), nil
 }
 
 func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
@@ -381,7 +381,7 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(canceledBooking, nil, nil), nil
+	return mapper.ToBookingResponse(canceledBooking, nil), nil
 }
 
 func (s *BookingService) Paid(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
@@ -418,7 +418,7 @@ func (s *BookingService) Paid(ctx context.Context, currentUser model.User, id ui
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(paidBooking, nil, nil), nil
+	return mapper.ToBookingResponse(paidBooking, nil), nil
 }
 
 func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
@@ -456,7 +456,7 @@ func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(paidBooking, nil, nil), nil
+	return mapper.ToBookingResponse(paidBooking, nil), nil
 }
 
 func (s *BookingService) Complete(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
@@ -495,5 +495,5 @@ func (s *BookingService) Complete(ctx context.Context, currentUser model.User, i
 		return dto.BookingResponse{}, err
 	}
 
-	return mapper.ToBookingResponse(completeBooking, nil, nil), nil
+	return mapper.ToBookingResponse(completeBooking, nil), nil
 }

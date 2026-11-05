@@ -2,18 +2,19 @@
 package payment
 
 import (
-	"crypto/sha512"
-	"crypto/subtle"
-	"encoding/hex"
+	"context"
+	"fmt"
 
 	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/midtrans/midtrans-go"
+	"github.com/midtrans/midtrans-go/coreapi"
 	"github.com/midtrans/midtrans-go/snap"
 )
 
 type MidtransGateway struct {
-	client    snap.Client
-	serverKey string
+	snapClient snap.Client
+	coreClient coreapi.Client
+	serverKey  string
 }
 
 func NewMidtransGateway() *MidtransGateway {
@@ -25,13 +26,14 @@ func NewMidtransGateway() *MidtransGateway {
 	serverKey := config.Env.MidtransServerKey
 
 	gateway := &MidtransGateway{serverKey: serverKey}
-	gateway.client.New(serverKey, env)
+	gateway.snapClient.New(serverKey, env)
+	gateway.coreClient.New(serverKey, env)
 
 	return gateway
 }
 
 func (g *MidtransGateway) CreateSnapToken(orderID string, amount int64, items []midtrans.ItemDetails, customer *midtrans.CustomerDetails, expiryMinutes int) (string, string, error) {
-	res, err := g.client.CreateTransaction(&snap.Request{
+	res, err := g.snapClient.CreateTransaction(&snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{OrderID: orderID, GrossAmt: amount},
 		Items:              &items,
 		CustomerDetail:     customer,
@@ -47,7 +49,14 @@ func (g *MidtransGateway) CreateSnapToken(orderID string, amount int64, items []
 	return res.Token, res.RedirectURL, nil
 }
 
-func (g *MidtransGateway) VerifySignature(orderID, statusCode, grossAmount, signature string) bool {
-	sum := sha512.Sum512([]byte(orderID + statusCode + grossAmount + g.serverKey))
-	return subtle.ConstantTimeCompare([]byte(hex.EncodeToString(sum[:])), []byte(signature)) == 1
+func (g *MidtransGateway) CheckTransaction(ctx context.Context, orderID string) (*coreapi.TransactionStatusResponse, error) {
+	res, err := g.coreClient.CheckTransaction(orderID)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != "200" && res.StatusCode != "201" {
+		return nil, fmt.Errorf("midtrans check: status_code=%s %s", res.StatusCode, res.StatusMessage)
+	}
+
+	return res, nil
 }
