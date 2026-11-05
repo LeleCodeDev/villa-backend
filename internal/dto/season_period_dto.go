@@ -10,9 +10,9 @@ type (
 	}
 
 	SeasonPeriodRequest struct {
-		Name      string `json:"name" binding:"required"`
-		StartDate string `json:"start_date" binding:"required,datetime=2006-01-02"`
-		EndDate   string `json:"end_date" binding:"required,datetime=2006-01-02"`
+		Name      string `json:"name" form:"name" binding:"required"`
+		StartDate string `json:"start_date" form:"start_date" binding:"required,datetime=2006-01-02"`
+		EndDate   string `json:"end_date" form:"end_date" binding:"required,datetime=2006-01-02"`
 	}
 
 	SeasonPeriodResponse struct {

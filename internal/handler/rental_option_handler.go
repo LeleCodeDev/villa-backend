@@ -88,6 +88,24 @@ func (h *RentalOptionHandler) GetAllRentalPriceByRentalOptionID(c *gin.Context) 
 	response.Success(c, http.StatusOK, "All rental prices successfully fetched!", rentalPrices)
 }
 
+func (h *RentalOptionHandler) GetAvailableRentalOptions(c *gin.Context) {
+	var query dto.BookingAvailableRequest
+	if err := c.ShouldBind(&query); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	rentalOptions, err := h.service.GetAvailable(ctx, query)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "All reantal options successfully fetched!", rentalOptions)
+}
+
 func (h *RentalOptionHandler) CreateRentalOption(c *gin.Context) {
 	var req dto.RentalOptionRequest
 	if err := c.ShouldBind(&req); err != nil {

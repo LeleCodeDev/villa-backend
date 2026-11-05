@@ -1,53 +1,67 @@
 package appError
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
 
-func GetValidationError(err validator.ValidationErrors) map[string]string {
-	errors := make(map[string]string)
+var messages = map[string]string{
+	"required": "{field} is required",
+	"email":    "{field} must be a valid email",
+	"min":      "{field} must contain at least {param} characters",
+	"max":      "{field} must contain at most {param} characters",
+	"gt":       "{field} must be greater than {param}",
+	"gte":      "{field} must be greater than or equal {param}",
+	"lt":       "{field} must be less than {param}",
+	"lte":      "{field} must be less than or equal {param}",
+}
 
-	for _, e := range err {
-		field := e.Field()
+var (
+	indexReplacer = strings.NewReplacer("[", ".", "]", "")
+	dateReplacer  = strings.NewReplacer("2006", "YYYY", "01", "MM", "02", "DD", "15", "HH", "04", "mm", "05", "ss")
+)
 
-		switch e.Tag() {
-		case "required":
-			errors[field] = fmt.Sprintf("%s is required", field)
-		case "email":
-			errors[field] = fmt.Sprintf("%s must be a valid email", field)
-		case "min":
-			errors[field] = fmt.Sprintf("%s must contain at least %s characters", field, e.Param())
-		case "max":
-			errors[field] = fmt.Sprintf("%s must contain at most %s characters", field, e.Param())
-		case "gt":
-			errors[field] = fmt.Sprintf("%s must be greater than %s", field, e.Param())
-		case "gte":
-			errors[field] = fmt.Sprintf("%s must be greater than or equal %s", field, e.Param())
-		case "lt":
-			errors[field] = fmt.Sprintf("%s must be less than %s", field, e.Param())
-		case "lte":
-			errors[field] = fmt.Sprintf("%s must be less than or equal %s", field, e.Param())
-		case "oneof":
-			values := strings.Join(strings.Split(e.Param(), " "), ", ")
-			errors[field] = fmt.Sprintf("%s must be one of these values: %s", field, values)
-		case "datetime":
-			layouts := map[string]string{
-				"2006-01-02":          "YYYY-MM-DD",
-				"2006-01-02 15:04":    "YYYY-MM-DD HH:mm",
-				"2006-01-02 15:04:05": "YYYY-MM-DD HH:mm:ss",
-			}
-			format, ok := layouts[e.Param()]
-			if !ok {
-				format = e.Param()
-			}
-			errors[field] = fmt.Sprintf("%s must be a valid date in format %s", field, format)
-		default:
-			errors[field] = fmt.Sprintf("%v is invalid", field)
-		}
+func GetValidationError(errs validator.ValidationErrors) map[string]any {
+	result := make(map[string]any)
+
+	for _, e := range errs {
+		path := strings.Split(indexReplacer.Replace(e.Namespace()), ".")[1:]
+		setNested(result, path, buildMessage(e))
 	}
 
-	return errors
+	return result
+}
+
+func setNested(node map[string]any, path []string, msg string) {
+	for _, key := range path[:len(path)-1] {
+		child, ok := node[key].(map[string]any)
+		if !ok {
+			child = make(map[string]any)
+			node[key] = child
+		}
+		node = child
+	}
+	node[path[len(path)-1]] = msg
+}
+
+func buildMessage(e validator.FieldError) string {
+	param := e.Param()
+
+	switch e.Tag() {
+	case "oneof":
+		param = strings.ReplaceAll(param, " ", ", ")
+		return strings.NewReplacer("{field}", e.Field(), "{param}", param).
+			Replace("{field} must be one of these values: {param}")
+	case "datetime":
+		param = dateReplacer.Replace(param)
+		return strings.NewReplacer("{field}", e.Field(), "{param}", param).
+			Replace("{field} must be a valid date in format {param}")
+	}
+
+	tmpl, ok := messages[e.Tag()]
+	if !ok {
+		tmpl = "{field} is invalid"
+	}
+	return strings.NewReplacer("{field}", e.Field(), "{param}", param).Replace(tmpl)
 }

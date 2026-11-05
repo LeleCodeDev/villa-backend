@@ -7,12 +7,12 @@ import (
 )
 
 type VillaPackage struct {
-	ID          uint    `gorm:"primaryKey"`
-	Title       string  `gorm:"not null"`
-	Subtitle    string  `gorm:"not null"`
-	MaxCapacity int     `gorm:"not null"`
-	Price       float64 `gorm:"type:numeric(10,2)"`
-	SortOrder   int     `gorm:"not null"`
+	ID          uint   `gorm:"primaryKey"`
+	Title       string `gorm:"not null"`
+	Subtitle    string `gorm:"not null"`
+	MaxCapacity int    `gorm:"not null"`
+	Price       int64  `gorm:"not null"`
+	SortOrder   int    `gorm:"not null"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

@@ -44,6 +44,18 @@ func (r *AddonRepository) GetAll(ctx context.Context, query dto.AddonQuery) ([]m
 	return addons, total, nil
 }
 
+func (r *AddonRepository) GetAllInIds(ctx context.Context, ids []uint) ([]model.Addon, error) {
+	var addons []model.Addon
+
+	if err := r.db.WithContext(ctx).
+		Where("id IN ?", ids).
+		Find(&addons).Error; err != nil {
+		return nil, err
+	}
+
+	return addons, nil
+}
+
 func (r *AddonRepository) GetByID(ctx context.Context, id uint) (*model.Addon, error) {
 	var addon model.Addon
 

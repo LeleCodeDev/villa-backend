@@ -1,15 +1,66 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/lelecodedev/villa-backend/internal/model"
+)
 
 type (
-	BookingCreateRequest struct {
-		GuestCount     int       `json:"guest_count" form:"guest_count" binding:"required,gt=0"`
-		RentalOptionID uint      `json:"rental_option_id" form:"rental_option_id" binding:"required,gt=0"`
-		ReasonID       uint      `json:"reason_id" form:"reason_id" binding:"required,gt=0"`
-		CheckInDate    time.Time `gorm:"not null;type:date"`
-		CheckOutDate   time.Time `gorm:"not null;type:date"`
+	BookingQuery struct {
+		PaginationQuery
+		SortQuery
+		Status    model.BookingStatus `json:"status" form:"status" binding:"omitempty,oneof=pending paid canceled completed expired refunded not_show"`
+		StartDate string              `json:"start_date" form:"start_date" binding:"omitempty,datetime=2006-01-02"`
+		EndDate   string              `json:"end_date" form:"end_date" binding:"omitempty,datetime=2006-01-02"`
+		Unpage    bool                `form:"unpage"`
+	}
 
-		// ReturnDate *types.DateOnly `json:"returnDate" binding:"required" time_format:"2006-01-02"`
+	BookingCreateRequest struct {
+		GuestCount     int                   `json:"guest_count" form:"guest_count" binding:"required,gt=0"`
+		RentalOptionID uint                  `json:"rental_option_id" form:"rental_option_id" binding:"required,gt=0"`
+		ReasonID       uint                  `json:"reason_id" form:"reason_id" binding:"required,gt=0"`
+		CheckInDate    string                `json:"check_in_date" form:"check_in_date" binding:"required,datetime=2006-01-02"`
+		CheckOutDate   string                `json:"check_out_date" form:"check_out_date" binding:"required,datetime=2006-01-02"`
+		BookingAddons  []BookingAddonRequest `json:"booking_addons" form:"booking_addons" binding:"omitempty,dive"`
+	}
+
+	BookingResponse struct {
+		ID             uint                   `json:"id"`
+		PaymentOrderID *string                `json:"payment_order_id"`
+		User           UserResponse           `json:"user"`
+		GuestCount     int                    `json:"guest_count"`
+		RentalOption   *RentalOptionResponse  `json:"rental_option"`
+		Reason         ReasonResponse         `json:"reason"`
+		Status         model.BookingStatus    `json:"status"`
+		CheckInDate    time.Time              `json:"check_in_date"`
+		CheckOutDate   time.Time              `json:"check_out_date"`
+		BookingPrice   int64                  `json:"booking_price"`
+		TotalPrice     int64                  `json:"total_price"`
+		SnapToken      *string                `json:"snap_token"`
+		RedirectURL    *string                `json:"redirect_url,omitempty"`
+		PaidAt         *time.Time             `json:"paid_at"`
+		CheckInAt      *time.Time             `json:"check_in_at"`
+		CheckOutAt     *time.Time             `json:"check_out_at"`
+		ExpiresAt      *time.Time             `json:"expires_at,omitempty"`
+		BookingAddons  []BookingAddonResponse `json:"booking_addons,omitempty"`
+		CreatedAt      time.Time              `json:"created_at"`
+		UpdatedAt      time.Time              `json:"updated_at"`
+	}
+
+	BookingAvailableRequest struct {
+		CheckInDate  string `json:"check_in_date" form:"check_in_date" binding:"required,datetime=2006-01-02"`
+		CheckOutDate string `json:"check_out_date" form:"check_out_date" binding:"required,datetime=2006-01-02"`
+		GuestCount   int    `json:"guest_count" form:"guest_count" binding:"required,gt=0"`
+	}
+
+	BookingConflict struct {
+		CheckInDate  time.Time `json:"check_in_date"`
+		CheckOutDate time.Time `json:"check_out_date"`
 	}
 )
+
+func (bq *BookingQuery) SetDefault() {
+	bq.setDefaultPagination()
+	bq.SetDefaultSort(SortAsc)
+}

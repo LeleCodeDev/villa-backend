@@ -9,6 +9,9 @@ import (
 func (a *App) RegisterRoute() {
 	api := a.Router.Group("/api")
 
+	api.POST("/payments/midtrans/notification", a.PaymentHandler.Notification)
+	api.GET("/payments/midtrans/notification", a.PaymentHandler.Notification)
+
 	api.Static("/uploads", "uploads")
 
 	auth := api.Group("/auth")
@@ -70,6 +73,7 @@ func (a *App) RegisterRoute() {
 
 		// Rental Option
 		public.GET("/rental-options", a.RentalOptionHandler.GetAllRentalOptions)
+		public.GET("/rental-options/available", a.RentalOptionHandler.GetAvailableRentalOptions)
 		public.GET("/rental-options/:id", a.RentalOptionHandler.GetRentalOptionByID)
 		public.GET("/rental-options/:id/rental-prices", a.RentalOptionHandler.GetAllRentalPriceByRentalOptionID)
 
@@ -92,6 +96,18 @@ func (a *App) RegisterRoute() {
 
 	authenticated := api.Group("")
 	authenticated.Use(a.AuthMiddleware)
+
+	user := authenticated.Group("")
+	user.Use(middleware.RoleMiddleware(model.RoleUser))
+	{
+		// Booking
+		user.GET("/my-bookings", a.BookingHandler.GetMyBookings)
+		user.POST("/my-bookings", a.BookingHandler.CreateBooking)
+		user.PUT("/my-bookings/:id/cancel", a.BookingHandler.CanceledBooking)
+		user.PUT("/my-bookings/:id/paid", a.BookingHandler.PaidBooking)
+		user.PUT("/my-bookings/:id/check-in", a.BookingHandler.CheckInBooking)
+		user.PUT("/my-bookings/:id/complete", a.BookingHandler.CompletedBooking)
+	}
 
 	admin := authenticated.Group("")
 	admin.Use(middleware.RoleMiddleware(model.RoleAdmin))
@@ -189,9 +205,9 @@ func (a *App) RegisterRoute() {
 		admin.GET("/messages/:id", a.MessageHandler.GetMessageByID)
 
 		// Rental Option
-		public.POST("/rental-options", a.RentalOptionHandler.CreateRentalOption)
-		public.PUT("/rental-options/:id", a.RentalOptionHandler.UpdateRentalOption)
-		public.DELETE("/rental-options/:id", a.RentalOptionHandler.DeleteRentalOption)
+		admin.POST("/rental-options", a.RentalOptionHandler.CreateRentalOption)
+		admin.PUT("/rental-options/:id", a.RentalOptionHandler.UpdateRentalOption)
+		admin.DELETE("/rental-options/:id", a.RentalOptionHandler.DeleteRentalOption)
 
 		// Attraction
 		admin.GET("/attractions/:id", a.AttractionHandler.GetAttractionByID)
@@ -227,5 +243,8 @@ func (a *App) RegisterRoute() {
 		admin.GET("/seasons/:id", a.SeasonPeriodHandler.GetSeasonPeriodByID)
 		admin.POST("/seasons", a.SeasonPeriodHandler.CreateSeasonPeriod)
 		admin.PUT("/seasons/:id", a.SeasonPeriodHandler.UpdateSeasonPeriod)
+
+		// Booking
+		admin.GET("/bookings", a.BookingHandler.GetAllBookings)
 	}
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
@@ -94,4 +95,28 @@ func (r *RentalOptionRepository) ShiftSortOrder(ctx context.Context, sortOrder i
 		Model(&model.RentalOption{}).
 		Where("sort_order >= ?", sortOrder).
 		Update("sort_order", gorm.Expr("sort_order + 1")).Error
+}
+
+func (r *RentalOptionRepository) GetAvailable(ctx context.Context, checkIn time.Time, checkOut time.Time, guests int) ([]model.RentalOption, error) {
+	var options []model.RentalOption
+
+	conflicting := r.db.WithContext(ctx).
+		Model(&model.Booking{}).
+		Select("rental_option_id").
+		Where("rental_option_id IS NOT NULL").
+		Where("check_in_date <= ? AND check_out_date >= ?", checkOut, checkIn).
+		Where(
+			"status = ? OR (status = ? AND (expires_at IS NULL OR expires_at > ?))",
+			model.BookingStatusPaid,
+			model.BookingStatusPending,
+			time.Now(),
+		)
+
+	err := r.db.WithContext(ctx).
+		Where("max_capacity >= ?", guests).
+		Where("id NOT IN (?)", conflicting).
+		Order("sort_order ASC").
+		Find(&options).Error
+
+	return options, err
 }
