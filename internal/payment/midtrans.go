@@ -54,7 +54,7 @@ func (g *MidtransGateway) CheckTransaction(ctx context.Context, orderID string) 
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode != "200" && res.StatusCode != "201" {
+	if res.StatusCode != "200" && res.StatusCode != "201" && res.StatusCode != "407" {
 		return nil, fmt.Errorf("midtrans check: status_code=%s %s", res.StatusCode, res.StatusMessage)
 	}
 
