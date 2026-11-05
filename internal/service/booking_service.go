@@ -315,7 +315,7 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			}
 		}
 
-		orderID := fmt.Sprintf("BOOKING-%d", booking.ID)
+		orderID := fmt.Sprintf("BOOKING-%d-%d", booking.ID, time.Now().UnixNano())
 		token, redirectURL, err := s.gateaway.CreateSnapToken(
 			orderID,
 			booking.TotalPrice,
