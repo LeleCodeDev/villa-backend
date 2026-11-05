@@ -384,43 +384,6 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 	return mapper.ToBookingResponse(canceledBooking, nil), nil
 }
 
-func (s *BookingService) Paid(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
-	var paidBooking *model.Booking
-
-	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
-		txBookingRepo := s.repo.WithTx(tx)
-
-		booking, err := txBookingRepo.GetByID(ctx, id)
-		if err != nil {
-			return err
-		}
-		if booking == nil {
-			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
-		}
-
-		if currentUser.Role != model.RoleAdmin && booking.UserID != currentUser.ID {
-			return appError.Unauthorized("You are not authorized to access this booking!")
-		}
-
-		if booking.Status != model.BookingStatusPending {
-			return appError.BadRequest("Booking status is not pending")
-		}
-
-		booking.Status = model.BookingStatusPaid
-		if err := txBookingRepo.Update(ctx, booking); err != nil {
-			return err
-		}
-
-		paidBooking = booking
-
-		return nil
-	}); err != nil {
-		return dto.BookingResponse{}, err
-	}
-
-	return mapper.ToBookingResponse(paidBooking, nil), nil
-}
-
 func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
 	var paidBooking *model.Booking
 
