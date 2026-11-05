@@ -106,3 +106,9 @@ func (r *RentalPriceRepository) Update(ctx context.Context, rentalPrice *model.R
 func (r *RentalPriceRepository) Delete(ctx context.Context, rentalPrice *model.RentalPrice) error {
 	return r.db.WithContext(ctx).Delete(rentalPrice).Error
 }
+
+func (r *RentalPriceRepository) DeleteByRentalOptionID(ctx context.Context, rentalOptionID uint) error {
+	return r.db.WithContext(ctx).
+		Where("rental_option_id = ?", rentalOptionID).
+		Delete(&model.RentalPrice{}).Error
+}

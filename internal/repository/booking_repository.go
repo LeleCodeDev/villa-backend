@@ -109,6 +109,14 @@ func (r *BookingRepository) TransitionStatus(ctx context.Context, id uint, from,
 	return res.RowsAffected == 1, res.Error
 }
 
+func (r *BookingRepository) SetNullRentalOptionID(ctx context.Context, rentalOptionID uint) error {
+	updates := map[string]any{"rental_option_id": nil}
+	return r.db.WithContext(ctx).
+		Model(&model.Booking{}).
+		Where("rental_option_id = ?", rentalOptionID).
+		Updates(updates).Error
+}
+
 func (r *BookingRepository) Create(ctx context.Context, booking *model.Booking) error {
 	return r.db.WithContext(ctx).Create(booking).Error
 }

@@ -73,7 +73,7 @@ func (r *PricelistRepository) Delete(ctx context.Context, pricelist *model.Price
 func (r *PricelistRepository) DeleteByRentalOptionID(ctx context.Context, rentalOptionID uint) error {
 	return r.db.WithContext(ctx).
 		Where("rental_option_id = ?", rentalOptionID).
-		Delete(&model.RentalOption{}).Error
+		Delete(&model.Pricelist{}).Error
 }
 
 func (r *PricelistRepository) GetMaxSortOrder(ctx context.Context) (int, error) {

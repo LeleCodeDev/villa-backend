@@ -19,6 +19,7 @@ type RentalOptionService struct {
 	repo            *repository.RentalOptionRepository
 	pricelistRepo   *repository.PricelistRepository
 	rentalPriceRepo *repository.RentalPriceRepository
+	bookingRepo     *repository.BookingRepository
 }
 
 func NewRentalOptionService(
@@ -225,6 +226,8 @@ func (s *RentalOptionService) Delete(ctx context.Context, id uint) error {
 	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 		txPricelistRepo := s.pricelistRepo.WithTx(tx)
+		txRentalPriceRepo := s.rentalPriceRepo.WithTx(tx)
+		txBookingRepo := s.bookingRepo.WithTx(tx)
 
 		rentalOption, err := txRepo.GetByID(ctx, id)
 		if err != nil {
@@ -243,6 +246,12 @@ func (s *RentalOptionService) Delete(ctx context.Context, id uint) error {
 		}
 
 		if err := txPricelistRepo.DeleteByRentalOptionID(ctx, id); err != nil {
+			return err
+		}
+		if err := txRentalPriceRepo.DeleteByRentalOptionID(ctx, id); err != nil {
+			return err
+		}
+		if err := txBookingRepo.SetNullRentalOptionID(ctx, id); err != nil {
 			return err
 		}
 
