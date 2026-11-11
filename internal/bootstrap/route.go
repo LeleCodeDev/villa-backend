@@ -109,6 +109,10 @@ func (a *App) RegisterRoute() {
 
 		// Event Booking
 		user.GET("/my-event-bookings", a.EventBookingHandler.GetMyEventBookings)
+		user.POST("/my-event-bookings", a.EventBookingHandler.CreateEventBooking)
+		user.PUT("/my-event-bookings/:id/cancel", a.EventBookingHandler.CanceledEventBooking)
+		user.PUT("/my-event-bookings/:id/check-in", a.EventBookingHandler.CheckInEventBooking)
+		user.PUT("/my-event-bookings/:id/complete", a.EventBookingHandler.CompletedEventBooking)
 	}
 
 	admin := authenticated.Group("")
