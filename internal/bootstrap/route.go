@@ -106,6 +106,9 @@ func (a *App) RegisterRoute() {
 		user.PUT("/my-bookings/:id/cancel", a.BookingHandler.CanceledBooking)
 		user.PUT("/my-bookings/:id/check-in", a.BookingHandler.CheckInBooking)
 		user.PUT("/my-bookings/:id/complete", a.BookingHandler.CompletedBooking)
+
+		// Event Booking
+		user.GET("/my-event-bookings", a.EventBookingHandler.GetMyEventBookings)
 	}
 
 	admin := authenticated.Group("")
@@ -245,5 +248,8 @@ func (a *App) RegisterRoute() {
 
 		// Booking
 		admin.GET("/bookings", a.BookingHandler.GetAllBookings)
+
+		// Event Booking
+		admin.GET("/event-bookings", a.EventBookingHandler.GetAllEventBookings)
 	}
 }

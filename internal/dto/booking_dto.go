@@ -10,9 +10,9 @@ type (
 	BookingQuery struct {
 		PaginationQuery
 		SortQuery
-		Status    model.BookingStatus `json:"status" form:"status" binding:"omitempty,oneof=pending paid canceled completed expired refunded not_show"`
-		StartDate string              `json:"start_date" form:"start_date" binding:"omitempty,datetime=2006-01-02"`
-		EndDate   string              `json:"end_date" form:"end_date" binding:"omitempty,datetime=2006-01-02"`
+		Status    model.BookingStatus `form:"status" binding:"omitempty,oneof=pending paid canceled completed expired refunded not_show"`
+		StartDate string              `form:"start_date" binding:"omitempty,datetime=2006-01-02"`
+		EndDate   string              `form:"end_date" binding:"omitempty,datetime=2006-01-02"`
 		Unpage    bool                `form:"unpage"`
 	}
 

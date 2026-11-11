@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/database"
 	"github.com/lelecodedev/villa-backend/internal/handler"
 	"github.com/lelecodedev/villa-backend/internal/middleware"
@@ -48,6 +49,7 @@ type App struct {
 	SeasonPeriodHandler         *handler.SeasonPeriodHandler
 	BookingHandler              *handler.BookingHandler
 	PaymentHandler              *handler.PaymentHandler
+	EventBookingHandler         *handler.EventBookingHandler
 }
 
 func NewApp() *App {
@@ -83,6 +85,7 @@ func NewApp() *App {
 	seasonPeriodRepo := repository.NewSeasonPeriodRepository(db)
 	bookingRepo := repository.NewBookingRepository(db)
 	bookingAddonRepo := repository.NewBookingAddonRepository(db)
+	eventBookingRepo := repository.NewEventBookingRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	userService := service.NewUserService(txManager, userRepo)
@@ -120,6 +123,7 @@ func NewApp() *App {
 		gateaway,
 	)
 	paymentService := service.NewPaymentService(bookingRepo, gateaway)
+	eventBookingService := service.NewEventBookingService(txManager, eventBookingRepo, gateaway)
 
 	app := &App{
 		Router:                      r,
@@ -152,13 +156,15 @@ func NewApp() *App {
 		SeasonPeriodHandler:         handler.NewSeasonPeriodHandler(seasonPeriodService),
 		BookingHandler:              handler.NewBookingHandler(bookingService),
 		PaymentHandler:              handler.NewPaymentHandler(paymentService),
+		EventBookingHandler:         handler.NewEventBookingHandler(eventBookingService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     config.Env.AllowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: false,
+		MaxAge:           7200,
 	}))
 
 	app.RegisterRoute()

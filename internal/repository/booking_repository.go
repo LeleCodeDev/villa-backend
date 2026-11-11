@@ -160,9 +160,3 @@ func (r *BookingRepository) GetBookingConflicts(ctx context.Context, optionID ui
 
 	return conflicts, nil
 }
-
-// func (r *BookingRepository) SetPayment(ctx context.Context, id uint, orderID, token string) error {
-// 	return r.db.WithContext(ctx).Model(&model.Booking{}).
-// 		Where("id = ?", id).
-// 		Updates(map[string]any{"payment_order_id": orderID, "snap_token": token}).Error
-// }
