@@ -98,7 +98,7 @@ func (s *VillaPackageService) Create(ctx context.Context, req dto.VillaPackageRe
 			}
 		}
 
-		villaPackage := mapper.ToVillaPackageModel(req, sortOrder)
+		villaPackage := mapper.ToVillaPackageModel(req, sortOrder, false)
 		if err := txRepo.Create(ctx, villaPackage); err != nil {
 			return err
 		}

@@ -123,7 +123,7 @@ func NewApp() *App {
 		gateaway,
 	)
 	paymentService := service.NewPaymentService(bookingRepo, gateaway)
-	eventBookingService := service.NewEventBookingService(txManager, eventBookingRepo, gateaway)
+	eventBookingService := service.NewEventBookingService(txManager, eventBookingRepo, villaPackageRepo, gateaway)
 
 	app := &App{
 		Router:                      r,

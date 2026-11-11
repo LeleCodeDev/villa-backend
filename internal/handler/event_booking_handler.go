@@ -9,6 +9,7 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/pagination"
 	"github.com/lelecodedev/villa-backend/internal/response"
 	"github.com/lelecodedev/villa-backend/internal/service"
+	"github.com/lelecodedev/villa-backend/internal/util"
 )
 
 type EventBookingHandler struct {
@@ -68,4 +69,22 @@ func (h *EventBookingHandler) GetMyEventBookings(c *gin.Context) {
 
 	pagination := pagination.BuildPagination(query.Page, query.Size, total)
 	response.Paginated(c, http.StatusOK, "All event bookings successfully fetched", eventBookings, pagination)
+}
+
+func (h *EventBookingHandler) GetEventBookingByID(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	eventBooking, err := h.service.GetByID(ctx, id)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusOK, "Event booking successfully fetched", eventBooking)
 }

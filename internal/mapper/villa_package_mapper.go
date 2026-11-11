@@ -12,25 +12,27 @@ func ToVillaPackageResponse(villaPackage *model.VillaPackage, lists []model.Vill
 	}
 
 	return dto.VillaPackageResponse{
-		ID:          villaPackage.ID,
-		Title:       villaPackage.Title,
-		Subtitle:    villaPackage.Subtitle,
-		MaxCapacity: villaPackage.MaxCapacity,
-		Price:       villaPackage.Price,
-		Lists:       listsResponse,
-		SortOrder:   villaPackage.SortOrder,
-		CreatedAt:   villaPackage.CreatedAt,
-		UpdatedAt:   villaPackage.UpdatedAt,
+		ID:        villaPackage.ID,
+		Title:     villaPackage.Title,
+		Subtitle:  villaPackage.Subtitle,
+		Type:      villaPackage.Type,
+		Price:     villaPackage.Price,
+		Custom:    villaPackage.Custom,
+		Lists:     listsResponse,
+		SortOrder: villaPackage.SortOrder,
+		CreatedAt: villaPackage.CreatedAt,
+		UpdatedAt: villaPackage.UpdatedAt,
 	}
 }
 
-func ToVillaPackageModel(req dto.VillaPackageRequest, sortOrder int) *model.VillaPackage {
+func ToVillaPackageModel(req dto.VillaPackageRequest, sortOrder int, custom bool) *model.VillaPackage {
 	return &model.VillaPackage{
-		Title:       req.Title,
-		Subtitle:    req.Subtitle,
-		MaxCapacity: req.MaxCapacity,
-		Price:       req.Price,
-		SortOrder:   sortOrder,
+		Title:     req.Title,
+		Subtitle:  req.Subtitle,
+		Type:      req.Type,
+		Price:     req.Price,
+		Custom:    custom,
+		SortOrder: sortOrder,
 	}
 }
 
@@ -38,6 +40,6 @@ func UpdateVillaPackageModel(villaPackage *model.VillaPackage, req dto.VillaPack
 	villaPackage.Title = req.Title
 	villaPackage.Subtitle = req.Subtitle
 	villaPackage.Price = req.Price
-	villaPackage.MaxCapacity = req.MaxCapacity
+	villaPackage.Type = req.Type
 	villaPackage.SortOrder = sortOrder
 }

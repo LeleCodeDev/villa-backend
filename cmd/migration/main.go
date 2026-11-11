@@ -40,6 +40,7 @@ func main() {
 		&model.SeasonPeriod{},
 		&model.Booking{},
 		&model.BookingAddon{},
+		&model.EventBooking{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {
