@@ -122,7 +122,7 @@ func NewApp() *App {
 		addonRepo,
 		gateaway,
 	)
-	paymentService := service.NewPaymentService(bookingRepo, gateaway)
+	paymentService := service.NewPaymentService(bookingRepo, eventBookingRepo, gateaway)
 	eventBookingService := service.NewEventBookingService(txManager, eventBookingRepo, villaPackageRepo, gateaway)
 
 	app := &App{
