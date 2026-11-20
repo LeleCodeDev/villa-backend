@@ -52,13 +52,17 @@ func (s *EventBookingService) GetAll(ctx context.Context, query dto.EventBooking
 	return responses, total, nil
 }
 
-func (s *EventBookingService) GetByID(ctx context.Context, id uint) (dto.EventBookingResponse, error) {
+func (s *EventBookingService) GetByID(ctx context.Context, id uint, currentUser model.User) (dto.EventBookingResponse, error) {
 	eventBooking, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return dto.EventBookingResponse{}, err
 	}
 	if eventBooking == nil {
 		return dto.EventBookingResponse{}, appError.NotFound(fmt.Sprintf("Event booking not found with ID : %d", id))
+	}
+
+	if currentUser.Role != model.RoleAdmin && eventBooking.UserID != currentUser.ID {
+		return dto.EventBookingResponse{}, appError.Unauthorized("You are not authorized to access this event booking!")
 	}
 
 	return mapper.ToEventBookingResponse(eventBooking), nil

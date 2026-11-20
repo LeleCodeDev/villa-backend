@@ -12,27 +12,29 @@ func ToVillaPackageResponse(villaPackage *model.VillaPackage, lists []model.Vill
 	}
 
 	return dto.VillaPackageResponse{
-		ID:        villaPackage.ID,
-		Title:     villaPackage.Title,
-		Subtitle:  villaPackage.Subtitle,
-		Type:      villaPackage.Type,
-		Price:     villaPackage.Price,
-		Custom:    villaPackage.Custom,
-		Lists:     listsResponse,
-		SortOrder: villaPackage.SortOrder,
-		CreatedAt: villaPackage.CreatedAt,
-		UpdatedAt: villaPackage.UpdatedAt,
+		ID:               villaPackage.ID,
+		Title:            villaPackage.Title,
+		Subtitle:         villaPackage.Subtitle,
+		Type:             villaPackage.Type,
+		Price:            villaPackage.Price,
+		RequiresApproval: villaPackage.RequiresApproval,
+		MaxCapacity:      villaPackage.MaxCapacity,
+		Lists:            listsResponse,
+		SortOrder:        villaPackage.SortOrder,
+		CreatedAt:        villaPackage.CreatedAt,
+		UpdatedAt:        villaPackage.UpdatedAt,
 	}
 }
 
 func ToVillaPackageModel(req dto.VillaPackageRequest, sortOrder int, custom bool) *model.VillaPackage {
 	return &model.VillaPackage{
-		Title:     req.Title,
-		Subtitle:  req.Subtitle,
-		Type:      req.Type,
-		Price:     req.Price,
-		Custom:    custom,
-		SortOrder: sortOrder,
+		Title:            req.Title,
+		Subtitle:         req.Subtitle,
+		Type:             req.Type,
+		Price:            req.Price,
+		MaxCapacity:      req.MaxCapacity,
+		RequiresApproval: *req.RequiresApproval,
+		SortOrder:        sortOrder,
 	}
 }
 

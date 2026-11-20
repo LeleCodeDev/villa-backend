@@ -79,8 +79,9 @@ func (h *BookingHandler) GetBookingByID(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
+	currentUser := c.MustGet("user").(model.User)
 
-	booking, err := h.service.GetByID(ctx, id)
+	booking, err := h.service.GetByID(ctx, id, currentUser)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return

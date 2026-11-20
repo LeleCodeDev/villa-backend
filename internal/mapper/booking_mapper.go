@@ -7,10 +7,15 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
-func ToBookingResponse(booking *model.Booking, bookingAddons []model.BookingAddon) dto.BookingResponse {
-	var BookingAddonResponses []dto.BookingAddonResponse
+func ToBookingResponse(booking *model.Booking, bookingAddons []model.BookingAddon, payments []model.Payment) dto.BookingResponse {
+	var bookingAddonResponses []dto.BookingAddonResponse
 	for i := range bookingAddons {
-		BookingAddonResponses = append(BookingAddonResponses, ToBookingAddonResponse(&bookingAddons[i]))
+		bookingAddonResponses = append(bookingAddonResponses, ToBookingAddonResponse(&bookingAddons[i]))
+	}
+
+	var paymentResponses []dto.PaymentResponse
+	for i := range payments {
+		paymentResponses = append(paymentResponses, ToPaymentResponse(&payments[i]))
 	}
 
 	var rentalOption *dto.RentalOptionResponse
@@ -20,26 +25,26 @@ func ToBookingResponse(booking *model.Booking, bookingAddons []model.BookingAddo
 	}
 
 	return dto.BookingResponse{
-		ID:             booking.ID,
-		PaymentOrderID: booking.PaymentOrderID,
-		User:           ToUserResponse(&booking.User),
-		GuestCount:     booking.GuestCount,
-		RentalOption:   rentalOption,
-		Reason:         ToReasonResponse(&booking.Reason),
-		Status:         booking.Status,
-		CheckInDate:    booking.CheckInDate,
-		CheckOutDate:   booking.CheckOutDate,
-		BookingPrice:   booking.BookingPrice,
-		TotalPrice:     booking.TotalPrice,
-		SnapToken:      booking.SnapToken,
-		RedirectURL:    booking.RedirectURL,
-		PaidAt:         booking.PaidAt,
-		CheckInAt:      booking.CheckInAt,
-		CheckOutAt:     booking.CheckOutAt,
-		ExpiresAt:      booking.ExpiresAt,
-		BookingAddons:  BookingAddonResponses,
-		CreatedAt:      booking.CreatedAt,
-		UpdatedAt:      booking.UpdatedAt,
+		ID:            booking.ID,
+		User:          ToUserResponse(&booking.User),
+		GuestCount:    booking.GuestCount,
+		RentalOption:  rentalOption,
+		Reason:        ToReasonResponse(&booking.Reason),
+		Status:        booking.Status,
+		PaymentType:   booking.PaymentType,
+		CheckInDate:   booking.CheckInDate,
+		CheckOutDate:  booking.CheckOutDate,
+		BookingPrice:  booking.BookingPrice,
+		TotalPrice:    booking.TotalPrice,
+		DepositAmount: booking.DepositAmount,
+		BalanceDueAt:  booking.BalanceDueAt,
+		CheckInAt:     booking.CheckInAt,
+		CheckOutAt:    booking.CheckOutAt,
+		ExpiresAt:     booking.ExpiresAt,
+		BookingAddons: bookingAddonResponses,
+		Payments:      paymentResponses,
+		CreatedAt:     booking.CreatedAt,
+		UpdatedAt:     booking.UpdatedAt,
 	}
 }
 
@@ -52,11 +57,12 @@ func ToBookingModel(
 	checkOutDate time.Time,
 	bookingPrice int64,
 	totalPrice int64,
+	depositAmount *int64,
+	balanceDueAt *time.Time,
 	expireAt time.Time,
 ) *model.Booking {
 	return &model.Booking{
 		UserID:         user.ID,
-		PaymentOrderID: nil,
 		User:           user,
 		GuestCount:     req.GuestCount,
 		RentalOptionID: &rentalOption.ID,
@@ -64,13 +70,13 @@ func ToBookingModel(
 		ReasonID:       reason.ID,
 		Reason:         reason,
 		Status:         model.BookingStatusPending,
+		PaymentType:    req.PaymentType,
 		CheckInDate:    checkInDate,
 		CheckOutDate:   checkOutDate,
 		BookingPrice:   bookingPrice,
 		TotalPrice:     totalPrice,
-		SnapToken:      nil,
-		RedirectURL:    nil,
-		PaidAt:         nil,
+		DepositAmount:  depositAmount,
+		BalanceDueAt:   balanceDueAt,
 		CheckInAt:      nil,
 		CheckOutAt:     nil,
 		ExpiresAt:      &expireAt,

@@ -18,8 +18,8 @@ type (
 	}
 
 	EventBookingCreateRequest struct {
-		StartAt        string `json:"start_at" form:"start_at" binding:"omitempty,datetime=2006-01-02 15:04"`
-		EndAt          string `json:"end_at" form:"end_at" binding:"omitempty,datetime=2006-01-02 15:04"`
+		StartAt        string `json:"start_at" form:"start_at" binding:"required,datetime=2006-01-02 15:04"`
+		EndAt          string `json:"end_at" form:"end_at" binding:"required,datetime=2006-01-02 15:04"`
 		VillaPackageID uint   `json:"villa_package_id" form:"villa_package_id" binding:"required,gt=0"`
 	}
 

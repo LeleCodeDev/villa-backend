@@ -88,7 +88,7 @@ func (s *RentalOptionService) GetAvailable(ctx context.Context, query dto.Bookin
 		return nil, err
 	}
 
-	rentalOptions, err := s.repo.GetAvailable(ctx, checkIn, checkOut, query.GuestCount)
+	rentalOptions, err := s.repo.GetAvailable(ctx, checkIn, checkOut)
 	if err != nil {
 		return nil, err
 	}

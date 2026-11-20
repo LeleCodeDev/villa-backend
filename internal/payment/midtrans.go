@@ -3,6 +3,7 @@ package payment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/lelecodedev/villa-backend/internal/config"
@@ -32,6 +33,8 @@ func NewMidtransGateway() *MidtransGateway {
 	return gateway
 }
 
+var ErrNotCancelable = errors.New("transaction can no longer be canceled")
+
 func (g *MidtransGateway) CreateSnapToken(orderID string, amount int64, items []midtrans.ItemDetails, customer *midtrans.CustomerDetails, expiryMinutes int) (string, string, error) {
 	res, err := g.snapClient.CreateTransaction(&snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{OrderID: orderID, GrossAmt: amount},
@@ -59,4 +62,25 @@ func (g *MidtransGateway) CheckTransaction(ctx context.Context, orderID string) 
 	}
 
 	return res, nil
+}
+
+func (g *MidtransGateway) CancelTransaction(ctx context.Context, orderID string) error {
+	res, err := g.coreClient.CancelTransaction(orderID)
+	if err != nil {
+		switch err.GetStatusCode() {
+		case 404:
+			return nil
+		case 412:
+			return ErrNotCancelable
+		}
+		return err
+	}
+
+	switch res.StatusCode {
+	case "404":
+		return nil
+	case "412":
+		return ErrNotCancelable
+	}
+	return nil
 }

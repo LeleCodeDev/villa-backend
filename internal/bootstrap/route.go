@@ -97,6 +97,16 @@ func (a *App) RegisterRoute() {
 	authenticated := api.Group("")
 	authenticated.Use(a.AuthMiddleware)
 
+	adminAndUser := authenticated.Group("")
+	adminAndUser.Use(middleware.RoleMiddleware(model.RoleAdmin, model.RoleUser))
+	{
+		// Booking
+		adminAndUser.GET("/bookings/:id", a.BookingHandler.GetBookingByID)
+
+		// Event Booking
+		adminAndUser.GET("/event-bookings/:id", a.EventBookingHandler.GetEventBookingByID)
+	}
+
 	user := authenticated.Group("")
 	user.Use(middleware.RoleMiddleware(model.RoleUser))
 	{
@@ -104,8 +114,6 @@ func (a *App) RegisterRoute() {
 		user.GET("/my-bookings", a.BookingHandler.GetMyBookings)
 		user.POST("/my-bookings", a.BookingHandler.CreateBooking)
 		user.PUT("/my-bookings/:id/cancel", a.BookingHandler.CanceledBooking)
-		user.PUT("/my-bookings/:id/check-in", a.BookingHandler.CheckInBooking)
-		user.PUT("/my-bookings/:id/complete", a.BookingHandler.CompletedBooking)
 
 		// Event Booking
 		user.GET("/my-event-bookings", a.EventBookingHandler.GetMyEventBookings)
@@ -252,6 +260,8 @@ func (a *App) RegisterRoute() {
 
 		// Booking
 		admin.GET("/bookings", a.BookingHandler.GetAllBookings)
+		admin.PUT("/bookings/:id/check-in", a.BookingHandler.CheckInBooking)
+		admin.PUT("/bookings/:id/complete", a.BookingHandler.CompletedBooking)
 
 		// Event Booking
 		admin.GET("/event-bookings", a.EventBookingHandler.GetAllEventBookings)

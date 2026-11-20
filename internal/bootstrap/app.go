@@ -86,6 +86,7 @@ func NewApp() *App {
 	bookingRepo := repository.NewBookingRepository(db)
 	bookingAddonRepo := repository.NewBookingAddonRepository(db)
 	eventBookingRepo := repository.NewEventBookingRepository(db)
+	paymentRepo := repository.NewPaymentRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	userService := service.NewUserService(txManager, userRepo)
@@ -120,9 +121,16 @@ func NewApp() *App {
 		rentalPriceRepo,
 		seasonPeriodRepo,
 		addonRepo,
+		paymentRepo,
 		gateaway,
 	)
-	paymentService := service.NewPaymentService(bookingRepo, eventBookingRepo, gateaway)
+	paymentService := service.NewPaymentService(
+		txManager,
+		paymentRepo,
+		bookingRepo,
+		eventBookingRepo,
+		gateaway,
+	)
 	eventBookingService := service.NewEventBookingService(txManager, eventBookingRepo, villaPackageRepo, gateaway)
 
 	app := &App{
