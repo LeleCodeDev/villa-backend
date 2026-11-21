@@ -79,8 +79,9 @@ func (h *BookingHandler) GetBookingByID(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
+	currentUser := c.MustGet("user").(model.User)
 
-	booking, err := h.service.GetByID(ctx, id)
+	booking, err := h.service.GetByID(ctx, id, currentUser)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
@@ -106,6 +107,25 @@ func (h *BookingHandler) CreateBooking(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusCreated, "Booking successfully created!", booking)
+}
+
+func (h *BookingHandler) PayBookingBalance(c *gin.Context) {
+	id, err := util.GetParamsID(c)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+	currentUser := c.MustGet("user").(model.User)
+
+	balancePayment, err := h.service.PayBalance(ctx, currentUser, id)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Balance payment successfully created!", balancePayment)
 }
 
 func (h *BookingHandler) CanceledBooking(c *gin.Context) {

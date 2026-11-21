@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/lelecodedev/villa-backend/internal/dto"
@@ -83,26 +84,18 @@ func (r *BookingRepository) GetByID(ctx context.Context, id uint) (*model.Bookin
 	return &booking, nil
 }
 
-func (r *BookingRepository) GetByOrderID(ctx context.Context, orderID string) (*model.Booking, error) {
-	var booking model.Booking
-	if err := r.db.WithContext(ctx).
-		Where("payment_order_id = ?", orderID).
-		First(&booking).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-
-		return nil, err
-	}
-	return &booking, nil
-}
-
 func (r *BookingRepository) TransitionStatus(ctx context.Context, id uint, from, to model.BookingStatus) (bool, error) {
 	updates := map[string]any{"status": to}
-	if to == model.BookingStatusPaid {
-		updates["paid_at"] = time.Now()
+
+	if slices.Contains([]model.BookingStatus{
+		model.BookingStatusPartiallyPaid,
+		model.BookingStatusPaid,
+		model.BookingStatusExpired,
+		model.BookingStatusCanceled,
+	}, to) {
 		updates["expires_at"] = nil
 	}
+
 	res := r.db.WithContext(ctx).Model(&model.Booking{}).
 		Where("id = ? AND status = ?", id, from).
 		Updates(updates)
@@ -151,9 +144,3 @@ func (r *BookingRepository) GetBookingConflicts(ctx context.Context, optionID ui
 
 	return conflicts, nil
 }
-
-// func (r *BookingRepository) SetPayment(ctx context.Context, id uint, orderID, token string) error {
-// 	return r.db.WithContext(ctx).Model(&model.Booking{}).
-// 		Where("id = ?", id).
-// 		Updates(map[string]any{"payment_order_id": orderID, "snap_token": token}).Error
-// }

@@ -11,16 +11,6 @@ type ServiceError struct {
 	Errors     any
 }
 
-type errorsOpts struct {
-	Errors any
-}
-
-type ErrorOption func(*errorsOpts)
-
-func AddErrors(errors any) ErrorOption {
-	return func(o *errorsOpts) { o.Errors = errors }
-}
-
 func (e *ServiceError) Error() string {
 	return e.Message
 }
@@ -44,7 +34,7 @@ func AlreadyExist(message string) *ServiceError {
 	}
 }
 
-func Conflict(message string, opts ...ErrorOption) *ServiceError {
+func Conflict(message string) *ServiceError {
 	return &ServiceError{
 		Message:    message,
 		StatusCode: http.StatusConflict,

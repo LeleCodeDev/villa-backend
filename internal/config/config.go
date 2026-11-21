@@ -4,6 +4,7 @@ package config
 import (
 	"log"
 	"os"
+	"strings"
 	"time"
 	_ "time/tzdata"
 
@@ -24,6 +25,7 @@ type Config struct {
 	Location             *time.Location
 	MidtransServerKey    string
 	MidtransIsProduction bool
+	AllowedOrigins       []string
 }
 
 var Env *Config
@@ -45,6 +47,7 @@ func LoadConfig() {
 		Location:             getLocation(),
 		MidtransServerKey:    getMidtransServerKey(),
 		MidtransIsProduction: getMidtransIsProduction(),
+		AllowedOrigins:       getAllowedOrigins(),
 	}
 }
 
@@ -76,4 +79,13 @@ func getMidtransServerKey() string {
 func getMidtransIsProduction() bool {
 	key := os.Getenv("MIDTRANS_ENVIRONMENT")
 	return key == "production"
+}
+
+func getAllowedOrigins() []string {
+	key := os.Getenv("ALLOWED_ORIGINS")
+	if key == "" {
+		return []string{"*"}
+	}
+
+	return strings.Split(key, ",")
 }

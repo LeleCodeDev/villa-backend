@@ -2,45 +2,50 @@ package service
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log"
 	"math"
 	"strconv"
 
+	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/payment"
 	"github.com/lelecodedev/villa-backend/internal/repository"
-)
-
-var (
-	ErrInvalidSignature = errors.New("invalid signature")
-	ErrBookingNotFound  = errors.New("booking not found")
-	ErrAmountMismatch   = errors.New("amount mismatch")
+	"gorm.io/gorm"
 )
 
 type PaymentService struct {
-	repo    *repository.BookingRepository
-	gateway *payment.MidtransGateway
+	txManager        *repository.TxManager
+	paymentRepo      *repository.PaymentRepository
+	bookingRepo      *repository.BookingRepository
+	eventBookingRepo *repository.EventBookingRepository
+	gateway          *payment.MidtransGateway
 }
 
 func NewPaymentService(
-	repo *repository.BookingRepository,
+	txManager *repository.TxManager,
+	paymentRepo *repository.PaymentRepository,
+	bookingRepo *repository.BookingRepository,
+	eventBookingRepo *repository.EventBookingRepository,
 	gateway *payment.MidtransGateway,
 ) *PaymentService {
 	return &PaymentService{
-		repo:    repo,
-		gateway: gateway,
+		txManager:        txManager,
+		paymentRepo:      paymentRepo,
+		bookingRepo:      bookingRepo,
+		eventBookingRepo: eventBookingRepo,
+		gateway:          gateway,
 	}
 }
 
-func (s *PaymentService) HandleNotification(ctx context.Context, n dto.MidtransNotification) error {
-	booking, err := s.repo.GetByOrderID(ctx, n.OrderID)
+func (s *PaymentService) HandleNotificationCallback(ctx context.Context, n dto.MidtransCallbackRequest) error {
+	p, err := s.paymentRepo.GetByOrderID(ctx, n.OrderID)
 	if err != nil {
 		return err
 	}
-	if booking == nil {
-		return ErrBookingNotFound
+	if p == nil {
+		return appError.NotFound(fmt.Sprintf("Payment not found with order ID : %s", n.OrderID))
 	}
 
 	status, err := s.gateway.CheckTransaction(ctx, n.OrderID)
@@ -48,44 +53,99 @@ func (s *PaymentService) HandleNotification(ctx context.Context, n dto.MidtransN
 		return err
 	}
 
-	gross, err := strconv.ParseFloat(n.GrossAmount, 64)
-	if err != nil || int64(math.Round(gross)) != booking.TotalPrice {
-		return ErrAmountMismatch
+	grossAmount, err := strconv.ParseFloat(n.GrossAmount, 64)
+	if err != nil || int64(math.Round(grossAmount)) != p.Amount {
+		return appError.Conflict("Amount mismatch")
 	}
 
-	target, ok := mapStatus(status.TransactionStatus, status.FraudStatus)
-	if !ok || booking.Status == target {
+	target, ok := mapPaymentStatus(status.TransactionStatus, status.FraudStatus)
+	if !ok || p.Status == target {
 		return nil
 	}
 
-	updated, err := s.repo.TransitionStatus(ctx, booking.ID, model.BookingStatusPending, target)
-	if err != nil {
-		return err
-	}
-	if !updated {
-		if target == model.BookingStatusPaid {
-			log.Printf("REVIEW NEEDED: payment for booking %d arrived while status is %s", booking.ID, booking.Status)
+	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txPaymentRepo := s.paymentRepo.WithTx(tx)
+		txBookingRepo := s.bookingRepo.WithTx(tx)
+		txEventBookingRepo := s.eventBookingRepo.WithTx(tx)
+
+		updated, err := txPaymentRepo.TransitionStatus(ctx, p.ID, model.PaymentStatusPending, target)
+		if err != nil {
+			return err
 		}
-		return nil
-	}
+		if !updated {
+			if target == model.PaymentStatusPaid {
+				log.Printf("REVIEW NEEDED: payment %s paid but was already %s", p.OrderID, p.Status)
+			}
 
-	// if target == model.BookingStatusPaid {
-	// }
-	return nil
+			return nil
+		}
+
+		from, to, ok := bookingTransition(p.Kind, target)
+		if !ok {
+			return nil
+		}
+
+		var moved bool
+		switch {
+		case p.BookingID != nil:
+			moved, err = txBookingRepo.TransitionStatus(ctx, *p.BookingID, from, to)
+		case p.EventBookingID != nil:
+			moved, err = txEventBookingRepo.TransitionStatus(ctx, *p.EventBookingID, from, to)
+		}
+
+		if err != nil {
+			return err
+		}
+		if !moved && target == model.PaymentStatusPaid {
+			log.Printf("REVIEW NEEDED: payment %s paid but booking was not in status %s", p.OrderID, from)
+		}
+
+		return nil
+	})
 }
 
-func mapStatus(transactionStatus, fraudStatus string) (model.BookingStatus, bool) {
+func mapPaymentStatus(transactionStatus, fraudStatus string) (model.PaymentStatus, bool) {
 	switch transactionStatus {
 	case "settlement":
-		return model.BookingStatusPaid, true
+		return model.PaymentStatusPaid, true
 	case "capture":
 		if fraudStatus == "accept" {
-			return model.BookingStatusPaid, true
+			return model.PaymentStatusPaid, true
 		}
 	case "expire":
-		return model.BookingStatusExpired, true
+		return model.PaymentStatusExpired, true
 	case "cancel":
-		return model.BookingStatusCanceled, true
+		return model.PaymentStatusCanceled, true
+	case "deny":
+		return model.PaymentStatusFailed, true
 	}
 	return "", false
+}
+
+func bookingTransition(kind model.PaymentKind, target model.PaymentStatus) (from, to model.BookingStatus, ok bool) {
+	switch target {
+	case model.PaymentStatusPaid:
+		switch kind {
+		case model.PaymentKindDeposit:
+			return model.BookingStatusPending, model.BookingStatusPartiallyPaid, true
+		case model.PaymentKindFull:
+			return model.BookingStatusPending, model.BookingStatusPaid, true
+		case model.PaymentKindBalance:
+			return model.BookingStatusPartiallyPaid, model.BookingStatusPaid, true
+		}
+
+	case model.PaymentStatusExpired, model.PaymentStatusFailed, model.PaymentStatusCanceled:
+		if kind == model.PaymentKindBalance {
+			return "", "", false
+		}
+
+		switch target {
+		case model.PaymentStatusExpired:
+			return model.BookingStatusPending, model.BookingStatusExpired, true
+		default:
+			return model.BookingStatusPending, model.BookingStatusCanceled, true
+		}
+	}
+
+	return "", "", false
 }

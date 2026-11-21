@@ -97,7 +97,7 @@ func (r *RentalOptionRepository) ShiftSortOrder(ctx context.Context, sortOrder i
 		Update("sort_order", gorm.Expr("sort_order + 1")).Error
 }
 
-func (r *RentalOptionRepository) GetAvailable(ctx context.Context, checkIn time.Time, checkOut time.Time, guests int) ([]model.RentalOption, error) {
+func (r *RentalOptionRepository) GetAvailable(ctx context.Context, checkIn time.Time, checkOut time.Time) ([]model.RentalOption, error) {
 	var options []model.RentalOption
 
 	conflicting := r.db.WithContext(ctx).
@@ -113,7 +113,6 @@ func (r *RentalOptionRepository) GetAvailable(ctx context.Context, checkIn time.
 		)
 
 	err := r.db.WithContext(ctx).
-		Where("max_capacity >= ?", guests).
 		Where("id NOT IN (?)", conflicting).
 		Order("sort_order ASC").
 		Find(&options).Error
