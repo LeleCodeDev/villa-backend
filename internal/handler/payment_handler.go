@@ -26,12 +26,17 @@ func (h *PaymentHandler) Notification(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	err := h.service.HandleNotificationCallback(ctx, req)
-	if serviceError, ok := err.(*appError.ServiceError); ok {
-		log.Println(serviceError.Message)
-		c.Status(serviceError.StatusCode)
+	if err != nil {
+		if serviceError, ok := err.(*appError.ServiceError); ok {
+			log.Println(serviceError.Message)
+			c.Status(serviceError.StatusCode)
+			return
+		}
+
+		log.Println("Payment notification:", err)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	log.Println("Payment notification:", err)
-	c.Status(http.StatusInternalServerError)
+	c.Status(http.StatusOK)
 }

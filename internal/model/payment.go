@@ -30,7 +30,7 @@ type Payment struct {
 	EventBookingID *uint         `gorm:"index"`
 	EventBooking   *EventBooking `gorm:"constraint:OnDelete:RESTRICT"`
 	Kind           PaymentKind   `gorm:"type:varchar(20);not null;default:'full';check:kind IN ('full', 'deposit', 'balance')"`
-	Status         PaymentStatus `gorm:"type:varchar(20);not null;default:'pending';check:status IN ('pending', 'paid', 'failed', 'expired')"`
+	Status         PaymentStatus `gorm:"type:varchar(20);not null;default:'pending';check:status IN ('pending', 'paid', 'failed', 'expired', 'canceled')"`
 	Amount         int64         `gorm:"not null"`
 	SnapToken      *string       `gorm:"type:varchar(100)"`
 	RedirectURL    *string

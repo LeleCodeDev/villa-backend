@@ -113,6 +113,7 @@ func (a *App) RegisterRoute() {
 		// Booking
 		user.GET("/my-bookings", a.BookingHandler.GetMyBookings)
 		user.POST("/my-bookings", a.BookingHandler.CreateBooking)
+		user.POST("/my-bookings/:id/balance", a.BookingHandler.PayBookingBalance)
 		user.PUT("/my-bookings/:id/cancel", a.BookingHandler.CanceledBooking)
 
 		// Event Booking

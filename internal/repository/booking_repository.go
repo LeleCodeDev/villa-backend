@@ -86,11 +86,9 @@ func (r *BookingRepository) GetByID(ctx context.Context, id uint) (*model.Bookin
 
 func (r *BookingRepository) TransitionStatus(ctx context.Context, id uint, from, to model.BookingStatus) (bool, error) {
 	updates := map[string]any{"status": to}
-	if to == model.BookingStatusPaid {
-		updates["paid_at"] = time.Now()
-	}
 
 	if slices.Contains([]model.BookingStatus{
+		model.BookingStatusPartiallyPaid,
 		model.BookingStatusPaid,
 		model.BookingStatusExpired,
 		model.BookingStatusCanceled,

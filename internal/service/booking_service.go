@@ -105,12 +105,8 @@ func (s *BookingService) GetByID(ctx context.Context, id uint, currentUser model
 	if err != nil {
 		return dto.BookingResponse{}, err
 	}
-	if booking == nil {
+	if booking == nil || (currentUser.Role != model.RoleAdmin && booking.UserID != currentUser.ID) {
 		return dto.BookingResponse{}, appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
-	}
-
-	if currentUser.Role != model.RoleAdmin && booking.UserID != currentUser.ID {
-		return dto.BookingResponse{}, appError.Unauthorized("You are not authorized to access this booking!")
 	}
 
 	bookingAddons, err := s.bookingAddonRepo.GetAllByBookingID(ctx, id)
@@ -332,6 +328,9 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			payKind = model.PaymentKindDeposit
 			payAmount = d
 
+			bda := checkIn.Add(11 * time.Hour)
+			balanceDueAt = &bda
+
 			items = []midtrans.ItemDetails{{
 				ID:    fmt.Sprintf("DEPOSIT-BOOKING-%d", rentalOption.ID),
 				Name:  "Deposit 10% - " + rentalOption.Title,
@@ -412,6 +411,95 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 	return mapper.ToBookingResponse(createdBooking, createdAddons, createdPayments), nil
 }
 
+func (s *BookingService) PayBalance(ctx context.Context, currentUser model.User, id uint) (dto.PaymentResponse, error) {
+	var balancePayment *model.Payment
+
+	const paymentWindow = 60 * time.Minute
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txBookingRepo := s.repo.WithTx(tx)
+		txPaymentRepo := s.paymentRepo.WithTx(tx)
+
+		booking, err := txBookingRepo.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if booking == nil || booking.UserID != currentUser.ID {
+			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
+		}
+		if booking.Status != model.BookingStatusPartiallyPaid {
+			return appError.BadRequest("booking is not awaiting balance payment")
+		}
+		if booking.DepositAmount == nil {
+			return appError.BadRequest("booking has no deposit")
+		}
+
+		balance := booking.TotalPrice - *booking.DepositAmount
+
+		existing, err := txPaymentRepo.GetFirstByBookingIDAndStatusAndKind(ctx, booking.ID, model.PaymentStatusPending, model.PaymentKindBalance)
+		if err != nil {
+			return err
+		}
+		if existing != nil && existing.ExpiresAt != nil && existing.ExpiresAt.After(time.Now()) {
+			balancePayment = existing
+			return nil
+		}
+
+		itemID := fmt.Sprintf("BALANCE-BOOKING-#%d", booking.ID)
+		itemName := fmt.Sprintf("Balance #%d", booking.ID)
+
+		if booking.RentalOptionID != nil && booking.RentalOption != nil {
+			itemID = fmt.Sprintf("BALANCE-BOOKING-%d", booking.RentalOptionID)
+			itemName = "Balance - " + booking.RentalOption.Title
+		}
+
+		items := []midtrans.ItemDetails{{
+			ID:    itemID,
+			Name:  itemName,
+			Price: balance,
+			Qty:   1,
+		}}
+
+		orderID := fmt.Sprintf("BOOKING-%d-BALANCE-%d", booking.ID, time.Now().UnixNano())
+		token, redirectURL, err := s.gateaway.CreateSnapToken(
+			orderID,
+			balance,
+			items,
+			&midtrans.CustomerDetails{
+				FName: currentUser.Username,
+				Email: currentUser.Email,
+				Phone: currentUser.Phone,
+			},
+			int(paymentWindow.Minutes()))
+		if err != nil {
+			return appError.BadGateway("failed to start payment, please try again")
+		}
+
+		expiresAt := time.Now().Add(paymentWindow)
+		payment := &model.Payment{
+			OrderID:     orderID,
+			BookingID:   &booking.ID,
+			Kind:        model.PaymentKindBalance,
+			Status:      model.PaymentStatusPending,
+			Amount:      balance,
+			SnapToken:   &token,
+			RedirectURL: &redirectURL,
+			ExpiresAt:   &expiresAt,
+		}
+		if err := txPaymentRepo.Create(ctx, payment); err != nil {
+			return err
+		}
+
+		balancePayment = payment
+
+		return nil
+	}); err != nil {
+		return dto.PaymentResponse{}, err
+	}
+
+	return mapper.ToPaymentResponse(balancePayment), nil
+}
+
 func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
 	var canceledBooking *model.Booking
 
@@ -485,12 +573,8 @@ func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id
 		if err != nil {
 			return err
 		}
-		if booking == nil {
+		if booking == nil || booking.UserID != currentUser.ID {
 			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
-		}
-
-		if booking.UserID != currentUser.ID {
-			return appError.Unauthorized("You are not authorized to access this booking!")
 		}
 
 		if booking.Status != model.BookingStatusPaid {
@@ -523,12 +607,8 @@ func (s *BookingService) Complete(ctx context.Context, currentUser model.User, i
 		if err != nil {
 			return err
 		}
-		if booking == nil {
+		if booking == nil || booking.UserID != currentUser.ID {
 			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
-		}
-
-		if booking.UserID != currentUser.ID {
-			return appError.Unauthorized("You are not authorized to access this booking!")
 		}
 
 		if booking.Status != model.BookingStatusPaid {

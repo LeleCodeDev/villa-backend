@@ -47,6 +47,24 @@ func (r *PaymentRepository) GetAllByBookingIDAndStatus(ctx context.Context, book
 	return payments, nil
 }
 
+func (r *PaymentRepository) GetFirstByBookingIDAndStatusAndKind(ctx context.Context, bookingID uint, status model.PaymentStatus, kind model.PaymentKind) (*model.Payment, error) {
+	var payment model.Payment
+
+	if err := r.db.WithContext(ctx).
+		Where("booking_id = ?", bookingID).
+		Where("kind = ?", kind).
+		Where("status = ?", status).
+		First(&payment).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &payment, nil
+}
+
 func (r *PaymentRepository) GetAllInBookingIDs(ctx context.Context, bookingIds []uint) ([]model.Payment, error) {
 	var payments []model.Payment
 

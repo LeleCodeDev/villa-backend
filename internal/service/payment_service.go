@@ -134,16 +134,17 @@ func bookingTransition(kind model.PaymentKind, target model.PaymentStatus) (from
 			return model.BookingStatusPartiallyPaid, model.BookingStatusPaid, true
 		}
 
-	case model.PaymentStatusExpired, model.PaymentStatusFailed:
+	case model.PaymentStatusExpired, model.PaymentStatusFailed, model.PaymentStatusCanceled:
 		if kind == model.PaymentKindBalance {
 			return "", "", false
 		}
 
-		if target == model.PaymentStatusExpired {
+		switch target {
+		case model.PaymentStatusExpired:
 			return model.BookingStatusPending, model.BookingStatusExpired, true
+		default:
+			return model.BookingStatusPending, model.BookingStatusCanceled, true
 		}
-
-		return model.BookingStatusPending, model.BookingStatusCanceled, true
 	}
 
 	return "", "", false
