@@ -27,6 +27,7 @@ type (
 		Amount         int64               `json:"amount"`
 		SnapToken      *string             `json:"snap_token"`
 		RedirectURL    *string             `json:"redirect_url"`
+		PaidAt         *time.Time          `json:"paid_at"`
 		ExpiresAt      *time.Time          `json:"expires_at,omitempty"`
 		CreatedAt      time.Time           `json:"created_at"`
 		UpdatedAt      time.Time           `json:"updated_at"`

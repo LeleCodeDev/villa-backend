@@ -16,6 +16,7 @@ func ToPaymentResponse(payment *model.Payment) dto.PaymentResponse {
 		Amount:         payment.Amount,
 		SnapToken:      payment.SnapToken,
 		RedirectURL:    payment.RedirectURL,
+		PaidAt:         payment.PaidAt,
 		ExpiresAt:      payment.ExpiresAt,
 		CreatedAt:      payment.CreatedAt,
 		UpdatedAt:      payment.UpdatedAt,

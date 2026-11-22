@@ -420,6 +420,7 @@ func (s *BookingService) PayBalance(ctx context.Context, currentUser model.User,
 		txBookingRepo := s.repo.WithTx(tx)
 		txPaymentRepo := s.paymentRepo.WithTx(tx)
 
+		// get booking
 		booking, err := txBookingRepo.GetByID(ctx, id)
 		if err != nil {
 			return err
@@ -434,8 +435,7 @@ func (s *BookingService) PayBalance(ctx context.Context, currentUser model.User,
 			return appError.BadRequest("booking has no deposit")
 		}
 
-		balance := booking.TotalPrice - *booking.DepositAmount
-
+		// check existing pending balance payment
 		existing, err := txPaymentRepo.GetFirstByBookingIDAndStatusAndKind(ctx, booking.ID, model.PaymentStatusPending, model.PaymentKindBalance)
 		if err != nil {
 			return err
@@ -445,6 +445,7 @@ func (s *BookingService) PayBalance(ctx context.Context, currentUser model.User,
 			return nil
 		}
 
+		// make midtrans item detail
 		itemID := fmt.Sprintf("BALANCE-BOOKING-#%d", booking.ID)
 		itemName := fmt.Sprintf("Balance #%d", booking.ID)
 
@@ -453,6 +454,8 @@ func (s *BookingService) PayBalance(ctx context.Context, currentUser model.User,
 			itemName = "Balance - " + booking.RentalOption.Title
 		}
 
+		balance := booking.TotalPrice - *booking.DepositAmount
+
 		items := []midtrans.ItemDetails{{
 			ID:    itemID,
 			Name:  itemName,
@@ -460,6 +463,7 @@ func (s *BookingService) PayBalance(ctx context.Context, currentUser model.User,
 			Qty:   1,
 		}}
 
+		// make snap token
 		orderID := fmt.Sprintf("BOOKING-%d-BALANCE-%d", booking.ID, time.Now().UnixNano())
 		token, redirectURL, err := s.gateaway.CreateSnapToken(
 			orderID,
@@ -475,6 +479,7 @@ func (s *BookingService) PayBalance(ctx context.Context, currentUser model.User,
 			return appError.BadGateway("failed to start payment, please try again")
 		}
 
+		// make payment model
 		expiresAt := time.Now().Add(paymentWindow)
 		payment := &model.Payment{
 			OrderID:     orderID,
@@ -511,13 +516,10 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 		if err != nil {
 			return err
 		}
-		if booking == nil {
+		if booking == nil || (currentUser.Role != model.RoleAdmin && booking.UserID != currentUser.ID) {
 			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
 		}
 
-		if currentUser.Role != model.RoleAdmin && booking.UserID != currentUser.ID {
-			return appError.Unauthorized("You are not authorized to access this booking!")
-		}
 		if booking.Status != model.BookingStatusPending {
 			return appError.BadRequest("Booking status is not pending!")
 		}
@@ -541,7 +543,7 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 					return appError.Conflict("Payment was already received, booking can't be canceled!")
 				}
 
-				return appError.BadGateway("failed to cancel payment, please try again")
+				return appError.BadGateway("Failed to cancel payment, please try again")
 			}
 
 			if _, err := txPaymentRepo.TransitionStatus(
@@ -563,7 +565,7 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 	return mapper.ToBookingResponse(canceledBooking, nil, nil), nil
 }
 
-func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
+func (s *BookingService) CheckIn(ctx context.Context, id uint) (dto.BookingResponse, error) {
 	var paidBooking *model.Booking
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
@@ -573,7 +575,7 @@ func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id
 		if err != nil {
 			return err
 		}
-		if booking == nil || booking.UserID != currentUser.ID {
+		if booking == nil {
 			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
 		}
 
@@ -597,7 +599,7 @@ func (s *BookingService) CheckIn(ctx context.Context, currentUser model.User, id
 	return mapper.ToBookingResponse(paidBooking, nil, nil), nil
 }
 
-func (s *BookingService) Complete(ctx context.Context, currentUser model.User, id uint) (dto.BookingResponse, error) {
+func (s *BookingService) Complete(ctx context.Context, id uint) (dto.BookingResponse, error) {
 	var completeBooking *model.Booking
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
@@ -607,7 +609,7 @@ func (s *BookingService) Complete(ctx context.Context, currentUser model.User, i
 		if err != nil {
 			return err
 		}
-		if booking == nil || booking.UserID != currentUser.ID {
+		if booking == nil {
 			return appError.NotFound(fmt.Sprintf("Booking not found with ID: %d", id))
 		}
 

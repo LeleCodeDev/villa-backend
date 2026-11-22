@@ -50,6 +50,7 @@ type App struct {
 	BookingHandler              *handler.BookingHandler
 	PaymentHandler              *handler.PaymentHandler
 	EventBookingHandler         *handler.EventBookingHandler
+	EventBookingRequestHandler  *handler.EventBookingRequestHandler
 }
 
 func NewApp() *App {
@@ -87,6 +88,7 @@ func NewApp() *App {
 	bookingAddonRepo := repository.NewBookingAddonRepository(db)
 	eventBookingRepo := repository.NewEventBookingRepository(db)
 	paymentRepo := repository.NewPaymentRepository(db)
+	eventBookingRequestRepo := repository.NewEventBookingRequestRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	userService := service.NewUserService(txManager, userRepo)
@@ -131,7 +133,21 @@ func NewApp() *App {
 		eventBookingRepo,
 		gateaway,
 	)
-	eventBookingService := service.NewEventBookingService(txManager, eventBookingRepo, villaPackageRepo, gateaway)
+	eventBookingService := service.NewEventBookingService(
+		txManager,
+		eventBookingRepo,
+		villaPackageRepo,
+		paymentRepo,
+		gateaway,
+	)
+	eventBookingRequestService := service.NewEventBookingRequestService(
+		txManager,
+		eventBookingRequestRepo,
+		villaPackageRepo,
+		eventBookingRepo,
+		paymentRepo,
+		gateaway,
+	)
 
 	app := &App{
 		Router:                      r,
@@ -165,6 +181,7 @@ func NewApp() *App {
 		BookingHandler:              handler.NewBookingHandler(bookingService),
 		PaymentHandler:              handler.NewPaymentHandler(paymentService),
 		EventBookingHandler:         handler.NewEventBookingHandler(eventBookingService),
+		EventBookingRequestHandler:  handler.NewEventBookingRequestHandler(eventBookingRequestService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

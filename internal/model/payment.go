@@ -34,6 +34,7 @@ type Payment struct {
 	Amount         int64         `gorm:"not null"`
 	SnapToken      *string       `gorm:"type:varchar(100)"`
 	RedirectURL    *string
+	PaidAt         *time.Time
 	ExpiresAt      *time.Time
 	CreatedAt      time.Time
 	UpdatedAt      time.Time

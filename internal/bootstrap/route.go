@@ -105,6 +105,9 @@ func (a *App) RegisterRoute() {
 
 		// Event Booking
 		adminAndUser.GET("/event-bookings/:id", a.EventBookingHandler.GetEventBookingByID)
+
+		// Event Booking Request
+		adminAndUser.GET("/event-requests/:id", a.EventBookingRequestHandler.GetEventBookingRequestByID)
 	}
 
 	user := authenticated.Group("")
@@ -120,8 +123,12 @@ func (a *App) RegisterRoute() {
 		user.GET("/my-event-bookings", a.EventBookingHandler.GetMyEventBookings)
 		user.POST("/my-event-bookings", a.EventBookingHandler.CreateEventBooking)
 		user.PUT("/my-event-bookings/:id/cancel", a.EventBookingHandler.CanceledEventBooking)
-		user.PUT("/my-event-bookings/:id/check-in", a.EventBookingHandler.CheckInEventBooking)
-		user.PUT("/my-event-bookings/:id/complete", a.EventBookingHandler.CompletedEventBooking)
+
+		// Event Booking Request
+		user.GET("/my-event-requests", a.EventBookingRequestHandler.GetMyEventBookingRequests)
+		user.POST("/my-event-requests", a.EventBookingRequestHandler.CreateEventBookingRequest)
+		user.PUT("/my-event-requests/:id/cancel", a.EventBookingRequestHandler.CancelEventBookingRequest)
+		user.PUT("/my-event-requests/:id/pay", a.EventBookingRequestHandler.PayEventBookingRequest)
 	}
 
 	admin := authenticated.Group("")
@@ -266,5 +273,12 @@ func (a *App) RegisterRoute() {
 
 		// Event Booking
 		admin.GET("/event-bookings", a.EventBookingHandler.GetAllEventBookings)
+		admin.PUT("/event-bookings/:id/check-in", a.EventBookingHandler.CheckInEventBooking)
+		admin.PUT("/event-bookings/:id/complete", a.EventBookingHandler.CompletedEventBooking)
+
+		// Event Booking Request
+		admin.GET("/event-requests", a.EventBookingRequestHandler.GetAllEventBookingRequests)
+		admin.PUT("/event-requests/:id/approve", a.EventBookingRequestHandler.ApproveEventBookingRequest)
+		admin.PUT("/event-requests/:id/reject", a.EventBookingRequestHandler.RejectEventBookingRequest)
 	}
 }

@@ -13,6 +13,8 @@ func ToEventBookingRequestResponse(request *model.EventBookingRequest) dto.Event
 		User:           ToUserResponse(&request.User),
 		Title:          request.Title,
 		Description:    request.Description,
+		GuestCount:     request.GuestCount,
+		Budget:         request.Budget,
 		StartAt:        request.StartAt,
 		EndAt:          request.EndAt,
 		Status:         request.Status,
@@ -24,12 +26,23 @@ func ToEventBookingRequestResponse(request *model.EventBookingRequest) dto.Event
 	}
 }
 
-func ToEventBookingRequestModel(req dto.CreateEventRequest, user model.User, start time.Time, end time.Time) *model.EventBookingRequest {
+func ToEventBookingRequestModel(req dto.CreateEventRequest, user model.User, villaPackage *model.VillaPackage, start time.Time, end time.Time) *model.EventBookingRequest {
+	var villaPackageID *uint
+	var villaPackageModel *model.VillaPackage
+	if villaPackage != nil {
+		villaPackageID = &villaPackage.ID
+		villaPackageModel = villaPackage
+	}
+
 	return &model.EventBookingRequest{
 		UserID:         user.ID,
 		User:           user,
+		VillaPackageID: villaPackageID,
+		VillaPackage:   villaPackageModel,
 		Title:          req.Title,
 		Description:    req.Description,
+		GuestCount:     req.GuestCount,
+		Budget:         req.Budget,
 		StartAt:        start,
 		EndAt:          end,
 		Status:         model.RequestPending,

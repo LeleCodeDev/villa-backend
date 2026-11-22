@@ -155,9 +155,8 @@ func (h *BookingHandler) CheckInBooking(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	currentUser := c.MustGet("user").(model.User)
 
-	booking, err := h.service.CheckIn(ctx, currentUser, id)
+	booking, err := h.service.CheckIn(ctx, id)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
@@ -174,9 +173,8 @@ func (h *BookingHandler) CompletedBooking(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	currentUser := c.MustGet("user").(model.User)
 
-	booking, err := h.service.Complete(ctx, currentUser, id)
+	booking, err := h.service.Complete(ctx, id)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return

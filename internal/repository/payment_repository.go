@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"gorm.io/gorm"
@@ -91,6 +92,40 @@ func (r *PaymentRepository) GetAllByEventBookingID(ctx context.Context, eventBoo
 	return payments, nil
 }
 
+func (r *PaymentRepository) GetByEventBookingID(ctx context.Context, eventBookingID uint) (*model.Payment, error) {
+	var payment model.Payment
+
+	if err := r.db.WithContext(ctx).
+		Where("event_booking_id = ?", eventBookingID).
+		First(&payment).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &payment, nil
+}
+
+func (r *PaymentRepository) GetByEventBookingIDAndStatus(ctx context.Context, eventBookingID uint, status model.PaymentStatus) (*model.Payment, error) {
+	var payment model.Payment
+
+	if err := r.db.WithContext(ctx).
+		Where("event_booking_id = ?", eventBookingID).
+		Where("status = ?", status).
+		Order("created_at DESC").
+		First(&payment).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &payment, nil
+}
+
 func (r *PaymentRepository) GetAllInEventBookingIds(ctx context.Context, eventBookingIds []uint) ([]model.Payment, error) {
 	var payments []model.Payment
 
@@ -132,6 +167,9 @@ func (r *PaymentRepository) Delete(ctx context.Context, payment *model.Payment) 
 
 func (r *PaymentRepository) TransitionStatus(ctx context.Context, id uint, from, to model.PaymentStatus) (bool, error) {
 	updates := map[string]any{"status": to}
+	if to == model.PaymentStatusPaid {
+		updates["paid_at"] = time.Now()
+	}
 
 	res := r.db.WithContext(ctx).Model(&model.Payment{}).
 		Where("id = ? AND status = ?", id, from).
