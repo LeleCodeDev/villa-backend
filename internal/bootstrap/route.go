@@ -92,6 +92,9 @@ func (a *App) RegisterRoute() {
 		// Rental Price
 		public.GET("/rental-prices", a.RentalPriceHandler.GetAllRentalPrices)
 		public.GET("/rental-prices/:id", a.RentalPriceHandler.GetRentalPriceByID)
+
+		// Villa Rule
+		public.GET("/villa-rules", a.VillaRuleHandler.GetAllvillaRules)
 	}
 
 	authenticated := api.Group("")
@@ -280,5 +283,11 @@ func (a *App) RegisterRoute() {
 		admin.GET("/event-requests", a.EventBookingRequestHandler.GetAllEventBookingRequests)
 		admin.PUT("/event-requests/:id/approve", a.EventBookingRequestHandler.ApproveEventBookingRequest)
 		admin.PUT("/event-requests/:id/reject", a.EventBookingRequestHandler.RejectEventBookingRequest)
+
+		// Villa Rule
+		admin.GET("/villa-rules/:id", a.VillaRuleHandler.GetVillaRuleByID)
+		admin.POST("/villa-rules", a.VillaRuleHandler.CreateVillaRule)
+		admin.PUT("/villa-rules/:id", a.VillaRuleHandler.UpdateVillaRule)
+		admin.DELETE("/villa-rules/:id", a.VillaRuleHandler.DeleteVillaRule)
 	}
 }

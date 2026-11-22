@@ -51,6 +51,7 @@ type App struct {
 	PaymentHandler              *handler.PaymentHandler
 	EventBookingHandler         *handler.EventBookingHandler
 	EventBookingRequestHandler  *handler.EventBookingRequestHandler
+	VillaRuleHandler            *handler.VillaRuleHandler
 }
 
 func NewApp() *App {
@@ -89,6 +90,7 @@ func NewApp() *App {
 	eventBookingRepo := repository.NewEventBookingRepository(db)
 	paymentRepo := repository.NewPaymentRepository(db)
 	eventBookingRequestRepo := repository.NewEventBookingRequestRepository(db)
+	villaRuleRepo := repository.NewVillaRuleRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	userService := service.NewUserService(txManager, userRepo)
@@ -148,6 +150,7 @@ func NewApp() *App {
 		paymentRepo,
 		gateaway,
 	)
+	villaRuleService := service.NewVillaRuleService(txManager, villaRuleRepo)
 
 	app := &App{
 		Router:                      r,
@@ -182,6 +185,7 @@ func NewApp() *App {
 		PaymentHandler:              handler.NewPaymentHandler(paymentService),
 		EventBookingHandler:         handler.NewEventBookingHandler(eventBookingService),
 		EventBookingRequestHandler:  handler.NewEventBookingRequestHandler(eventBookingRequestService),
+		VillaRuleHandler:            handler.NewVillaRuleHandler(villaRuleService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
