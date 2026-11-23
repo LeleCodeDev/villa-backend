@@ -8,6 +8,12 @@ import (
 )
 
 func ToEventBookingRequestResponse(request *model.EventBookingRequest) dto.EventBookingRequestResponse {
+	var villaPackage *dto.VillaPackageResponse
+	if request.VillaPackage != nil {
+		villaPackageResponse := ToVillaPackageResponse(request.VillaPackage, nil)
+		villaPackage = &villaPackageResponse
+	}
+
 	return dto.EventBookingRequestResponse{
 		ID:             request.ID,
 		User:           ToUserResponse(&request.User),
@@ -17,6 +23,7 @@ func ToEventBookingRequestResponse(request *model.EventBookingRequest) dto.Event
 		Budget:         request.Budget,
 		StartAt:        request.StartAt,
 		EndAt:          request.EndAt,
+		VillaPackage:   villaPackage,
 		Status:         request.Status,
 		ReviewedAt:     request.ReviewedAt,
 		RejectReason:   request.RejectReason,
