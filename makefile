@@ -18,10 +18,10 @@ dev-logs:
 	$(DEV) logs -f app
 
 dev-migrate:
-	$(DEV) run --rm --build migration
+	$(DEV) exec app go run ./cmd/migration
 
 dev-seed:
-	$(DEV) run --rm --build seeder $(args)
+	$(DEV) exec app go run ./cmd/seeder $(args)
 
 dev-shell:
 	$(DEV) exec app sh

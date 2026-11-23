@@ -36,4 +36,7 @@ func UpdateApplicationModel(application *model.Application, req dto.ApplicationR
 	application.Title = req.Title
 	application.PhoneNumber = req.PhoneNumber
 	application.Logo = filename
+	application.Email = req.Email
+	application.InstagramLink = req.InstagramLink
+	application.TikTokLink = req.TikTokLink
 }
