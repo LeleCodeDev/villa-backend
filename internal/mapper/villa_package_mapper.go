@@ -46,5 +46,7 @@ func UpdateVillaPackageModel(villaPackage *model.VillaPackage, req dto.VillaPack
 	villaPackage.Price = req.Price
 	villaPackage.Type = req.Type
 	villaPackage.IsWedding = req.IsWedding
+	villaPackage.MaxCapacity = req.MaxCapacity
+	villaPackage.RequiresApproval = *req.RequiresApproval
 	villaPackage.SortOrder = sortOrder
 }
