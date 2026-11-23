@@ -34,6 +34,7 @@ func main() {
 		&model.RentalOption{},
 		&model.Logo{},
 		&model.Attraction{},
+		&model.Pricelist{},
 		&model.Transport{},
 		&model.WhatsappTemplate{},
 		&model.RentalPrice{},
