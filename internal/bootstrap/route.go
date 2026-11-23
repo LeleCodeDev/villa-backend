@@ -111,6 +111,9 @@ func (a *App) RegisterRoute() {
 
 		// Event Booking Request
 		adminAndUser.GET("/event-requests/:id", a.EventBookingRequestHandler.GetEventBookingRequestByID)
+
+		// Whatsapp Message
+		adminAndUser.POST("/whatsapp/send-text", a.WhatsappHandler.SendText)
 	}
 
 	user := authenticated.Group("")

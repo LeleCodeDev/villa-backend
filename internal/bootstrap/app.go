@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/lelecodedev/villa-backend/internal/client"
 	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/database"
 	"github.com/lelecodedev/villa-backend/internal/handler"
@@ -52,6 +53,7 @@ type App struct {
 	EventBookingHandler         *handler.EventBookingHandler
 	EventBookingRequestHandler  *handler.EventBookingRequestHandler
 	VillaRuleHandler            *handler.VillaRuleHandler
+	WhatsappHandler             *handler.WhatsappHandler
 }
 
 func NewApp() *App {
@@ -61,6 +63,7 @@ func NewApp() *App {
 	db := database.NewDB()
 	txManager := repository.NewTxManager(db)
 	gateaway := payment.NewMidtransGateway()
+	whatsappClient := client.NewWhatsappClient(config.Env.WhatsappBaseURL, config.Env.WhatsappAPIKey, config.Env.WhatsappSessionID)
 
 	applicationRepo := repository.NewApplicationRepository(db)
 	userRepo := repository.NewUserRepository(db)
@@ -151,6 +154,7 @@ func NewApp() *App {
 		gateaway,
 	)
 	villaRuleService := service.NewVillaRuleService(txManager, villaRuleRepo)
+	whatsappService := service.NewWhatsappService(whatsappClient)
 
 	app := &App{
 		Router:                      r,
@@ -186,6 +190,7 @@ func NewApp() *App {
 		EventBookingHandler:         handler.NewEventBookingHandler(eventBookingService),
 		EventBookingRequestHandler:  handler.NewEventBookingRequestHandler(eventBookingRequestService),
 		VillaRuleHandler:            handler.NewVillaRuleHandler(villaRuleService),
+		WhatsappHandler:             handler.NewWhatsappHandler(whatsappService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{
