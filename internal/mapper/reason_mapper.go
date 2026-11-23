@@ -9,14 +9,16 @@ func ToReasonResponse(reason *model.Reason) dto.ReasonResponse {
 	return dto.ReasonResponse{
 		ID:        reason.ID,
 		Text:      reason.Text,
+		IsOther:   reason.IsOther,
 		CreatedAt: reason.CreatedAt,
 		UpdatedAt: reason.UpdatedAt,
 	}
 }
 
-func ToReasonModel(req dto.ReasonRequest) *model.Reason {
+func ToReasonModel(req dto.ReasonRequest, isOther bool) *model.Reason {
 	return &model.Reason{
-		Text: req.Text,
+		Text:    req.Text,
+		IsOther: isOther,
 	}
 }
 

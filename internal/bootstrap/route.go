@@ -135,6 +135,9 @@ func (a *App) RegisterRoute() {
 		user.POST("/my-event-requests", a.EventBookingRequestHandler.CreateEventBookingRequest)
 		user.PUT("/my-event-requests/:id/cancel", a.EventBookingRequestHandler.CancelEventBookingRequest)
 		user.PUT("/my-event-requests/:id/pay", a.EventBookingRequestHandler.PayEventBookingRequest)
+
+		// Reason
+		user.POST("/my-reasons", a.ReasonHandler.CreateCustomReason)
 	}
 
 	admin := authenticated.Group("")

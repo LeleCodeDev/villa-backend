@@ -16,6 +16,7 @@ type (
 	ReasonResponse struct {
 		ID        uint      `json:"id"`
 		Text      string    `json:"text"`
+		IsOther   bool      `json:"is_other"`
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 	}

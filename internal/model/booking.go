@@ -31,6 +31,7 @@ type Booking struct {
 	UserID         uint          `gorm:"not null;index"`
 	User           User          `gorm:"constraint:OnDelete:CASCADE"`
 	GuestCount     int           `gorm:"not null"`
+	VisitorCount   int           `gorm:"not null"`
 	RentalOptionID *uint         `gorm:"index"`
 	RentalOption   *RentalOption `gorm:"constraint:OnDelete:SET NULL"`
 	ReasonID       uint          `gorm:"not null;index"`
