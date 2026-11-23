@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/lelecodedev/villa-backend/internal/client"
 	"github.com/lelecodedev/villa-backend/internal/config"
 	"github.com/lelecodedev/villa-backend/internal/database"
 	"github.com/lelecodedev/villa-backend/internal/handler"
@@ -50,6 +51,9 @@ type App struct {
 	BookingHandler              *handler.BookingHandler
 	PaymentHandler              *handler.PaymentHandler
 	EventBookingHandler         *handler.EventBookingHandler
+	EventBookingRequestHandler  *handler.EventBookingRequestHandler
+	VillaRuleHandler            *handler.VillaRuleHandler
+	WhatsappHandler             *handler.WhatsappHandler
 }
 
 func NewApp() *App {
@@ -59,6 +63,7 @@ func NewApp() *App {
 	db := database.NewDB()
 	txManager := repository.NewTxManager(db)
 	gateaway := payment.NewMidtransGateway()
+	whatsappClient := client.NewWhatsappClient(config.Env.WhatsappBaseURL, config.Env.WhatsappAPIKey, config.Env.WhatsappSessionID)
 
 	applicationRepo := repository.NewApplicationRepository(db)
 	userRepo := repository.NewUserRepository(db)
@@ -87,6 +92,8 @@ func NewApp() *App {
 	bookingAddonRepo := repository.NewBookingAddonRepository(db)
 	eventBookingRepo := repository.NewEventBookingRepository(db)
 	paymentRepo := repository.NewPaymentRepository(db)
+	eventBookingRequestRepo := repository.NewEventBookingRequestRepository(db)
+	villaRuleRepo := repository.NewVillaRuleRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	userService := service.NewUserService(txManager, userRepo)
@@ -131,7 +138,23 @@ func NewApp() *App {
 		eventBookingRepo,
 		gateaway,
 	)
-	eventBookingService := service.NewEventBookingService(txManager, eventBookingRepo, villaPackageRepo, gateaway)
+	eventBookingService := service.NewEventBookingService(
+		txManager,
+		eventBookingRepo,
+		villaPackageRepo,
+		paymentRepo,
+		gateaway,
+	)
+	eventBookingRequestService := service.NewEventBookingRequestService(
+		txManager,
+		eventBookingRequestRepo,
+		villaPackageRepo,
+		eventBookingRepo,
+		paymentRepo,
+		gateaway,
+	)
+	villaRuleService := service.NewVillaRuleService(txManager, villaRuleRepo)
+	whatsappService := service.NewWhatsappService(whatsappClient)
 
 	app := &App{
 		Router:                      r,
@@ -165,6 +188,9 @@ func NewApp() *App {
 		BookingHandler:              handler.NewBookingHandler(bookingService),
 		PaymentHandler:              handler.NewPaymentHandler(paymentService),
 		EventBookingHandler:         handler.NewEventBookingHandler(eventBookingService),
+		EventBookingRequestHandler:  handler.NewEventBookingRequestHandler(eventBookingRequestService),
+		VillaRuleHandler:            handler.NewVillaRuleHandler(villaRuleService),
+		WhatsappHandler:             handler.NewWhatsappHandler(whatsappService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

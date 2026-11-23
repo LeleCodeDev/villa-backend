@@ -80,24 +80,36 @@ func (s *PaymentService) HandleNotificationCallback(ctx context.Context, n dto.M
 			return nil
 		}
 
-		from, to, ok := bookingTransition(p.Kind, target)
-		if !ok {
-			return nil
+		if p.BookingID != nil {
+			from, to, ok := bookingTransition(p.Kind, target)
+			if !ok {
+				return nil
+			}
+
+			moved, err := txBookingRepo.TransitionStatus(ctx, *p.BookingID, from, to)
+			if err != nil {
+				return err
+			}
+
+			if !moved && target == model.PaymentStatusPaid {
+				log.Printf("REVIEW NEEDED: payment %s paid but booking not in status %s", p.OrderID, from)
+			}
 		}
 
-		var moved bool
-		switch {
-		case p.BookingID != nil:
-			moved, err = txBookingRepo.TransitionStatus(ctx, *p.BookingID, from, to)
-		case p.EventBookingID != nil:
-			moved, err = txEventBookingRepo.TransitionStatus(ctx, *p.EventBookingID, from, to)
-		}
+		if p.EventBookingID != nil {
+			from, to, ok := eventBookingTransition(p.Kind, target)
+			if !ok {
+				return nil
+			}
 
-		if err != nil {
-			return err
-		}
-		if !moved && target == model.PaymentStatusPaid {
-			log.Printf("REVIEW NEEDED: payment %s paid but booking was not in status %s", p.OrderID, from)
+			moved, err := txEventBookingRepo.TransitionStatus(ctx, *p.EventBookingID, from, to)
+			if err != nil {
+				return err
+			}
+
+			if !moved && target == model.PaymentStatusPaid {
+				log.Printf("REVIEW NEEDED: payment %s paid but event booking not in status %s", p.OrderID, from)
+			}
 		}
 
 		return nil
@@ -147,5 +159,12 @@ func bookingTransition(kind model.PaymentKind, target model.PaymentStatus) (from
 		}
 	}
 
+	return "", "", false
+}
+
+func eventBookingTransition(kind model.PaymentKind, target model.PaymentStatus) (from, to model.EventBookingStatus, ok bool) {
+	if kind == model.PaymentKindFull && target == model.PaymentStatusPaid {
+		return model.EventBookingStatusPending, model.EventBookingStatusPaid, true
+	}
 	return "", "", false
 }

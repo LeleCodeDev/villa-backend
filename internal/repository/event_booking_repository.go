@@ -125,16 +125,13 @@ func (r *EventBookingRepository) GetByOrderID(ctx context.Context, orderID strin
 	return &eventBooking, nil
 }
 
-func (r *EventBookingRepository) TransitionStatus(ctx context.Context, id uint, from, to model.BookingStatus) (bool, error) {
+func (r *EventBookingRepository) TransitionStatus(ctx context.Context, id uint, from, to model.EventBookingStatus) (bool, error) {
 	updates := map[string]any{"status": to}
-	if to == model.BookingStatusPaid {
-		updates["paid_at"] = time.Now()
-	}
 
-	if slices.Contains([]model.BookingStatus{
-		model.BookingStatusPaid,
-		model.BookingStatusExpired,
-		model.BookingStatusCanceled,
+	if slices.Contains([]model.EventBookingStatus{
+		model.EventBookingStatusPaid,
+		model.EventBookingStatusExpired,
+		model.EventBookingStatusCanceled,
 	}, to) {
 		updates["expires_at"] = nil
 	}
@@ -163,11 +160,38 @@ func (r *EventBookingRepository) GetBookingConflicts(
 	var conflicts []model.EventBooking
 	db := r.db.WithContext(ctx).
 		Where("villa_package_id = ?", villaPackageID).
-		Where("status NOT IN ?", []model.BookingStatus{
-			model.BookingStatusCanceled,
-			model.BookingStatusExpired,
-			model.BookingStatusCompleted,
-			model.BookingStatusNotShow,
+		Where("status NOT IN ?", []model.EventBookingStatus{
+			model.EventBookingStatusCanceled,
+			model.EventBookingStatusExpired,
+			model.EventBookingStatusCompleted,
+			model.EventBookingStatusNotShow,
+		}).
+		Where("start_at <= ? AND end_at >= ?", out, in)
+
+	if excludeID > 0 {
+		db = db.Where("id != ?", excludeID)
+	}
+
+	if err := db.Find(&conflicts).Error; err != nil {
+		return nil, err
+	}
+
+	return conflicts, nil
+}
+
+func (r *EventBookingRepository) GetCustomBookingConflicts(
+	ctx context.Context,
+	in time.Time,
+	out time.Time,
+	excludeID uint,
+) ([]model.EventBooking, error) {
+	var conflicts []model.EventBooking
+	db := r.db.WithContext(ctx).
+		Where("status NOT IN ?", []model.EventBookingStatus{
+			model.EventBookingStatusCanceled,
+			model.EventBookingStatusExpired,
+			model.EventBookingStatusCompleted,
+			model.EventBookingStatusNotShow,
 		}).
 		Where("start_at <= ? AND end_at >= ?", out, in)
 

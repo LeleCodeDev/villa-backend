@@ -25,6 +25,9 @@ type Config struct {
 	Location             *time.Location
 	MidtransServerKey    string
 	MidtransIsProduction bool
+	WhatsappBaseURL      string
+	WhatsappAPIKey       string
+	WhatsappSessionID    string
 	AllowedOrigins       []string
 }
 
@@ -47,6 +50,9 @@ func LoadConfig() {
 		Location:             getLocation(),
 		MidtransServerKey:    getMidtransServerKey(),
 		MidtransIsProduction: getMidtransIsProduction(),
+		WhatsappBaseURL:      getEnv("WHATSAPP_BASE_URL", "http://127.0.0.1:2785"),
+		WhatsappAPIKey:       getEnv("WHATSAPP_API_KEY", "SECRET"),
+		WhatsappSessionID:    getEnv("WHATSAPP_SESSION_ID", ""),
 		AllowedOrigins:       getAllowedOrigins(),
 	}
 }

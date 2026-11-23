@@ -27,7 +27,10 @@ func (r *EventBookingRequestRepository) GetAll(ctx context.Context, query dto.Ev
 	var eventBookingRequests []model.EventBookingRequest
 	var total int64
 
-	db := r.db.WithContext(ctx).Preload("User").Model(&model.EventBookingRequest{})
+	db := r.db.WithContext(ctx).
+		Preload("User").
+		Preload("VillaPackage").
+		Model(&model.EventBookingRequest{})
 
 	if userID != nil {
 		db = db.Where("user_id = ?", userID)
@@ -77,6 +80,7 @@ func (r *EventBookingRequestRepository) GetByID(ctx context.Context, id uint) (*
 
 	if err := r.db.WithContext(ctx).
 		Preload("User").
+		Preload("VillaPackage").
 		First(&request, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

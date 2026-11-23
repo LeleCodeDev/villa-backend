@@ -72,7 +72,25 @@ func (h *ReasonHandler) CreateReason(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	reason, err := h.service.Create(ctx, req)
+	reason, err := h.service.Create(ctx, req, false)
+	if err != nil {
+		response.HandleServiceError(c, err)
+		return
+	}
+
+	response.Success(c, http.StatusCreated, "Reason successfully created!", reason)
+}
+
+func (h *ReasonHandler) CreateCustomReason(c *gin.Context) {
+	var req dto.ReasonRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.HandleValidationError(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	reason, err := h.service.Create(ctx, req, true)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return

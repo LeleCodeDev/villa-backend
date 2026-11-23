@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -21,6 +22,7 @@ type EventBookingService struct {
 	txManager        *repository.TxManager
 	repo             *repository.EventBookingRepository
 	villaPackageRepo *repository.VillaPackageRepository
+	paymentRepo      *repository.PaymentRepository
 	gateaway         *payment.MidtransGateway
 }
 
@@ -28,12 +30,14 @@ func NewEventBookingService(
 	txManager *repository.TxManager,
 	repo *repository.EventBookingRepository,
 	villaPackageRepo *repository.VillaPackageRepository,
+	paymentRepo *repository.PaymentRepository,
 	gateaway *payment.MidtransGateway,
 ) *EventBookingService {
 	return &EventBookingService{
 		txManager:        txManager,
 		repo:             repo,
 		villaPackageRepo: villaPackageRepo,
+		paymentRepo:      paymentRepo,
 		gateaway:         gateaway,
 	}
 }
@@ -44,9 +48,21 @@ func (s *EventBookingService) GetAll(ctx context.Context, query dto.EventBooking
 		return nil, 0, err
 	}
 
+	eventBookingIds := make([]uint, 0, len(eventBokings))
+
+	payments, err := s.paymentRepo.GetAllInEventBookingIds(ctx, eventBookingIds)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	paymentMap := make(map[uint]*model.Payment, len(eventBokings))
+	for _, payment := range payments {
+		paymentMap[*payment.EventBookingID] = &payment
+	}
+
 	responses := make([]dto.EventBookingResponse, 0, len(eventBokings))
 	for _, eventBoking := range eventBokings {
-		responses = append(responses, mapper.ToEventBookingResponse(&eventBoking))
+		responses = append(responses, mapper.ToEventBookingResponse(&eventBoking, paymentMap[eventBoking.ID]))
 	}
 
 	return responses, total, nil
@@ -65,7 +81,12 @@ func (s *EventBookingService) GetByID(ctx context.Context, id uint, currentUser 
 		return dto.EventBookingResponse{}, appError.Unauthorized("You are not authorized to access this event booking!")
 	}
 
-	return mapper.ToEventBookingResponse(eventBooking), nil
+	payment, err := s.paymentRepo.GetByEventBookingID(ctx, eventBooking.ID)
+	if err != nil {
+		return dto.EventBookingResponse{}, err
+	}
+
+	return mapper.ToEventBookingResponse(eventBooking, payment), nil
 }
 
 func parseEventBookingDates(start, end string) (time.Time, time.Time, error) {
@@ -96,6 +117,23 @@ func parseEventBookingDates(start, end string) (time.Time, time.Time, error) {
 	return startAt, endAt, nil
 }
 
+func calculateQuantity(t model.ChargeType, start, end time.Time) int {
+	d := end.Sub(start)
+	var q int
+	switch t {
+	case model.ChargePerHour:
+		q = int(math.Ceil(d.Hours()))
+	case model.ChargePerDay:
+		q = int(math.Ceil(d.Hours() / 24))
+	default:
+		q = 1
+	}
+	if q < 1 {
+		q = 1
+	}
+	return q
+}
+
 func (s *EventBookingService) Create(ctx context.Context, currentUser model.User, req dto.EventBookingCreateRequest) (dto.EventBookingResponse, error) {
 	// parse req string time from string to time.Time
 	startAt, endAt, err := parseEventBookingDates(req.StartAt, req.EndAt)
@@ -106,11 +144,12 @@ func (s *EventBookingService) Create(ctx context.Context, currentUser model.User
 	const paymentWindow = 60 * time.Minute
 
 	var createdEventBooking *model.EventBooking
-	var items []midtrans.ItemDetails
+	var createdPayment *model.Payment
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txEventBookingRepo := s.repo.WithTx(tx)
 		txVillaPackageRepo := s.villaPackageRepo.WithTx(tx)
+		txPaymentRepo := s.paymentRepo.WithTx(tx)
 
 		// get villa package
 		villaPackage, err := txVillaPackageRepo.GetByID(ctx, req.VillaPackageID)
@@ -119,6 +158,10 @@ func (s *EventBookingService) Create(ctx context.Context, currentUser model.User
 		}
 		if villaPackage == nil {
 			return appError.NotFound(fmt.Sprintf("Villa package not found with ID: %d", req.VillaPackageID))
+		}
+
+		if villaPackage.RequiresApproval {
+			return appError.BadRequest("Villa package requires approval, please submit a request")
 		}
 
 		// check booking conflict
@@ -137,32 +180,26 @@ func (s *EventBookingService) Create(ctx context.Context, currentUser model.User
 		}
 
 		// calculate price
-		var quantity int
-		switch villaPackage.Type {
-		case model.ChargePerDay:
-			quantity = int(endAt.Sub(startAt).Hours() / 24)
-		case model.ChargePerHour:
-			quantity = int(math.Ceil(endAt.Sub(startAt).Hours()))
-		default:
-			quantity = 1
-		}
-
+		quantity := calculateQuantity(villaPackage.Type, startAt, endAt)
 		totalPrice := villaPackage.Price * int64(quantity)
 
-		items = append(items, midtrans.ItemDetails{
+		items := []midtrans.ItemDetails{{
 			ID:    fmt.Sprintf("EVENT-%s-%d", villaPackage.Type, villaPackage.ID),
 			Name:  villaPackage.Title,
 			Price: villaPackage.Price,
 			Qty:   int32(quantity),
-		})
+		}}
 
 		// create event booking
 		eventBooking := mapper.ToEventBookingModel(
 			startAt,
 			endAt,
+			villaPackage.Title,
 			currentUser,
-			*villaPackage,
+			villaPackage,
+			req.GuestCount,
 			quantity,
+			villaPackage.Price,
 			totalPrice,
 			time.Now().Add(paymentWindow),
 		)
@@ -170,6 +207,7 @@ func (s *EventBookingService) Create(ctx context.Context, currentUser model.User
 			return err
 		}
 
+		// create payment
 		orderID := fmt.Sprintf("EVENT-BOOKING-%d-%d", eventBooking.ID, time.Now().UnixNano())
 		token, redirectURL, err := s.gateaway.CreateSnapToken(
 			orderID,
@@ -185,20 +223,28 @@ func (s *EventBookingService) Create(ctx context.Context, currentUser model.User
 			return appError.BadGateway("failed to start payment, please try again")
 		}
 
-		eventBooking.PaymentOrderID = &orderID
-		eventBooking.SnapToken = &token
-		eventBooking.RedirectURL = &redirectURL
-		if err := txEventBookingRepo.Update(ctx, eventBooking); err != nil {
+		payment := &model.Payment{
+			OrderID:        orderID,
+			EventBookingID: &eventBooking.ID,
+			Kind:           model.PaymentKindFull,
+			Status:         model.PaymentStatusPending,
+			Amount:         totalPrice,
+			SnapToken:      &token,
+			RedirectURL:    &redirectURL,
+			ExpiresAt:      eventBooking.ExpiresAt,
+		}
+		if err := txPaymentRepo.Create(ctx, payment); err != nil {
 			return err
 		}
 
 		createdEventBooking = eventBooking
+		createdPayment = payment
 		return nil
 	}); err != nil {
 		return dto.EventBookingResponse{}, err
 	}
 
-	return mapper.ToEventBookingResponse(createdEventBooking), nil
+	return mapper.ToEventBookingResponse(createdEventBooking, createdPayment), nil
 }
 
 func (s *EventBookingService) Cancel(ctx context.Context, currentUser model.User, id uint) (dto.EventBookingResponse, error) {
@@ -206,28 +252,51 @@ func (s *EventBookingService) Cancel(ctx context.Context, currentUser model.User
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txEventBookingRepo := s.repo.WithTx(tx)
+		txPaymentRepo := s.paymentRepo.WithTx(tx)
 
 		eventBooking, err := txEventBookingRepo.GetByID(ctx, id)
 		if err != nil {
 			return err
 		}
-		if eventBooking == nil {
+		if eventBooking == nil || (currentUser.Role != model.RoleAdmin && eventBooking.UserID != currentUser.ID) {
 			return appError.NotFound(fmt.Sprintf("Event booking not found with ID: %d", id))
 		}
 
-		if currentUser.Role != model.RoleAdmin && eventBooking.UserID != currentUser.ID {
-			return appError.Unauthorized("You are not authorized to access this event booking!")
+		if eventBooking.Status != model.EventBookingStatusPending {
+			return appError.BadRequest("Event booking status is not pending!")
 		}
 
-		if eventBooking.Status != model.BookingStatusPending {
-			return appError.BadRequest("Event booking status is not pending")
-		}
-
-		eventBooking.Status = model.BookingStatusCanceled
-		if err := txEventBookingRepo.Update(ctx, eventBooking); err != nil {
+		moved, err := txEventBookingRepo.TransitionStatus(ctx, eventBooking.ID, model.EventBookingStatusPending, model.EventBookingStatusCanceled)
+		if err != nil {
 			return err
 		}
+		if !moved {
+			return appError.Conflict("Booking status has changed!")
+		}
 
+		pendingPayment, err := txPaymentRepo.GetByEventBookingIDAndStatus(ctx, eventBooking.ID, model.PaymentStatusPending)
+		if err != nil {
+			return err
+		}
+		if pendingPayment != nil {
+			if err := s.gateaway.CancelTransaction(ctx, pendingPayment.OrderID); err != nil {
+				if errors.Is(err, payment.ErrNotCancelable) {
+					return appError.Conflict("Payment was already received, booking can't be canceled!")
+				}
+
+				return appError.BadGateway("Failed to cancel payment, please try again")
+			}
+
+			if _, err := txPaymentRepo.TransitionStatus(
+				ctx,
+				pendingPayment.ID,
+				model.PaymentStatusPending,
+				model.PaymentStatusCanceled); err != nil {
+				return err
+			}
+		}
+
+		eventBooking.Status = model.EventBookingStatusCanceled
 		canceledBooking = eventBooking
 
 		return nil
@@ -235,10 +304,10 @@ func (s *EventBookingService) Cancel(ctx context.Context, currentUser model.User
 		return dto.EventBookingResponse{}, err
 	}
 
-	return mapper.ToEventBookingResponse(canceledBooking), nil
+	return mapper.ToEventBookingResponse(canceledBooking, nil), nil
 }
 
-func (s *EventBookingService) CheckIn(ctx context.Context, currentUser model.User, id uint) (dto.EventBookingResponse, error) {
+func (s *EventBookingService) CheckIn(ctx context.Context, id uint) (dto.EventBookingResponse, error) {
 	var paidBooking *model.EventBooking
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
@@ -252,11 +321,7 @@ func (s *EventBookingService) CheckIn(ctx context.Context, currentUser model.Use
 			return appError.NotFound(fmt.Sprintf("Event booking not found with ID: %d", id))
 		}
 
-		if eventBooking.UserID != currentUser.ID {
-			return appError.Unauthorized("You are not authorized to access this event booking!")
-		}
-
-		if eventBooking.Status != model.BookingStatusPaid {
+		if eventBooking.Status != model.EventBookingStatusPaid {
 			return appError.BadRequest("Event booking status is not paid")
 		}
 
@@ -273,10 +338,10 @@ func (s *EventBookingService) CheckIn(ctx context.Context, currentUser model.Use
 		return dto.EventBookingResponse{}, err
 	}
 
-	return mapper.ToEventBookingResponse(paidBooking), nil
+	return mapper.ToEventBookingResponse(paidBooking, nil), nil
 }
 
-func (s *EventBookingService) Complete(ctx context.Context, currentUser model.User, id uint) (dto.EventBookingResponse, error) {
+func (s *EventBookingService) Complete(ctx context.Context, id uint) (dto.EventBookingResponse, error) {
 	var completeBooking *model.EventBooking
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
@@ -290,17 +355,13 @@ func (s *EventBookingService) Complete(ctx context.Context, currentUser model.Us
 			return appError.NotFound(fmt.Sprintf("Event booking not found with ID: %d", id))
 		}
 
-		if eventBooking.UserID != currentUser.ID {
-			return appError.Unauthorized("You are not authorized to access this event booking!")
-		}
-
-		if eventBooking.Status != model.BookingStatusPaid {
+		if eventBooking.Status != model.EventBookingStatusPaid {
 			return appError.BadRequest("Booking status is not paid")
 		}
 
 		now := time.Now()
 		eventBooking.CheckOutAt = &now
-		eventBooking.Status = model.BookingStatusCompleted
+		eventBooking.Status = model.EventBookingStatusCompleted
 		if err := txEventBookingRepo.Update(ctx, eventBooking); err != nil {
 			return err
 		}
@@ -312,5 +373,5 @@ func (s *EventBookingService) Complete(ctx context.Context, currentUser model.Us
 		return dto.EventBookingResponse{}, err
 	}
 
-	return mapper.ToEventBookingResponse(completeBooking), nil
+	return mapper.ToEventBookingResponse(completeBooking, nil), nil
 }

@@ -76,10 +76,14 @@ func seedHeroSection(db *gorm.DB) {
 }
 
 func seedApplicationSetting(db *gorm.DB) {
+	email := "example@email.com"
 	app := &model.Application{
-		Title:       "Villa Arira",
-		PhoneNumber: "000000000000",
-		Logo:        nil,
+		Title:         "Villa Arira",
+		PhoneNumber:   "000000000000",
+		Email:         &email,
+		InstagramLink: nil,
+		TikTokLink:    nil,
+		Logo:          nil,
 	}
 
 	if err := db.FirstOrCreate(app, model.Application{Title: "Villa Arira"}).Error; err != nil {

@@ -18,6 +18,7 @@ type (
 
 	BookingCreateRequest struct {
 		GuestCount     int                   `json:"guest_count" form:"guest_count" binding:"required,gt=0"`
+		VisitorCount   int                   `json:"visitor_count" form:"visitor_count" binding:"required,gt=0"`
 		RentalOptionID uint                  `json:"rental_option_id" form:"rental_option_id" binding:"required,gt=0"`
 		ReasonID       uint                  `json:"reason_id" form:"reason_id" binding:"required,gt=0"`
 		PaymentType    model.PaymentType     `json:"payment_type" form:"payment_type" binding:"required,oneof=full deposit"`
@@ -30,6 +31,7 @@ type (
 		ID            uint                   `json:"id"`
 		User          UserResponse           `json:"user"`
 		GuestCount    int                    `json:"guest_count"`
+		VisitorCount  int                    `json:"visitor_count"`
 		RentalOption  *RentalOptionResponse  `json:"rental_option"`
 		Reason        ReasonResponse         `json:"reason"`
 		Status        model.BookingStatus    `json:"status"`

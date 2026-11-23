@@ -1,8 +1,7 @@
 services:
   app:
     build: .
-    ports:
-      - "${PORT:-8080}:${PORT:-8080}"
+    network_mode: host
     env_file: .env
     environment:
       DB_HOST: db

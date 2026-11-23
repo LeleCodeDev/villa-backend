@@ -19,6 +19,7 @@ func ToVillaPackageResponse(villaPackage *model.VillaPackage, lists []model.Vill
 		Price:            villaPackage.Price,
 		RequiresApproval: villaPackage.RequiresApproval,
 		MaxCapacity:      villaPackage.MaxCapacity,
+		IsWedding:        villaPackage.IsWedding,
 		Lists:            listsResponse,
 		SortOrder:        villaPackage.SortOrder,
 		CreatedAt:        villaPackage.CreatedAt,
@@ -33,6 +34,7 @@ func ToVillaPackageModel(req dto.VillaPackageRequest, sortOrder int, custom bool
 		Type:             req.Type,
 		Price:            req.Price,
 		MaxCapacity:      req.MaxCapacity,
+		IsWedding:        req.IsWedding,
 		RequiresApproval: *req.RequiresApproval,
 		SortOrder:        sortOrder,
 	}
@@ -43,5 +45,6 @@ func UpdateVillaPackageModel(villaPackage *model.VillaPackage, req dto.VillaPack
 	villaPackage.Subtitle = req.Subtitle
 	villaPackage.Price = req.Price
 	villaPackage.Type = req.Type
+	villaPackage.IsWedding = req.IsWedding
 	villaPackage.SortOrder = sortOrder
 }

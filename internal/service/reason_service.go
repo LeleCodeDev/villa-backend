@@ -53,13 +53,13 @@ func (s *ReasonService) GetByID(ctx context.Context, id uint) (dto.ReasonRespons
 	return mapper.ToReasonResponse(reason), nil
 }
 
-func (s *ReasonService) Create(ctx context.Context, req dto.ReasonRequest) (dto.ReasonResponse, error) {
+func (s *ReasonService) Create(ctx context.Context, req dto.ReasonRequest, isOther bool) (dto.ReasonResponse, error) {
 	var createdReason *model.Reason
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
-		reason := mapper.ToReasonModel(req)
+		reason := mapper.ToReasonModel(req, isOther)
 		if err := txRepo.Create(ctx, reason); err != nil {
 			return err
 		}

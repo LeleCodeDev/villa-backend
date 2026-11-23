@@ -22,6 +22,7 @@ type VillaPackage struct {
 	Type             ChargeType `gorm:"type:varchar(20);not null;default:'one_time';check:type IN ('one_time','per_hour','per_day')"`
 	RequiresApproval bool       `gorm:"not null;default:false"`
 	MaxCapacity      int        `gorm:"not null"`
+	IsWedding        bool       `gorm:"not null;default:false"`
 	SortOrder        int        `gorm:"not null"`
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
