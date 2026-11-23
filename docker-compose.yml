@@ -4,8 +4,8 @@ services:
     network_mode: host
     env_file: .env
     environment:
-      DB_HOST: db
-      DB_PORT: "5432"
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5433"
     volumes:
       - uploads:/app/uploads
     depends_on:
