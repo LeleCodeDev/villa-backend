@@ -27,6 +27,10 @@ func (r *GalleryRepository) GetAll(ctx context.Context, query dto.GalleryQuery) 
 
 	db := r.db.WithContext(ctx).Model(&model.Gallery{})
 
+	if query.Type != "" {
+		db = db.Where("type = ?", query.Type)
+	}
+
 	if err := db.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
