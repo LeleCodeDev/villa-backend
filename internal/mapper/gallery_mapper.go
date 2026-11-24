@@ -11,6 +11,7 @@ func ToGalleryResponse(gallery *model.Gallery) dto.GalleryResponse {
 		ID:          gallery.ID,
 		Title:       gallery.Title,
 		Description: gallery.Description,
+		Type:        gallery.Type,
 		Image:       image.BuildURLPtr(gallery.Image),
 		SortOrder:   gallery.SortOrder,
 		CreatedAt:   gallery.CreatedAt,
@@ -22,6 +23,7 @@ func ToGalleryModel(req dto.GalleryRequest, filename *string, order int) *model.
 	return &model.Gallery{
 		Title:       req.Title,
 		Description: req.Description,
+		Type:        req.Type,
 		Image:       filename,
 		SortOrder:   order,
 	}
@@ -30,6 +32,7 @@ func ToGalleryModel(req dto.GalleryRequest, filename *string, order int) *model.
 func UpdateGalleryModel(gallery *model.Gallery, req dto.GalleryRequest, filename *string, order int) {
 	gallery.Title = req.Title
 	gallery.Description = req.Description
+	gallery.Type = req.Type
 	gallery.Image = filename
 	gallery.SortOrder = order
 }
