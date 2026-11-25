@@ -2,16 +2,16 @@ package mapper
 
 import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
-	"github.com/lelecodedev/villa-backend/internal/image"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
 func ToSpecificationGalleryResponse(specificationGallery *model.SpecificationGallery) dto.SpecificationGalleryResponse {
 	return dto.SpecificationGalleryResponse{
 		ID:        specificationGallery.ID,
-		Image1:    image.BuildURLPtr(specificationGallery.Image1),
-		Image2:    image.BuildURLPtr(specificationGallery.Image2),
-		Image3:    image.BuildURLPtr(specificationGallery.Image3),
+		Image1:    media.BuildURLPtr(specificationGallery.Image1),
+		Image2:    media.BuildURLPtr(specificationGallery.Image2),
+		Image3:    media.BuildURLPtr(specificationGallery.Image3),
 		CreatedAt: specificationGallery.CreatedAt,
 		UpdatedAt: specificationGallery.UpdatedAt,
 	}

@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 
@@ -57,6 +59,7 @@ func (s *GalleryService) GetByID(ctx context.Context, id uint) (dto.GalleryRespo
 
 func (s *GalleryService) Create(ctx context.Context, req dto.GalleryRequest) (dto.GalleryResponse, error) {
 	var createdGallery *model.Gallery
+	var imagePath *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
@@ -76,9 +79,8 @@ func (s *GalleryService) Create(ctx context.Context, req dto.GalleryRequest) (dt
 			}
 		}
 
-		var imagePath *string
 		if req.Image != nil {
-			path, err := image.SaveImage("uploads/galleries", req.Image, image.DefaultOptions())
+			path, err := image.Save("uploads/galleries", req.Image, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
@@ -88,7 +90,6 @@ func (s *GalleryService) Create(ctx context.Context, req dto.GalleryRequest) (dt
 
 		gallery := mapper.ToGalleryModel(req, imagePath, sortOrder)
 		if err := txRepo.Create(ctx, gallery); err != nil {
-			image.DeleteImage(*imagePath)
 			return err
 		}
 
@@ -96,6 +97,12 @@ func (s *GalleryService) Create(ctx context.Context, req dto.GalleryRequest) (dt
 
 		return nil
 	}); err != nil {
+		if imagePath != nil {
+			if delErr := media.Delete(*imagePath); delErr != nil {
+				log.Printf("failed to cleanup image %s: %v", *imagePath, delErr)
+			}
+		}
+
 		return dto.GalleryResponse{}, err
 	}
 
@@ -104,6 +111,8 @@ func (s *GalleryService) Create(ctx context.Context, req dto.GalleryRequest) (dt
 
 func (s *GalleryService) Update(ctx context.Context, req dto.GalleryRequest, id uint) (dto.GalleryResponse, error) {
 	var updatedGallery *model.Gallery
+	var oldImage *string
+	var newImage *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
@@ -135,15 +144,13 @@ func (s *GalleryService) Update(ctx context.Context, req dto.GalleryRequest, id 
 
 		imagepath := gallery.Image
 		if req.Image != nil {
-			if gallery.Image != nil {
-				image.DeleteImage(*gallery.Image)
-			}
-
-			path, err := image.SaveImage("uploads/galleries", req.Image, image.DefaultOptions())
+			path, err := image.Save("uploads/galleries", req.Image, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
 
+			newImage = &path
+			oldImage = gallery.Image
 			imagepath = &path
 		}
 
@@ -156,14 +163,28 @@ func (s *GalleryService) Update(ctx context.Context, req dto.GalleryRequest, id 
 
 		return nil
 	}); err != nil {
+		if newImage != nil {
+			if delErr := media.Delete(*newImage); delErr != nil {
+				log.Printf("failed to cleanup new image %s: %v", *newImage, delErr)
+			}
+		}
+
 		return dto.GalleryResponse{}, err
+	}
+
+	if oldImage != nil {
+		if delErr := media.Delete(*oldImage); delErr != nil {
+			log.Printf("failed to delete old image %s: %v", *oldImage, delErr)
+		}
 	}
 
 	return mapper.ToGalleryResponse(updatedGallery), nil
 }
 
 func (s *GalleryService) Delete(ctx context.Context, id uint) error {
-	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+	var imagePath *string
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
 		gallery, err := txRepo.GetByID(ctx, id)
@@ -174,6 +195,8 @@ func (s *GalleryService) Delete(ctx context.Context, id uint) error {
 			return appError.NotFound(fmt.Sprintf("Gallery not found with ID: %d", id))
 		}
 
+		imagePath = gallery.Image
+
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)
 		if err != nil {
 			return err
@@ -182,10 +205,16 @@ func (s *GalleryService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 
-		if gallery.Image != nil {
-			image.DeleteImage(*gallery.Image)
-		}
-
 		return txRepo.Delete(ctx, gallery)
-	})
+	}); err != nil {
+		return err
+	}
+
+	if imagePath != nil {
+		if delErr := media.Delete(*imagePath); delErr != nil {
+			log.Printf("failed to delete image %s: %v", *imagePath, delErr)
+		}
+	}
+
+	return nil
 }

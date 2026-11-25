@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
-	"github.com/lelecodedev/villa-backend/internal/image"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
@@ -12,7 +12,7 @@ func ToGalleryResponse(gallery *model.Gallery) dto.GalleryResponse {
 		Title:       gallery.Title,
 		Description: gallery.Description,
 		Type:        gallery.Type,
-		Image:       image.BuildURLPtr(gallery.Image),
+		Image:       media.BuildURLPtr(gallery.Image),
 		SortOrder:   gallery.SortOrder,
 		CreatedAt:   gallery.CreatedAt,
 		UpdatedAt:   gallery.UpdatedAt,

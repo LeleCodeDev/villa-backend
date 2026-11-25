@@ -1,74 +1,56 @@
-// Package image
 package image
 
 import (
-	"fmt"
 	"image"
 	"image/jpeg"
 	_ "image/png"
 	"io"
 	"mime/multipart"
-	"os"
-	"path/filepath"
-	"slices"
-	"strings"
 
 	"github.com/disintegration/imaging"
-	"github.com/google/uuid"
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	_ "golang.org/x/image/webp"
 )
 
 type SaveOptions struct {
-	MaxSizeBytes int64
-	MaxWidth     int
-	AllowedExts  []string
-	JPEGQuality  int
+	media.Rules
+	MaxWidth    int
+	JPEGQuality int
 }
 
 func DefaultOptions() SaveOptions {
 	return SaveOptions{
-		MaxSizeBytes: 5 * 1024 * 1024, // 5MB
-		MaxWidth:     1280,
-		AllowedExts:  []string{"jpeg", "jpg", "png", "webp"},
-		JPEGQuality:  75,
+		Rules: media.Rules{
+			MaxSizeBytes: 5 * 1024 * 1024,
+			AllowedExts:  []string{"jpeg", "jpg", "png", "webp"},
+		},
+		MaxWidth:    1280,
+		JPEGQuality: 75,
 	}
 }
 
-func validateImage(file *multipart.FileHeader, opts SaveOptions) (image.Image, error) {
-	if file.Size > opts.MaxSizeBytes {
-		return nil, appError.BadRequest(fmt.Sprintf("File must be under %d MB", opts.MaxSizeBytes/1024/1024))
-	}
-
-	ext := filepath.Ext(file.Filename)
-	if !slices.Contains(opts.AllowedExts, strings.TrimPrefix(ext, ".")) {
-		return nil, appError.BadRequest(fmt.Sprintf("File must be: %v", strings.Join(opts.AllowedExts, ", ")))
-	}
-
-	src, err := file.Open()
+func decode(fh *multipart.FileHeader) (image.Image, error) {
+	src, err := fh.Open()
 	if err != nil {
 		return nil, err
 	}
 	defer src.Close()
 
-	limitedReader := io.LimitReader(src, opts.MaxSizeBytes)
-
-	img, _, err := image.Decode(limitedReader)
+	img, _, err := image.Decode(src)
 	if err != nil {
 		return nil, appError.BadRequest("Uploaded file is not a valid image")
 	}
-
 	return img, nil
 }
 
-// SaveImage always save file into jpg for smaller image size
-func SaveImage(basePath string, file *multipart.FileHeader, opts SaveOptions) (string, error) {
-	img, err := validateImage(file, opts)
-	if err != nil {
+func Save(basePath string, fh *multipart.FileHeader, opts SaveOptions) (string, error) {
+	if _, err := media.Validate("image", fh, opts.Rules); err != nil {
 		return "", err
 	}
 
-	if err := os.MkdirAll(basePath, 0o755); err != nil {
+	img, err := decode(fh)
+	if err != nil {
 		return "", err
 	}
 
@@ -76,24 +58,7 @@ func SaveImage(basePath string, file *multipart.FileHeader, opts SaveOptions) (s
 		img = imaging.Resize(img, opts.MaxWidth, 0, imaging.Lanczos)
 	}
 
-	filename := uuid.New().String() + ".jpg"
-	path := filepath.Join(basePath, filename)
-
-	dst, err := os.Create(path)
-	if err != nil {
-		return "", err
-	}
-	defer dst.Close()
-
-	if err := jpeg.Encode(dst, img, &jpeg.Options{Quality: opts.JPEGQuality}); err != nil {
-		return "", err
-	}
-
-	return path, nil
-}
-
-func DeleteImage(path string) {
-	if path != "" {
-		os.Remove(path)
-	}
+	return media.Write(basePath, media.UniqueName("jpg"), func(w io.Writer) error {
+		return jpeg.Encode(w, img, &jpeg.Options{Quality: opts.JPEGQuality})
+	})
 }

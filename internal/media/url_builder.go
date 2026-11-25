@@ -1,4 +1,4 @@
-package image
+package media
 
 import "github.com/lelecodedev/villa-backend/internal/config"
 

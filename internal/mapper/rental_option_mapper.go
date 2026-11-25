@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
-	"github.com/lelecodedev/villa-backend/internal/image"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
@@ -20,7 +20,7 @@ func ToRentalOptionResponse(rentalOption *model.RentalOption, prices []model.Ren
 		RoomCount:   rentalOption.RoomCount,
 		MaxCapacity: rentalOption.MaxCapacity,
 		SortOrder:   rentalOption.SortOrder,
-		Image:       image.BuildURLPtr(rentalOption.Image),
+		Image:       media.BuildURLPtr(rentalOption.Image),
 		Prices:      priceResponses,
 		CreatedAt:   rentalOption.CreatedAt,
 		UpdatedAt:   rentalOption.UpdatedAt,

@@ -11,6 +11,8 @@ type Application struct {
 	ID            uint    `gorm:"primaryKey"`
 	Title         string  `gorm:"not null"`
 	Logo          *string `gorm:"type:varchar(255)"`
+	Music         *string `gorm:"type:varchar(255)"`
+	WeddingMusic  *string `gorm:"type:varchar(255)"`
 	PhoneNumber   string  `gorm:"not null"`
 	Email         *string
 	InstagramLink *string

@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
-	"github.com/lelecodedev/villa-backend/internal/image"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 )
 
@@ -20,7 +20,7 @@ func ToAttractionResponse(attraction *model.Attraction, transports []model.Trans
 		Transports: transportResponses,
 		SortOrder:  attraction.SortOrder,
 		Map:        attraction.Map,
-		Image:      image.BuildURLPtr(attraction.Image),
+		Image:      media.BuildURLPtr(attraction.Image),
 		CreatedAt:  attraction.CreatedAt,
 		UpdatedAt:  attraction.UpdatedAt,
 	}
