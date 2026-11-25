@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/image"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 	"gorm.io/gorm"
@@ -79,6 +81,7 @@ func (s *AttractionService) GetByID(ctx context.Context, id uint) (dto.Attractio
 
 func (s *AttractionService) Create(ctx context.Context, req dto.AttractionRequest) (dto.AttractionResponse, error) {
 	var createdAttraction *model.Attraction
+	var imagePath *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
@@ -98,9 +101,8 @@ func (s *AttractionService) Create(ctx context.Context, req dto.AttractionReques
 			}
 		}
 
-		var imagePath *string
 		if req.Image != nil {
-			path, err := image.SaveImage("uploads/galleries", req.Image, image.DefaultOptions())
+			path, err := image.Save("uploads/galleries", req.Image, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
@@ -117,6 +119,12 @@ func (s *AttractionService) Create(ctx context.Context, req dto.AttractionReques
 
 		return nil
 	}); err != nil {
+		if imagePath != nil {
+			if delErr := media.Delete(*imagePath); delErr != nil {
+				log.Printf("failed to cleanup image %s: %v", *imagePath, delErr)
+			}
+		}
+
 		return dto.AttractionResponse{}, err
 	}
 
@@ -125,6 +133,8 @@ func (s *AttractionService) Create(ctx context.Context, req dto.AttractionReques
 
 func (s *AttractionService) Update(ctx context.Context, id uint, req dto.AttractionRequest) (dto.AttractionResponse, error) {
 	var updatedAttraction *model.Attraction
+	var oldImage *string
+	var newImage *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
@@ -156,15 +166,13 @@ func (s *AttractionService) Update(ctx context.Context, id uint, req dto.Attract
 
 		imagepath := attraction.Image
 		if req.Image != nil {
-			if attraction.Image != nil {
-				image.DeleteImage(*attraction.Image)
-			}
-
-			path, err := image.SaveImage("uploads/galleries", req.Image, image.DefaultOptions())
+			path, err := image.Save("uploads/galleries", req.Image, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
 
+			newImage = &path
+			oldImage = attraction.Image
 			imagepath = &path
 		}
 
@@ -177,14 +185,28 @@ func (s *AttractionService) Update(ctx context.Context, id uint, req dto.Attract
 
 		return nil
 	}); err != nil {
+		if newImage != nil {
+			if delErr := media.Delete(*newImage); delErr != nil {
+				log.Printf("failed to cleanup new image %s: %v", *newImage, delErr)
+			}
+		}
+
 		return dto.AttractionResponse{}, err
+	}
+
+	if oldImage != nil {
+		if delErr := media.Delete(*oldImage); delErr != nil {
+			log.Printf("failed to delete old image %s: %v", *oldImage, delErr)
+		}
 	}
 
 	return mapper.ToAttractionResponse(updatedAttraction, nil), nil
 }
 
 func (s *AttractionService) Delete(ctx context.Context, id uint) error {
-	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+	var imagePath *string
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 		txtransportRepo := s.transportRepo.WithTx(tx)
 
@@ -195,6 +217,8 @@ func (s *AttractionService) Delete(ctx context.Context, id uint) error {
 		if attraction == nil {
 			return appError.NotFound(fmt.Sprintf("Attraction not found with ID: %d", id))
 		}
+
+		imagePath = attraction.Image
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)
 		if err != nil {
@@ -209,5 +233,15 @@ func (s *AttractionService) Delete(ctx context.Context, id uint) error {
 		}
 
 		return txRepo.Delete(ctx, attraction)
-	})
+	}); err != nil {
+		return err
+	}
+
+	if imagePath != nil {
+		if delErr := media.Delete(*imagePath); delErr != nil {
+			log.Printf("failed to delete image %s: %v", *imagePath, delErr)
+		}
+	}
+
+	return nil
 }

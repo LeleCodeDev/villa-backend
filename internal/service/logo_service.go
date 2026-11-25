@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/image"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 
@@ -63,11 +65,12 @@ func (s *LogoService) GetByID(ctx context.Context, id uint) (dto.LogoResponse, e
 
 func (s *LogoService) Create(ctx context.Context, req dto.LogoRequest) (dto.LogoResponse, error) {
 	var createdLogo *model.Logo
+	var imagePath *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
-		imagePath, err := image.SaveImage("uploads/logos", req.Image, image.DefaultOptions())
+		imagePath, err := image.Save("uploads/logos", req.Image, image.DefaultOptions())
 		if err != nil {
 			return err
 		}
@@ -81,6 +84,12 @@ func (s *LogoService) Create(ctx context.Context, req dto.LogoRequest) (dto.Logo
 
 		return nil
 	}); err != nil {
+		if imagePath != nil {
+			if delErr := media.Delete(*imagePath); delErr != nil {
+				log.Printf("failed to cleanup image %s: %v", *imagePath, delErr)
+			}
+		}
+
 		return dto.LogoResponse{}, err
 	}
 
@@ -89,6 +98,8 @@ func (s *LogoService) Create(ctx context.Context, req dto.LogoRequest) (dto.Logo
 
 func (s *LogoService) Update(ctx context.Context, id uint, req dto.LogoRequest) (dto.LogoResponse, error) {
 	var updatedLogo *model.Logo
+	var oldImage string
+	var newImage *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
@@ -103,13 +114,13 @@ func (s *LogoService) Update(ctx context.Context, id uint, req dto.LogoRequest) 
 
 		imagePath := logo.Image
 		if req.Image != nil {
-			image.DeleteImage(logo.Image)
-
-			path, err := image.SaveImage("uploads/logos", req.Image, image.DefaultOptions())
+			path, err := image.Save("uploads/logos", req.Image, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
 
+			newImage = &path
+			oldImage = logo.Image
 			imagePath = path
 		}
 
@@ -122,14 +133,28 @@ func (s *LogoService) Update(ctx context.Context, id uint, req dto.LogoRequest) 
 
 		return nil
 	}); err != nil {
+		if newImage != nil {
+			if delErr := media.Delete(*newImage); delErr != nil {
+				log.Printf("failed to cleanup new image %s: %v", *newImage, delErr)
+			}
+		}
+
 		return dto.LogoResponse{}, err
+	}
+
+	if oldImage != "" {
+		if delErr := media.Delete(oldImage); delErr != nil {
+			log.Printf("failed to delete old image %s: %v", oldImage, delErr)
+		}
 	}
 
 	return mapper.ToLogoResponse(updatedLogo), nil
 }
 
 func (s *LogoService) Delete(ctx context.Context, id uint) error {
-	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+	var imagePath string
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 		txSpecRepo := s.specificationRepo.WithTx(tx)
 		txFacRepo := s.facilityRepo.WithTx(tx)
@@ -141,6 +166,8 @@ func (s *LogoService) Delete(ctx context.Context, id uint) error {
 		if logo == nil {
 			return appError.NotFound(fmt.Sprintf("Logo not found with ID: %d", id))
 		}
+
+		imagePath = logo.Image
 
 		specExist, err := txSpecRepo.ExistByLogoID(ctx, logo.ID)
 		if err != nil {
@@ -157,5 +184,15 @@ func (s *LogoService) Delete(ctx context.Context, id uint) error {
 		}
 
 		return txRepo.Delete(ctx, logo)
-	})
+	}); err != nil {
+		return nil
+	}
+
+	if imagePath != "" {
+		if delErr := media.Delete(imagePath); delErr != nil {
+			log.Printf("failed to delete image %s: %v", imagePath, delErr)
+		}
+	}
+
+	return nil
 }

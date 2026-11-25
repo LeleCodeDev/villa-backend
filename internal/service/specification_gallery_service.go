@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"log"
+	"mime/multipart"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 
@@ -42,8 +45,9 @@ func (s *SpecificationGalleryService) Get(ctx context.Context) (dto.Specificatio
 
 func (s *SpecificationGalleryService) Create(ctx context.Context, req dto.SpecificationGalleryRequest) (dto.SpecificationGalleryResponse, error) {
 	var createdSpecificationGallery *model.SpecificationGallery
+	var saved []string
 
-	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+	err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
 		exist, err := txRepo.Exist(ctx)
@@ -54,48 +58,37 @@ func (s *SpecificationGalleryService) Create(ctx context.Context, req dto.Specif
 			return appError.AlreadyExist("Specification gallery data already exist!")
 		}
 
-		var imagePath1 *string
-		if req.Image1 != nil {
-			path, err := image.SaveImage("uploads/specification_galleries", req.Image1, image.DefaultOptions())
+		var paths [3]*string
+		files := [3]*multipart.FileHeader{req.Image1, req.Image2, req.Image3}
+
+		for i, file := range files {
+			if file == nil {
+				continue
+			}
+
+			path, err := image.Save("uploads/specification_galleries", file, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
 
-			imagePath1 = &path
+			saved = append(saved, path)
+			paths[i] = &path
 		}
 
-		var imagePath2 *string
-		if req.Image2 != nil {
-			path, err := image.SaveImage("uploads/specification_galleries", req.Image2, image.DefaultOptions())
-			if err != nil {
-				return err
-			}
-
-			imagePath2 = &path
-		}
-
-		var imagePath3 *string
-		if req.Image3 != nil {
-			path, err := image.SaveImage("uploads/specification_galleries", req.Image3, image.DefaultOptions())
-			if err != nil {
-				return err
-			}
-
-			imagePath3 = &path
-		}
-
-		specificationGallery := mapper.ToSpecificationGalleryModel(imagePath1, imagePath2, imagePath3)
+		specificationGallery := mapper.ToSpecificationGalleryModel(paths[0], paths[1], paths[2])
 		if err := txRepo.Create(ctx, specificationGallery); err != nil {
-			image.DeleteImage(*imagePath1)
-			image.DeleteImage(*imagePath2)
-			image.DeleteImage(*imagePath3)
 			return err
 		}
 
 		createdSpecificationGallery = specificationGallery
-
 		return nil
-	}); err != nil {
+	})
+	if err != nil {
+		for _, imagePath := range saved {
+			if delErr := media.Delete(imagePath); delErr != nil {
+				log.Printf("failed to cleanup image%s: %v", imagePath, delErr)
+			}
+		}
 		return dto.SpecificationGalleryResponse{}, err
 	}
 
@@ -104,6 +97,69 @@ func (s *SpecificationGalleryService) Create(ctx context.Context, req dto.Specif
 
 func (s *SpecificationGalleryService) Update(ctx context.Context, req dto.SpecificationGalleryRequest) (dto.SpecificationGalleryResponse, error) {
 	var updatedSpecificationGallery *model.SpecificationGallery
+	var saved []string
+	var replaced []string
+
+	err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+		txRepo := s.repo.WithTx(tx)
+
+		specificationGallery, err := txRepo.Get(ctx)
+		if err != nil {
+			return err
+		}
+		if specificationGallery == nil {
+			return appError.NotFound("Specification gallery data not found!")
+		}
+
+		current := [3]*string{specificationGallery.Image1, specificationGallery.Image2, specificationGallery.Image3}
+		files := [3]*multipart.FileHeader{req.Image1, req.Image2, req.Image3}
+		paths := current
+
+		for i, file := range files {
+			if file == nil {
+				continue
+			}
+
+			path, err := image.Save("uploads/specification_galleries", file, image.DefaultOptions())
+			if err != nil {
+				return err
+			}
+
+			saved = append(saved, path)
+			if current[i] != nil {
+				replaced = append(replaced, *current[i])
+			}
+			paths[i] = &path
+		}
+
+		mapper.UpdateSpecificationGalleryModel(specificationGallery, paths[0], paths[1], paths[2])
+		if err := txRepo.Update(ctx, specificationGallery); err != nil {
+			return err
+		}
+
+		updatedSpecificationGallery = specificationGallery
+		return nil
+	})
+	if err != nil {
+		for _, imagePath := range saved {
+			if delErr := media.Delete(imagePath); delErr != nil {
+				log.Printf("failed to cleanup new image %s: %v", imagePath, delErr)
+			}
+		}
+		return dto.SpecificationGalleryResponse{}, err
+	}
+
+	for _, imagePath := range replaced {
+		if delErr := media.Delete(imagePath); delErr != nil {
+			log.Printf("failed to delete old image %s: %v", imagePath, delErr)
+		}
+	}
+
+	return mapper.ToSpecificationGalleryResponse(updatedSpecificationGallery), nil
+}
+
+func (s *SpecificationGalleryService) Delete(ctx context.Context) error {
+	var imagePaths []string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
@@ -116,85 +172,22 @@ func (s *SpecificationGalleryService) Update(ctx context.Context, req dto.Specif
 			return appError.NotFound("Specification gallery data not found!")
 		}
 
-		imagepath1 := specificationGallery.Image1
-		if req.Image1 != nil {
-			if specificationGallery.Image1 != nil {
-				image.DeleteImage(*specificationGallery.Image1)
+		for _, path := range []*string{specificationGallery.Image1, specificationGallery.Image2, specificationGallery.Image3} {
+			if path != nil {
+				imagePaths = append(imagePaths, *path)
 			}
-
-			path, err := image.SaveImage("uploads/galleries", req.Image1, image.DefaultOptions())
-			if err != nil {
-				return err
-			}
-
-			imagepath1 = &path
-		}
-
-		imagepath2 := specificationGallery.Image2
-		if req.Image2 != nil {
-			if specificationGallery.Image2 != nil {
-				image.DeleteImage(*specificationGallery.Image2)
-			}
-
-			path, err := image.SaveImage("uploads/galleries", req.Image2, image.DefaultOptions())
-			if err != nil {
-				return err
-			}
-
-			imagepath2 = &path
-		}
-
-		imagepath3 := specificationGallery.Image3
-		if req.Image3 != nil {
-			if specificationGallery.Image3 != nil {
-				image.DeleteImage(*specificationGallery.Image3)
-			}
-
-			path, err := image.SaveImage("uploads/galleries", req.Image3, image.DefaultOptions())
-			if err != nil {
-				return err
-			}
-
-			imagepath3 = &path
-		}
-
-		mapper.UpdateSpecificationGalleryModel(specificationGallery, imagepath1, imagepath2, imagepath3)
-		if err := txRepo.Update(ctx, specificationGallery); err != nil {
-			return err
-		}
-
-		updatedSpecificationGallery = specificationGallery
-
-		return nil
-	}); err != nil {
-		return dto.SpecificationGalleryResponse{}, err
-	}
-
-	return mapper.ToSpecificationGalleryResponse(updatedSpecificationGallery), nil
-}
-
-func (s *SpecificationGalleryService) Delete(ctx context.Context) error {
-	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
-		txRepo := s.repo.WithTx(tx)
-
-		specificationGallery, err := txRepo.Get(ctx)
-		if err != nil {
-			return err
-		}
-		if specificationGallery == nil {
-			return appError.NotFound("Specification gallery data not found!")
-		}
-
-		if specificationGallery.Image1 != nil {
-			image.DeleteImage(*specificationGallery.Image1)
-		}
-		if specificationGallery.Image2 != nil {
-			image.DeleteImage(*specificationGallery.Image2)
-		}
-		if specificationGallery.Image3 != nil {
-			image.DeleteImage(*specificationGallery.Image3)
 		}
 
 		return txRepo.Delete(ctx, specificationGallery)
-	})
+	}); err != nil {
+		return err
+	}
+
+	for _, imagePath := range imagePaths {
+		if delErr := media.Delete(imagePath); delErr != nil {
+			log.Printf("failed to cleanup image %s: %v", imagePath, delErr)
+		}
+	}
+
+	return nil
 }

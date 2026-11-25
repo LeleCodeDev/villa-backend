@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
+	"github.com/lelecodedev/villa-backend/internal/media"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 
@@ -118,6 +120,8 @@ func (s *RentalOptionService) GetAvailable(ctx context.Context, query dto.Bookin
 
 func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRequest) (dto.RentalOptionResponse, error) {
 	var createdRentalOption *model.RentalOption
+	var imagePath *string
+
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 
@@ -136,9 +140,8 @@ func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRe
 			}
 		}
 
-		var imagePath *string
 		if req.Image != nil {
-			path, err := image.SaveImage("uploads/rental_options", req.Image, image.DefaultOptions())
+			path, err := image.Save("uploads/rental_options", req.Image, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
@@ -148,7 +151,6 @@ func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRe
 
 		rentalOption := mapper.ToRentalOptionModel(req, sortOrder, imagePath)
 		if err := txRepo.Create(ctx, rentalOption); err != nil {
-			image.DeleteImage(*imagePath)
 			return err
 		}
 
@@ -156,6 +158,12 @@ func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRe
 
 		return nil
 	}); err != nil {
+		if imagePath != nil {
+			if delErr := media.Delete(*imagePath); err != nil {
+				log.Printf("failed to delete image %s: %v", *imagePath, delErr)
+			}
+		}
+
 		return dto.RentalOptionResponse{}, err
 	}
 
@@ -164,6 +172,8 @@ func (s *RentalOptionService) Create(ctx context.Context, req dto.RentalOptionRe
 
 func (s *RentalOptionService) Update(ctx context.Context, req dto.RentalOptionRequest, id uint) (dto.RentalOptionResponse, error) {
 	var updatedRentalOption *model.RentalOption
+	var oldImage *string
+	var newImage *string
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
@@ -195,15 +205,13 @@ func (s *RentalOptionService) Update(ctx context.Context, req dto.RentalOptionRe
 
 		imagepath := rentalOption.Image
 		if req.Image != nil {
-			if rentalOption.Image != nil {
-				image.DeleteImage(*rentalOption.Image)
-			}
-
-			path, err := image.SaveImage("uploads/rental_options", req.Image, image.DefaultOptions())
+			path, err := image.Save("uploads/rental_options", req.Image, image.DefaultOptions())
 			if err != nil {
 				return err
 			}
 
+			newImage = &path
+			oldImage = rentalOption.Image
 			imagepath = &path
 		}
 
@@ -216,14 +224,28 @@ func (s *RentalOptionService) Update(ctx context.Context, req dto.RentalOptionRe
 
 		return nil
 	}); err != nil {
+		if newImage != nil {
+			if delErr := media.Delete(*newImage); delErr != nil {
+				log.Printf("failed to cleanup new image %s: %v", *newImage, delErr)
+			}
+		}
+
 		return dto.RentalOptionResponse{}, err
+	}
+
+	if oldImage != nil {
+		if delErr := media.Delete(*oldImage); delErr != nil {
+			log.Printf("failed to delete old image %s: %v", *oldImage, delErr)
+		}
 	}
 
 	return mapper.ToRentalOptionResponse(updatedRentalOption, nil), nil
 }
 
 func (s *RentalOptionService) Delete(ctx context.Context, id uint) error {
-	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+	var imagePath *string
+
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 		txPricelistRepo := s.pricelistRepo.WithTx(tx)
 		txRentalPriceRepo := s.rentalPriceRepo.WithTx(tx)
@@ -236,6 +258,8 @@ func (s *RentalOptionService) Delete(ctx context.Context, id uint) error {
 		if rentalOption == nil {
 			return appError.NotFound(fmt.Sprintf("Rental option not found with ID: %d", id))
 		}
+
+		imagePath = rentalOption.Image
 
 		maxOrder, err := txRepo.GetMaxSortOrder(ctx)
 		if err != nil {
@@ -255,10 +279,16 @@ func (s *RentalOptionService) Delete(ctx context.Context, id uint) error {
 			return err
 		}
 
-		if rentalOption.Image != nil {
-			image.DeleteImage(*rentalOption.Image)
-		}
-
 		return txRepo.Delete(ctx, rentalOption)
-	})
+	}); err != nil {
+		return err
+	}
+
+	if imagePath != nil {
+		if delErr := media.Delete(*imagePath); delErr != nil {
+			log.Printf("failed to delete image %s: %v", *imagePath, delErr)
+		}
+	}
+
+	return nil
 }
