@@ -106,7 +106,7 @@ func parseEventBookingDates(start, end string) (time.Time, time.Time, error) {
 		return time.Time{}, time.Time{}, appError.BadRequest("end_at must be after start_at")
 	}
 
-	now := time.Now().In(config.Env.Location)
+	now := time.Now().In(loc)
 	y, m, d := now.Date()
 	today := time.Date(y, m, d, 0, 0, 0, 0, config.Env.Location)
 

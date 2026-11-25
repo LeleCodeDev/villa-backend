@@ -138,6 +138,9 @@ func (a *App) RegisterRoute() {
 
 		// Reason
 		user.POST("/my-reasons", a.ReasonHandler.CreateCustomReason)
+
+		// Voucher
+		user.GET("/vouchers/validate", a.VoucherHandler.ValidateVoucher)
 	}
 
 	admin := authenticated.Group("")
@@ -295,5 +298,12 @@ func (a *App) RegisterRoute() {
 		admin.POST("/villa-rules", a.VillaRuleHandler.CreateVillaRule)
 		admin.PUT("/villa-rules/:id", a.VillaRuleHandler.UpdateVillaRule)
 		admin.DELETE("/villa-rules/:id", a.VillaRuleHandler.DeleteVillaRule)
+
+		// Voucher
+		admin.GET("/vouchers", a.VoucherHandler.GetAllVouchers)
+		admin.GET("/vouchers/:id", a.VoucherHandler.GetVoucherByID)
+		admin.POST("/vouchers", a.VoucherHandler.CreateVoucher)
+		admin.PUT("/vouchers/:id", a.VoucherHandler.UpdateVoucher)
+		admin.DELETE("/vouchers/:id", a.VoucherHandler.DeleteVoucher)
 	}
 }

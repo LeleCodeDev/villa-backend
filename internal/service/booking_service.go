@@ -28,6 +28,7 @@ type BookingService struct {
 	seasonPeriodRepo *repository.SeasonPeriodRepository
 	addonRepo        *repository.AddonRepository
 	paymentRepo      *repository.PaymentRepository
+	voucherRepo      *repository.VoucherRepository
 	gateaway         *payment.MidtransGateway
 }
 
@@ -41,6 +42,7 @@ func NewBookingService(
 	seasonPeriodRepo *repository.SeasonPeriodRepository,
 	addonRepo *repository.AddonRepository,
 	paymentRepo *repository.PaymentRepository,
+	voucherRepo *repository.VoucherRepository,
 	gateaway *payment.MidtransGateway,
 ) *BookingService {
 	return &BookingService{
@@ -53,6 +55,7 @@ func NewBookingService(
 		seasonPeriodRepo: seasonPeriodRepo,
 		addonRepo:        addonRepo,
 		paymentRepo:      paymentRepo,
+		voucherRepo:      voucherRepo,
 		gateaway:         gateaway,
 	}
 }
@@ -187,6 +190,32 @@ func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPerio
 	return total, nil
 }
 
+func calculateVoucher(voucher *model.Voucher, amount int64, now time.Time) (int64, error) {
+	if !voucher.IsActive ||
+		(voucher.StartAt != nil && now.Before(*voucher.StartAt)) ||
+		(voucher.ExpiresAt != nil && now.After(*voucher.ExpiresAt)) {
+		return 0, appError.BadRequest("Voucher is not valid")
+	}
+
+	if voucher.MinBookingAmount != nil && amount < *voucher.MinBookingAmount {
+		return 0, appError.BadRequest("Booking amount is below the voucher minimum")
+	}
+
+	var discount int64
+	switch voucher.DiscountType {
+	case model.DiscountTypePercent:
+		discount = amount * voucher.DiscountValue / 100
+
+		if voucher.MaxDiscount != nil && discount > *voucher.MaxDiscount {
+			discount = *voucher.MaxDiscount
+		}
+	case model.DiscountTypeFixed:
+		discount = voucher.DiscountValue
+	}
+
+	return min(discount, amount), nil
+}
+
 func (s *BookingService) Create(ctx context.Context, currentUser model.User, req dto.BookingCreateRequest) (dto.BookingResponse, error) {
 	// parse req time from string to time.Time
 	checkIn, checkOut, err := parseBookingDates(req.CheckInDate, req.CheckOutDate)
@@ -220,6 +249,7 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 		txSeasonPeriodRepo := s.seasonPeriodRepo.WithTx(tx)
 		txAddonRepo := s.addonRepo.WithTx(tx)
 		txPaymentRepo := s.paymentRepo.WithTx(tx)
+		txVoucherRepo := s.voucherRepo.WithTx(tx)
 
 		// get rental option
 		rentalOption, err := txRentalOptionRepo.GetByID(ctx, req.RentalOptionID)
@@ -276,6 +306,42 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			return err
 		}
 
+		now := time.Now()
+		var voucher *model.Voucher
+		var discount int64
+		if req.VoucherCode != nil && strings.TrimSpace(*req.VoucherCode) != "" {
+			voucher, err = txVoucherRepo.GetByCode(ctx, *req.VoucherCode)
+			if err != nil {
+				return err
+			}
+			if voucher == nil {
+				return appError.NotFound("Voucher not found")
+			}
+
+			discount, err = calculateVoucher(voucher, bookingPrice, now)
+			if err != nil {
+				return err
+			}
+
+			if voucher.PerUserLimit != nil {
+				used, err := txBookingRepo.CountVoucherUsage(ctx, currentUser.ID, voucher.ID)
+				if err != nil {
+					return err
+				}
+				if used >= int64(*voucher.PerUserLimit) {
+					return appError.BadRequest("You have reached the maximum used of this voucher")
+				}
+			}
+
+			ok, err := txVoucherRepo.IncrementUsage(ctx, voucher.ID)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				return appError.BadRequest("Voucher usage limit reached")
+			}
+		}
+
 		// get addons and calculate addon price
 		addons, err := txAddonRepo.GetAllInIds(ctx, addonIDs)
 		if err != nil {
@@ -295,7 +361,7 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			addonTotal += a.Price * int64(ba.Quantity)
 		}
 
-		totalPrice := bookingPrice + addonTotal
+		totalPrice := bookingPrice - discount + addonTotal
 
 		items := []midtrans.ItemDetails{{
 			ID:    fmt.Sprintf("STAY-%d", rentalOption.ID),
@@ -314,7 +380,15 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			})
 		}
 
-		// now := time.Now()
+		if discount > 0 {
+			items = append(items, midtrans.ItemDetails{
+				ID:    "DISCOUNT-" + voucher.Code,
+				Name:  "Voucher " + voucher.Code,
+				Price: -discount,
+				Qty:   1,
+			})
+		}
+
 		payKind := model.PaymentKindFull
 		payAmount := totalPrice
 		var depositAmount *int64
@@ -348,11 +422,18 @@ func (s *BookingService) Create(ctx context.Context, currentUser model.User, req
 			checkIn,
 			checkOut,
 			bookingPrice,
-			bookingPrice+addonTotal,
+			totalPrice,
 			depositAmount,
 			balanceDueAt,
 			time.Now().Add(paymentWindow),
 		)
+
+		if voucher != nil {
+			booking.VoucherID = &voucher.ID
+			booking.VoucherCode = &voucher.Code
+			booking.DiscountAmount = discount
+		}
+
 		if err := txBookingRepo.Create(ctx, booking); err != nil {
 			return err
 		}
@@ -511,6 +592,7 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txBookingRepo := s.repo.WithTx(tx)
 		txPaymentRepo := s.paymentRepo.WithTx(tx)
+		txVoucherRepo := s.voucherRepo.WithTx(tx)
 
 		booking, err := txBookingRepo.GetByID(ctx, id)
 		if err != nil {
@@ -530,6 +612,12 @@ func (s *BookingService) Cancel(ctx context.Context, currentUser model.User, id 
 		}
 		if !moved {
 			return appError.Conflict("Booking status has changed!")
+		}
+
+		if booking.VoucherID != nil {
+			if err := txVoucherRepo.DecrementUsage(ctx, *booking.VoucherID); err != nil {
+				return err
+			}
 		}
 
 		pendingPayments, err := txPaymentRepo.GetAllByBookingIDAndStatus(ctx, booking.ID, model.PaymentStatusPending)
