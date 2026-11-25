@@ -140,7 +140,7 @@ func (a *App) RegisterRoute() {
 		user.POST("/my-reasons", a.ReasonHandler.CreateCustomReason)
 
 		// Voucher
-		user.GET("/vouchers/validate", a.VoucherHandler.ValidateVoucher)
+		user.POST("/vouchers/validate", a.VoucherHandler.ValidateVoucher)
 	}
 
 	admin := authenticated.Group("")
