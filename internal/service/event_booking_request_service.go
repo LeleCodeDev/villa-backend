@@ -146,6 +146,20 @@ func (s *EventBookingRequestService) Approve(ctx context.Context, id uint, req d
 			return appError.BadRequest("this request is too close to the event date to approve, please contact the customer")
 		}
 
+		conflicts, err := txEventBookingRepo.GetBookingConflicts(ctx, request.StartAt, request.EndAt, 0)
+		if err != nil {
+			return err
+		}
+
+		if len(conflicts) > 0 {
+			conflictResponses := make([]dto.EventBookingConflict, 0, len(conflicts))
+			for _, c := range conflicts {
+				conflictResponses = append(conflictResponses, dto.EventBookingConflict{StartAt: c.StartAt, EndAt: c.EndAt})
+			}
+
+			return appError.Conflict("Event is already booked for these dates").WithErrors(conflictResponses)
+		}
+
 		var price int64
 		quantity := 1
 		hold := customHold
@@ -162,39 +176,11 @@ func (s *EventBookingRequestService) Approve(ctx context.Context, id uint, req d
 			quantity = calculateQuantity(villaPackage.Type, request.StartAt, request.EndAt)
 			price = villaPackage.Price
 			hold = packageHold
-
-			conflicts, err := txEventBookingRepo.GetBookingConflicts(ctx, villaPackage.ID, request.StartAt, request.EndAt, 0)
-			if err != nil {
-				return err
-			}
-
-			if len(conflicts) > 0 {
-				conflictResponses := make([]dto.EventBookingConflict, 0, len(conflicts))
-				for _, c := range conflicts {
-					conflictResponses = append(conflictResponses, dto.EventBookingConflict{StartAt: c.StartAt, EndAt: c.EndAt})
-				}
-
-				return appError.Conflict("Villa package is already booked for these dates").WithErrors(conflictResponses)
-			}
 		} else {
 			if req.Price == nil || *req.Price <= 0 {
 				return appError.BadRequest("price is required for custom event!")
 			}
 			price = *req.Price
-
-			conflicts, err := txEventBookingRepo.GetCustomBookingConflicts(ctx, request.StartAt, request.EndAt, 0)
-			if err != nil {
-				return err
-			}
-
-			if len(conflicts) > 0 {
-				conflictResponses := make([]dto.EventBookingConflict, 0, len(conflicts))
-				for _, c := range conflicts {
-					conflictResponses = append(conflictResponses, dto.EventBookingConflict{StartAt: c.StartAt, EndAt: c.EndAt})
-				}
-
-				return appError.Conflict("Event is already booked for these dates").WithErrors(conflictResponses)
-			}
 		}
 
 		expiresAt := now.Add(hold)

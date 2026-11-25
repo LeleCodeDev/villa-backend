@@ -152,35 +152,6 @@ func (r *EventBookingRepository) SetNullRentalOptionID(ctx context.Context, vill
 
 func (r *EventBookingRepository) GetBookingConflicts(
 	ctx context.Context,
-	villaPackageID uint,
-	in time.Time,
-	out time.Time,
-	excludeID uint,
-) ([]model.EventBooking, error) {
-	var conflicts []model.EventBooking
-	db := r.db.WithContext(ctx).
-		Where("villa_package_id = ?", villaPackageID).
-		Where("status NOT IN ?", []model.EventBookingStatus{
-			model.EventBookingStatusCanceled,
-			model.EventBookingStatusExpired,
-			model.EventBookingStatusCompleted,
-			model.EventBookingStatusNotShow,
-		}).
-		Where("start_at <= ? AND end_at >= ?", out, in)
-
-	if excludeID > 0 {
-		db = db.Where("id != ?", excludeID)
-	}
-
-	if err := db.Find(&conflicts).Error; err != nil {
-		return nil, err
-	}
-
-	return conflicts, nil
-}
-
-func (r *EventBookingRepository) GetCustomBookingConflicts(
-	ctx context.Context,
 	in time.Time,
 	out time.Time,
 	excludeID uint,

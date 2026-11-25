@@ -165,7 +165,7 @@ func (s *EventBookingService) Create(ctx context.Context, currentUser model.User
 		}
 
 		// check booking conflict
-		conflicts, err := txEventBookingRepo.GetBookingConflicts(ctx, villaPackage.ID, startAt, endAt, 0)
+		conflicts, err := txEventBookingRepo.GetBookingConflicts(ctx, startAt, endAt, 0)
 		if err != nil {
 			return err
 		}
@@ -175,7 +175,7 @@ func (s *EventBookingService) Create(ctx context.Context, currentUser model.User
 				conflictResponses = append(conflictResponses, dto.EventBookingConflict{StartAt: conflict.StartAt, EndAt: conflict.EndAt})
 			}
 
-			return appError.Conflict("Villa package is already booked for these dates").
+			return appError.Conflict("Event is already booked for these dates").
 				WithErrors(conflictResponses)
 		}
 
