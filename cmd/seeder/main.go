@@ -84,6 +84,8 @@ func seedApplicationSetting(db *gorm.DB) {
 		InstagramLink: nil,
 		TikTokLink:    nil,
 		Logo:          nil,
+		Music:         nil,
+		WeddingMusic:  nil,
 	}
 
 	if err := db.FirstOrCreate(app, model.Application{Title: "Villa Arira"}).Error; err != nil {
