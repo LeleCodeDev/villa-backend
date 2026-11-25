@@ -132,7 +132,7 @@ func (r *BookingRepository) GetBookingConflicts(ctx context.Context, optionID ui
 			model.BookingStatusCompleted,
 			model.BookingStatusNotShow,
 		}).
-		Where("check_in_date <= ? AND check_out_date >= ?", out, in)
+		Where("check_in_date < ? AND check_out_date > ?", out, in)
 
 	if excludeID > 0 {
 		db = db.Where("id != ?", excludeID)
