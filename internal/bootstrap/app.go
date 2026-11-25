@@ -54,6 +54,7 @@ type App struct {
 	EventBookingRequestHandler  *handler.EventBookingRequestHandler
 	VillaRuleHandler            *handler.VillaRuleHandler
 	WhatsappHandler             *handler.WhatsappHandler
+	VoucherHandler              *handler.VoucherHandler
 }
 
 func NewApp() *App {
@@ -94,6 +95,7 @@ func NewApp() *App {
 	paymentRepo := repository.NewPaymentRepository(db)
 	eventBookingRequestRepo := repository.NewEventBookingRequestRepository(db)
 	villaRuleRepo := repository.NewVillaRuleRepository(db)
+	voucherRepo := repository.NewVoucherRepository(db)
 
 	authService := service.NewAuthService(txManager, userRepo)
 	userService := service.NewUserService(txManager, userRepo)
@@ -103,7 +105,7 @@ func NewApp() *App {
 	galleryService := service.NewGalleryService(txManager, galleryRepo)
 	testimonyService := service.NewTestimonyService(txManager, testimonyRepo)
 	villaPackageListService := service.NewVillaPackageListService(txManager, villaPackageListRepo, villaPackageRepo)
-	villaPackageService := service.NewVillaPackageService(txManager, villaPackageRepo, villaPackageListRepo)
+	villaPackageService := service.NewVillaPackageService(txManager, villaPackageRepo, villaPackageListRepo, eventBookingRepo, eventBookingRequestRepo)
 	pricelistService := service.NewPricelistService(txManager, pricelistRepo, rentalOptionRepo)
 	facilityService := service.NewFacilityService(txManager, facilityRepo, logoRepo)
 	specificationService := service.NewSpecificationService(txManager, specificationRepo, logoRepo)
@@ -129,6 +131,7 @@ func NewApp() *App {
 		seasonPeriodRepo,
 		addonRepo,
 		paymentRepo,
+		voucherRepo,
 		gateaway,
 	)
 	paymentService := service.NewPaymentService(
@@ -155,6 +158,7 @@ func NewApp() *App {
 	)
 	villaRuleService := service.NewVillaRuleService(txManager, villaRuleRepo)
 	whatsappService := service.NewWhatsappService(whatsappClient)
+	voucherService := service.NewVoucherService(txManager, voucherRepo, bookingRepo)
 
 	app := &App{
 		Router:                      r,
@@ -191,6 +195,7 @@ func NewApp() *App {
 		EventBookingRequestHandler:  handler.NewEventBookingRequestHandler(eventBookingRequestService),
 		VillaRuleHandler:            handler.NewVillaRuleHandler(villaRuleService),
 		WhatsappHandler:             handler.NewWhatsappHandler(whatsappService),
+		VoucherHandler:              handler.NewVoucherHandler(voucherService),
 	}
 
 	app.Router.Use(cors.New(cors.Config{

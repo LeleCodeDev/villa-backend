@@ -14,20 +14,26 @@ import (
 )
 
 type VillaPackageService struct {
-	txManager *repository.TxManager
-	repo      *repository.VillaPackageRepository
-	listRepo  *repository.VillaPackageListRepository
+	txManager           *repository.TxManager
+	repo                *repository.VillaPackageRepository
+	listRepo            *repository.VillaPackageListRepository
+	eventBookingRepo    *repository.EventBookingRepository
+	eventBookingReqRepo *repository.EventBookingRequestRepository
 }
 
 func NewVillaPackageService(
 	txManager *repository.TxManager,
 	repo *repository.VillaPackageRepository,
 	listRepo *repository.VillaPackageListRepository,
+	eventBookingRepo *repository.EventBookingRepository,
+	eventBookingReqRepo *repository.EventBookingRequestRepository,
 ) *VillaPackageService {
 	return &VillaPackageService{
-		txManager: txManager,
-		repo:      repo,
-		listRepo:  listRepo,
+		txManager:           txManager,
+		repo:                repo,
+		listRepo:            listRepo,
+		eventBookingRepo:    eventBookingRepo,
+		eventBookingReqRepo: eventBookingReqRepo,
 	}
 }
 
@@ -163,6 +169,8 @@ func (s *VillaPackageService) Delete(ctx context.Context, id uint) error {
 	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRepo := s.repo.WithTx(tx)
 		txListRepo := s.listRepo.WithTx(tx)
+		txEventBookingRepo := s.eventBookingRepo.WithTx(tx)
+		txEventBookingReqRepo := s.eventBookingReqRepo.WithTx(tx)
 
 		villaPackage, err := txRepo.GetByID(ctx, id)
 		if err != nil {
@@ -181,6 +189,14 @@ func (s *VillaPackageService) Delete(ctx context.Context, id uint) error {
 		}
 
 		if err := txListRepo.DeleteByVillaPackageID(ctx, id); err != nil {
+			return err
+		}
+
+		if err := txEventBookingRepo.SetNullVillaPackageID(ctx, id); err != nil {
+			return err
+		}
+
+		if err := txEventBookingReqRepo.SetNullVillaPackageID(ctx, id); err != nil {
 			return err
 		}
 

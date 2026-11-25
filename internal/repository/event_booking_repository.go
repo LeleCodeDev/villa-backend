@@ -142,7 +142,7 @@ func (r *EventBookingRepository) TransitionStatus(ctx context.Context, id uint, 
 	return res.RowsAffected == 1, res.Error
 }
 
-func (r *EventBookingRepository) SetNullRentalOptionID(ctx context.Context, villaPackageID uint) error {
+func (r *EventBookingRepository) SetNullVillaPackageID(ctx context.Context, villaPackageID uint) error {
 	updates := map[string]any{"villa_package_id": nil}
 	return r.db.WithContext(ctx).
 		Model(&model.EventBooking{}).

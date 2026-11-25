@@ -92,6 +92,14 @@ func (r *EventBookingRequestRepository) GetByID(ctx context.Context, id uint) (*
 	return &request, nil
 }
 
+func (r *EventBookingRequestRepository) SetNullVillaPackageID(ctx context.Context, villaPackageID uint) error {
+	updates := map[string]any{"villa_package_id": nil}
+	return r.db.WithContext(ctx).
+		Model(&model.EventBookingRequest{}).
+		Where("villa_package_id = ?", villaPackageID).
+		Updates(updates).Error
+}
+
 func (r *EventBookingRequestRepository) Create(ctx context.Context, request *model.EventBookingRequest) error {
 	return r.db.WithContext(ctx).Create(request).Error
 }

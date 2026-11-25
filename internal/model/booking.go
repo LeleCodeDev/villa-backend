@@ -42,6 +42,10 @@ type Booking struct {
 	CheckOutDate   time.Time     `gorm:"not null;type:date"`
 	BookingPrice   int64         `gorm:"not null"`
 	TotalPrice     int64         `gorm:"not null"`
+	VoucherID      *uint         `gorm:"index"`
+	Voucher        *Voucher      `gorm:"constraint:OnDelete:SET NULL"`
+	VoucherCode    *string       `gorm:"type:varchar(50)"`
+	DiscountAmount int64         `gorm:"not null;default:0"`
 	DepositAmount  *int64
 	BalanceDueAt   *time.Time
 	CheckInAt      *time.Time

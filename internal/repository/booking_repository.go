@@ -110,6 +110,14 @@ func (r *BookingRepository) SetNullRentalOptionID(ctx context.Context, rentalOpt
 		Updates(updates).Error
 }
 
+func (r *BookingRepository) SetNullVoucherID(ctx context.Context, voucherID uint) error {
+	updates := map[string]any{"voucher_id": nil}
+	return r.db.WithContext(ctx).
+		Model(&model.Booking{}).
+		Where("voucher_id = ?", voucherID).
+		Updates(updates).Error
+}
+
 func (r *BookingRepository) Create(ctx context.Context, booking *model.Booking) error {
 	return r.db.WithContext(ctx).Create(booking).Error
 }
@@ -143,4 +151,19 @@ func (r *BookingRepository) GetBookingConflicts(ctx context.Context, optionID ui
 	}
 
 	return conflicts, nil
+}
+
+func (r *BookingRepository) CountVoucherUsage(ctx context.Context, userID, voucherID uint) (int64, error) {
+	var count int64
+
+	err := r.db.WithContext(ctx).
+		Model(&model.Booking{}).
+		Where("user_id = ? AND voucher_id = ? AND status NOT IN ?",
+			userID,
+			voucherID,
+			[]model.BookingStatus{model.BookingStatusCanceled, model.BookingStatusExpired},
+		).
+		Count(&count).Error
+
+	return count, err
 }

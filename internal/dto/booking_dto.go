@@ -25,30 +25,33 @@ type (
 		CheckInDate    string                `json:"check_in_date" form:"check_in_date" binding:"required,datetime=2006-01-02"`
 		CheckOutDate   string                `json:"check_out_date" form:"check_out_date" binding:"required,datetime=2006-01-02"`
 		BookingAddons  []BookingAddonRequest `json:"booking_addons" form:"booking_addons" binding:"omitempty,dive"`
+		VoucherCode    *string               `json:"voucher_code" form:"voucher_code" binding:"omitempty,min=3,max=50"`
 	}
 
 	BookingResponse struct {
-		ID            uint                   `json:"id"`
-		User          UserResponse           `json:"user"`
-		GuestCount    int                    `json:"guest_count"`
-		VisitorCount  int                    `json:"visitor_count"`
-		RentalOption  *RentalOptionResponse  `json:"rental_option"`
-		Reason        ReasonResponse         `json:"reason"`
-		Status        model.BookingStatus    `json:"status"`
-		PaymentType   model.PaymentType      `json:"payment_type"`
-		CheckInDate   time.Time              `json:"check_in_date"`
-		CheckOutDate  time.Time              `json:"check_out_date"`
-		BookingPrice  int64                  `json:"booking_price"`
-		TotalPrice    int64                  `json:"total_price"`
-		DepositAmount *int64                 `json:"deposit_amount,omitempty"`
-		BalanceDueAt  *time.Time             `json:"balance_due_at,omitempty"`
-		CheckInAt     *time.Time             `json:"check_in_at"`
-		CheckOutAt    *time.Time             `json:"check_out_at"`
-		ExpiresAt     *time.Time             `json:"expires_at,omitempty"`
-		BookingAddons []BookingAddonResponse `json:"booking_addons,omitempty"`
-		Payments      []PaymentResponse      `json:"payments,omitempty"`
-		CreatedAt     time.Time              `json:"created_at"`
-		UpdatedAt     time.Time              `json:"updated_at"`
+		ID             uint                   `json:"id"`
+		User           UserResponse           `json:"user"`
+		GuestCount     int                    `json:"guest_count"`
+		VisitorCount   int                    `json:"visitor_count"`
+		RentalOption   *RentalOptionResponse  `json:"rental_option"`
+		Reason         ReasonResponse         `json:"reason"`
+		Status         model.BookingStatus    `json:"status"`
+		PaymentType    model.PaymentType      `json:"payment_type"`
+		CheckInDate    time.Time              `json:"check_in_date"`
+		CheckOutDate   time.Time              `json:"check_out_date"`
+		BookingPrice   int64                  `json:"booking_price"`
+		TotalPrice     int64                  `json:"total_price"`
+		DepositAmount  *int64                 `json:"deposit_amount,omitempty"`
+		VoucherCode    *string                `json:"voucher_code,omitempty"`
+		DiscountAmount int64                  `json:"discount_amount"`
+		BalanceDueAt   *time.Time             `json:"balance_due_at,omitempty"`
+		CheckInAt      *time.Time             `json:"check_in_at"`
+		CheckOutAt     *time.Time             `json:"check_out_at"`
+		ExpiresAt      *time.Time             `json:"expires_at,omitempty"`
+		BookingAddons  []BookingAddonResponse `json:"booking_addons,omitempty"`
+		Payments       []PaymentResponse      `json:"payments,omitempty"`
+		CreatedAt      time.Time              `json:"created_at"`
+		UpdatedAt      time.Time              `json:"updated_at"`
 	}
 
 	BookingAvailableRequest struct {

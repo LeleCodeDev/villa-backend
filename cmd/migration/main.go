@@ -45,6 +45,7 @@ func main() {
 		&model.Payment{},
 		&model.EventBookingRequest{},
 		&model.VillaRule{},
+		&model.Voucher{},
 	}
 
 	if err := db.AutoMigrate(models...); err != nil {
