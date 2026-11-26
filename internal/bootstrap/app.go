@@ -97,7 +97,7 @@ func NewApp() *App {
 	villaRuleRepo := repository.NewVillaRuleRepository(db)
 	voucherRepo := repository.NewVoucherRepository(db)
 
-	authService := service.NewAuthService(txManager, userRepo)
+	authService := service.NewAuthService(txManager, userRepo, whatsappClient)
 	userService := service.NewUserService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
 	heroSectionService := service.NewHeroSectionService(txManager, heroSectionRepo)

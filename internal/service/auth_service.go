@@ -2,8 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
+	"log/slog"
+	"strings"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
+	"github.com/lelecodedev/villa-backend/internal/client"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
@@ -17,10 +21,15 @@ import (
 type AuthService struct {
 	txManager *repository.TxManager
 	userRepo  *repository.UserRepository
+	client    *client.WhatsappClient
 }
 
-func NewAuthService(txManager *repository.TxManager, userRepo *repository.UserRepository) *AuthService {
-	return &AuthService{txManager: txManager, userRepo: userRepo}
+func NewAuthService(
+	txManager *repository.TxManager,
+	userRepo *repository.UserRepository,
+	client *client.WhatsappClient,
+) *AuthService {
+	return &AuthService{txManager: txManager, userRepo: userRepo, client: client}
 }
 
 func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (dto.AuthResponse, error) {
@@ -35,6 +44,22 @@ func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (dt
 		}
 		if exist {
 			return appError.AlreadyExist("User email already exist!")
+		}
+
+		phone := strings.Replace(req.Phone, "0", "62", 1)
+
+		res, err := s.client.CheckNumber(ctx, phone)
+		if err != nil {
+			if apiErr, ok := errors.AsType[*appError.APIError](err); ok {
+				slog.Error("openwa request failed", "status", apiErr.StatusCode, "body", apiErr.Body)
+				return appError.BadGateway("Whatsapp provider error")
+			}
+
+			return err
+		}
+
+		if !res.Exists {
+			return appError.BadRequest("phone must be a valid whatsapp number")
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
