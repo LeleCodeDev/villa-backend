@@ -22,8 +22,9 @@ func ToVoucherResponse(voucher *model.Voucher) dto.VoucherResponse {
 		StartAt:          voucher.StartAt,
 		ExpiresAt:        voucher.ExpiresAt,
 		IsActive:         voucher.IsActive,
-		CreatedAt:        voucher.CreatedAt,
-		UpdatedAt:        voucher.UpdatedAt,
+
+		CreatedAt: voucher.CreatedAt,
+		UpdatedAt: voucher.UpdatedAt,
 	}
 }
 
@@ -44,6 +45,7 @@ func ToVoucherModel(req dto.VoucherRequest, startAt, expiresAt *time.Time) *mode
 		StartAt:          startAt,
 		ExpiresAt:        expiresAt,
 		IsActive:         isActive,
+		SourceBookingID:  nil,
 	}
 }
 

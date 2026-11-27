@@ -142,6 +142,13 @@ func (r *PaymentRepository) GetAllInEventBookingIds(ctx context.Context, eventBo
 func (r *PaymentRepository) GetByOrderID(ctx context.Context, orderID string) (*model.Payment, error) {
 	var payment model.Payment
 	if err := r.db.WithContext(ctx).
+		Preload("Booking").
+		Preload("Booking.User").
+		Preload("Booking.RentalOption").
+		Preload("Booking.BookingAddons.Addon").
+		Preload("EventBooking").
+		Preload("EventBooking.User").
+		Preload("EventBooking.VillaPackage").
 		Where("order_id = ?", orderID).
 		First(&payment).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

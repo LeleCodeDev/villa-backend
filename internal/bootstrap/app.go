@@ -134,12 +134,16 @@ func NewApp() *App {
 		voucherRepo,
 		gateaway,
 	)
+	voucherService := service.NewVoucherService(txManager, voucherRepo, bookingRepo)
 	paymentService := service.NewPaymentService(
 		txManager,
 		paymentRepo,
 		bookingRepo,
 		eventBookingRepo,
+		applicationRepo,
+		voucherService,
 		gateaway,
+		whatsappClient,
 	)
 	eventBookingService := service.NewEventBookingService(
 		txManager,
@@ -158,7 +162,6 @@ func NewApp() *App {
 	)
 	villaRuleService := service.NewVillaRuleService(txManager, villaRuleRepo)
 	whatsappService := service.NewWhatsappService(whatsappClient)
-	voucherService := service.NewVoucherService(txManager, voucherRepo, bookingRepo)
 
 	app := &App{
 		Router:                      r,

@@ -41,6 +41,7 @@ type (
 		StartAt          *time.Time         `json:"start_at,omitempty"`
 		ExpiresAt        *time.Time         `json:"expires_at,omitempty"`
 		IsActive         bool               `json:"is_active"`
+		SourceBookingID  *uint              `json:"source_booking_id,omitempty"`
 		CreatedAt        time.Time          `json:"created_at"`
 		UpdatedAt        time.Time          `json:"updated_at"`
 	}

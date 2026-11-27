@@ -8,6 +8,7 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type VoucherRepository struct {
@@ -105,6 +106,17 @@ func (r *VoucherRepository) DecrementUsage(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Model(&model.Voucher{}).
 		Where("id = ? AND used_count > 0", id).
 		UpdateColumn("used_count", gorm.Expr("used_count - 1")).Error
+}
+
+func (r *VoucherRepository) CreateIfAbsent(ctx context.Context, voucher *model.Voucher) (bool, error) {
+	res := r.db.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "source_booking_id"}},
+			DoNothing: true,
+		}).
+		Create(voucher)
+
+	return res.RowsAffected == 1, res.Error
 }
 
 func (r *VoucherRepository) Create(ctx context.Context, voucher *model.Voucher) error {
