@@ -97,25 +97,37 @@ func (r *RentalOptionRepository) ShiftSortOrder(ctx context.Context, sortOrder i
 		Update("sort_order", gorm.Expr("sort_order + 1")).Error
 }
 
-func (r *RentalOptionRepository) GetAvailable(ctx context.Context, checkIn time.Time, checkOut time.Time) ([]model.RentalOption, error) {
+func (r *RentalOptionRepository) GetAvailable(ctx context.Context, checkIn time.Time, checkOut time.Time, needsWeekend bool) ([]model.RentalOption, error) {
 	var options []model.RentalOption
 
-	conflicting := r.db.WithContext(ctx).
+	var busy int64
+	err := r.db.WithContext(ctx).
 		Model(&model.Booking{}).
-		Select("rental_option_id").
-		Where("rental_option_id IS NOT NULL").
 		Where("check_in_date <= ? AND check_out_date >= ?", checkOut, checkIn).
 		Where(
 			"status = ? OR (status = ? AND (expires_at IS NULL OR expires_at > ?))",
 			model.BookingStatusPaid,
 			model.BookingStatusPending,
 			time.Now(),
-		)
+		).
+		Count(&busy).Error
+	if err != nil {
+		return nil, err
+	}
+	if busy > 0 {
+		return []model.RentalOption{}, nil
+	}
 
-	err := r.db.WithContext(ctx).
-		Where("id NOT IN (?)", conflicting).
-		Order("sort_order ASC").
-		Find(&options).Error
+	q := r.db.WithContext(ctx)
+
+	if needsWeekend {
+		q = q.Where("id IN (?)",
+			r.db.Model(&model.RentalPrice{}).
+				Select("rental_option_id").
+				Where("day_type = ?", model.DayWeekend))
+	}
+
+	err = q.Order("sort_order ASC").Find(&options).Error
 
 	return options, err
 }

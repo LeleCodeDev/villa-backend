@@ -11,6 +11,7 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/mapper"
 	"github.com/lelecodedev/villa-backend/internal/model"
+	"github.com/lelecodedev/villa-backend/internal/notification"
 	"github.com/lelecodedev/villa-backend/internal/payment"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 	"github.com/midtrans/midtrans-go"
@@ -24,6 +25,7 @@ type EventBookingRequestService struct {
 	eventBookingRepo *repository.EventBookingRepository
 	paymentRepo      *repository.PaymentRepository
 	gateaway         *payment.MidtransGateway
+	notifier         *notification.Notifier
 }
 
 func NewEventBookingRequestService(
@@ -33,6 +35,7 @@ func NewEventBookingRequestService(
 	eventBookingRepo *repository.EventBookingRepository,
 	paymentRepo *repository.PaymentRepository,
 	gateaway *payment.MidtransGateway,
+	notifier *notification.Notifier,
 ) *EventBookingRequestService {
 	return &EventBookingRequestService{
 		txManager:        txManager,
@@ -41,6 +44,7 @@ func NewEventBookingRequestService(
 		eventBookingRepo: eventBookingRepo,
 		paymentRepo:      paymentRepo,
 		gateaway:         gateaway,
+		notifier:         notifier,
 	}
 }
 
@@ -120,11 +124,16 @@ func (s *EventBookingRequestService) Create(ctx context.Context, req dto.CreateE
 		return dto.EventBookingRequestResponse{}, err
 	}
 
+	s.notifier.Send(fmt.Sprintf("Event-Request-%d", createdRequest.ID), func(ctx context.Context, app *model.Application) []notification.Message {
+		return notification.RequestCreated(app, createdRequest)
+	})
+
 	return mapper.ToEventBookingRequestResponse(createdRequest), nil
 }
 
 func (s *EventBookingRequestService) Approve(ctx context.Context, id uint, req dto.ApproveEventRequest) (dto.EventBookingResponse, error) {
 	var approvedBooking *model.EventBooking
+	var approvedRequest *model.EventBookingRequest
 
 	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txRequestRepo := s.repo.WithTx(tx)
@@ -214,10 +223,15 @@ func (s *EventBookingRequestService) Approve(ctx context.Context, id uint, req d
 		}
 
 		approvedBooking = eventBooking
+		approvedRequest = request
 		return nil
 	}); err != nil {
 		return dto.EventBookingResponse{}, err
 	}
+
+	s.notifier.Send(fmt.Sprintf("Event-Request-%d", approvedRequest.ID), func(ctx context.Context, app *model.Application) []notification.Message {
+		return notification.RequestCreated(app, approvedRequest)
+	})
 
 	return mapper.ToEventBookingResponse(approvedBooking, nil), nil
 }
@@ -349,6 +363,10 @@ func (s *EventBookingRequestService) Reject(ctx context.Context, id uint, req dt
 		return dto.EventBookingRequestResponse{}, err
 	}
 
+	s.notifier.Send(fmt.Sprintf("Event-Request-%d", rejected.ID), func(ctx context.Context, app *model.Application) []notification.Message {
+		return notification.RequestCreated(app, rejected)
+	})
+
 	return mapper.ToEventBookingRequestResponse(rejected), nil
 }
 
@@ -381,6 +399,10 @@ func (s *EventBookingRequestService) Cancel(ctx context.Context, currentUser mod
 	}); err != nil {
 		return dto.EventBookingRequestResponse{}, err
 	}
+
+	s.notifier.Send(fmt.Sprintf("Event-Request-%d", canceled.ID), func(ctx context.Context, app *model.Application) []notification.Message {
+		return notification.RequestCreated(app, canceled)
+	})
 
 	return mapper.ToEventBookingRequestResponse(canceled), nil
 }
