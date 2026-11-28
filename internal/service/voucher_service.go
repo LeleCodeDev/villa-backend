@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"strings"
 	"time"
@@ -180,6 +181,47 @@ func (s *VoucherService) Create(ctx context.Context, req dto.VoucherRequest) (dt
 	}
 
 	return mapper.ToVoucherResponse(createdVoucher), nil
+}
+
+func (s *VoucherService) CreateRewardVoucher(ctx context.Context, booking *model.Booking) (*model.Voucher, error) {
+	const voucherAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		return &model.Voucher{}, err
+	}
+
+	for i := range b {
+		b[i] = voucherAlphabet[int(b[i])%len(voucherAlphabet)]
+	}
+
+	code := "VILLA" + string(b)
+
+	rewardPercent := 5
+	expiresAt := time.Now().AddDate(0, 3, 0)
+	usageLimit := 1
+	perUserLimit := 1
+
+	voucher := &model.Voucher{
+		Code:            code,
+		DiscountType:    model.DiscountTypePercent,
+		DiscountValue:   int64(rewardPercent),
+		UsageLimit:      &usageLimit,
+		PerUserLimit:    &perUserLimit,
+		ExpiresAt:       &expiresAt,
+		IsActive:        true,
+		SourceBookingID: &booking.ID,
+	}
+
+	created, err := s.repo.CreateIfAbsent(ctx, voucher)
+	if err != nil {
+		return nil, err
+	}
+	if !created {
+		return nil, nil
+	}
+
+	return voucher, nil
 }
 
 func (s *VoucherService) Update(ctx context.Context, req dto.VoucherRequest, id uint) (dto.VoucherResponse, error) {

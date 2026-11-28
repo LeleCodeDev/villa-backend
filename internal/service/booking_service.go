@@ -138,7 +138,7 @@ func parseBookingDates(in, out string) (time.Time, time.Time, error) {
 		return time.Time{}, time.Time{}, appError.BadRequest("invalid check_out_date, expected YYYY-MM-DD")
 	}
 
-	if checkOut.Before(checkIn) {
+	if !checkOut.After(checkIn) {
 		return time.Time{}, time.Time{}, appError.BadRequest("check_out_date must be after check_in_date")
 	}
 
@@ -183,6 +183,12 @@ func calculateStay(prices []model.RentalPrice, seasonPeriods []model.SeasonPerio
 
 		price, ok := priceMap[priceKey{Season: season, DayType: dayType}]
 		if !ok {
+			if season == model.SeasonHigh {
+				return 0, appError.BadRequest(fmt.Sprintf("no high season price configured for this rental option on %s", d.Format("2006-01-02")))
+			}
+			if dayType == model.DayWeekend {
+				return 0, appError.BadRequest("This option is not available for weekend (Fri-Sun)")
+			}
 			return 0, appError.BadRequest(fmt.Sprintf("no %s %s price configured for this rental option", season, dayType))
 		}
 		total += price

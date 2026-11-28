@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
 	"github.com/lelecodedev/villa-backend/internal/dto"
@@ -84,13 +85,23 @@ func (s *RentalOptionService) GetByID(ctx context.Context, id uint) (dto.RentalO
 	return mapper.ToRentalOptionResponse(rentalOption, rentalPrices), nil
 }
 
+func hasWeekendNight(checkIn, checkOut time.Time) bool {
+	for d := checkIn; d.Before(checkOut); d = d.AddDate(0, 0, 1) {
+		switch d.Weekday() {
+		case time.Friday, time.Saturday, time.Sunday:
+			return true
+		}
+	}
+	return false
+}
+
 func (s *RentalOptionService) GetAvailable(ctx context.Context, query dto.BookingAvailableRequest) ([]dto.RentalOptionResponse, error) {
 	checkIn, checkOut, err := parseBookingDates(query.CheckInDate, query.CheckOutDate)
 	if err != nil {
 		return nil, err
 	}
 
-	rentalOptions, err := s.repo.GetAvailable(ctx, checkIn, checkOut)
+	rentalOptions, err := s.repo.GetAvailable(ctx, checkIn, checkOut, hasWeekendNight(checkIn, checkOut))
 	if err != nil {
 		return nil, err
 	}

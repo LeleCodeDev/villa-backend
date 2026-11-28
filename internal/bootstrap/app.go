@@ -13,6 +13,7 @@ import (
 	"github.com/lelecodedev/villa-backend/internal/database"
 	"github.com/lelecodedev/villa-backend/internal/handler"
 	"github.com/lelecodedev/villa-backend/internal/middleware"
+	"github.com/lelecodedev/villa-backend/internal/notification"
 	"github.com/lelecodedev/villa-backend/internal/payment"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 	"github.com/lelecodedev/villa-backend/internal/service"
@@ -97,7 +98,9 @@ func NewApp() *App {
 	villaRuleRepo := repository.NewVillaRuleRepository(db)
 	voucherRepo := repository.NewVoucherRepository(db)
 
-	authService := service.NewAuthService(txManager, userRepo)
+	notifier := notification.NewNotifier(whatsappClient, applicationRepo)
+
+	authService := service.NewAuthService(txManager, userRepo, whatsappClient)
 	userService := service.NewUserService(txManager, userRepo)
 	applicationService := service.NewApplicationService(txManager, applicationRepo)
 	heroSectionService := service.NewHeroSectionService(txManager, heroSectionRepo)
@@ -134,12 +137,17 @@ func NewApp() *App {
 		voucherRepo,
 		gateaway,
 	)
+	voucherService := service.NewVoucherService(txManager, voucherRepo, bookingRepo)
 	paymentService := service.NewPaymentService(
 		txManager,
 		paymentRepo,
 		bookingRepo,
 		eventBookingRepo,
+		applicationRepo,
+		voucherService,
 		gateaway,
+		whatsappClient,
+		notifier,
 	)
 	eventBookingService := service.NewEventBookingService(
 		txManager,
@@ -155,10 +163,10 @@ func NewApp() *App {
 		eventBookingRepo,
 		paymentRepo,
 		gateaway,
+		notifier,
 	)
 	villaRuleService := service.NewVillaRuleService(txManager, villaRuleRepo)
 	whatsappService := service.NewWhatsappService(whatsappClient)
-	voucherService := service.NewVoucherService(txManager, voucherRepo, bookingRepo)
 
 	app := &App{
 		Router:                      r,

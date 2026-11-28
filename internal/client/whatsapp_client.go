@@ -21,6 +21,12 @@ type WhatsappClient struct {
 	http      *http.Client
 }
 
+type WhatsappCheckResponse struct {
+	Number     string `json:"number"`
+	Exists     bool   `json:"exists"`
+	WhatsappID string `json:"whatsappId"`
+}
+
 func NewWhatsappClient(baseURL, APIKey, sessionID string) *WhatsappClient {
 	transport := &http.Transport{
 		DialContext: (&net.Dialer{
@@ -43,18 +49,26 @@ func NewWhatsappClient(baseURL, APIKey, sessionID string) *WhatsappClient {
 	}
 }
 
-func (c *WhatsappClient) do(ctx context.Context, path string, payload any, out any) error {
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("marshal request: %w", err)
+func (c *WhatsappClient) do(ctx context.Context, method string, path string, payload any, out any) error {
+	var body io.Reader
+	if payload != nil {
+		b, err := json.Marshal(payload)
+		if err != nil {
+			return fmt.Errorf("marshal request: %w", err)
+		}
+
+		body = bytes.NewReader(b)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+path, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, method, c.BaseURL+path, body)
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	if payload != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
 	req.Header.Set("X-API-KEY", c.APIKey)
 
 	resp, err := c.http.Do(req)
@@ -87,5 +101,13 @@ func (c *WhatsappClient) SendText(ctx context.Context, chatID string, message st
 	}
 	path := fmt.Sprintf("/api/sessions/%s/messages/send-text", c.SessionID)
 
-	return c.do(ctx, path, payload, nil)
+	return c.do(ctx, http.MethodPost, path, payload, nil)
+}
+
+func (c *WhatsappClient) CheckNumber(ctx context.Context, number string) (WhatsappCheckResponse, error) {
+	var res WhatsappCheckResponse
+	path := fmt.Sprintf("/api/sessions/%s/contacts/check/%s", c.SessionID, number)
+
+	err := c.do(ctx, http.MethodGet, path, nil, &res)
+	return res, err
 }

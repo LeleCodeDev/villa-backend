@@ -51,6 +51,7 @@ type Booking struct {
 	CheckInAt      *time.Time
 	CheckOutAt     *time.Time
 	ExpiresAt      *time.Time
+	BookingAddons  []BookingAddon `gorm:"foreignKey:BookingID"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	DeletedAt      gorm.DeletedAt `gorm:"index"`

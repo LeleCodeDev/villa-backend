@@ -25,7 +25,8 @@ type Voucher struct {
 	PerUserLimit     *int
 	StartAt          *time.Time
 	ExpiresAt        *time.Time
-	IsActive         bool `gorm:"not null;default:true"`
+	IsActive         bool  `gorm:"not null;default:true"`
+	SourceBookingID  *uint `gorm:"uniqueIndex"`
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	DeletedAt        gorm.DeletedAt `gorm:"index;uniqueIndex:idx_code_deleted_at;"`

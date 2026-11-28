@@ -8,8 +8,10 @@ import (
 	"strconv"
 
 	appError "github.com/lelecodedev/villa-backend/internal/apperror"
+	"github.com/lelecodedev/villa-backend/internal/client"
 	"github.com/lelecodedev/villa-backend/internal/dto"
 	"github.com/lelecodedev/villa-backend/internal/model"
+	"github.com/lelecodedev/villa-backend/internal/notification"
 	"github.com/lelecodedev/villa-backend/internal/payment"
 	"github.com/lelecodedev/villa-backend/internal/repository"
 	"gorm.io/gorm"
@@ -20,7 +22,11 @@ type PaymentService struct {
 	paymentRepo      *repository.PaymentRepository
 	bookingRepo      *repository.BookingRepository
 	eventBookingRepo *repository.EventBookingRepository
+	applicationRepo  *repository.ApplicationRepository
+	voucherService   *VoucherService
 	gateway          *payment.MidtransGateway
+	client           *client.WhatsappClient
+	notifier         *notification.Notifier
 }
 
 func NewPaymentService(
@@ -28,14 +34,22 @@ func NewPaymentService(
 	paymentRepo *repository.PaymentRepository,
 	bookingRepo *repository.BookingRepository,
 	eventBookingRepo *repository.EventBookingRepository,
+	applicationRepo *repository.ApplicationRepository,
+	voucherService *VoucherService,
 	gateway *payment.MidtransGateway,
+	client *client.WhatsappClient,
+	notifier *notification.Notifier,
 ) *PaymentService {
 	return &PaymentService{
 		txManager:        txManager,
 		paymentRepo:      paymentRepo,
 		bookingRepo:      bookingRepo,
 		eventBookingRepo: eventBookingRepo,
+		applicationRepo:  applicationRepo,
+		voucherService:   voucherService,
 		gateway:          gateway,
+		client:           client,
+		notifier:         notifier,
 	}
 }
 
@@ -63,7 +77,7 @@ func (s *PaymentService) HandleNotificationCallback(ctx context.Context, n dto.M
 		return nil
 	}
 
-	return s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
+	if err := s.txManager.Transaction(ctx, func(tx *gorm.DB) error {
 		txPaymentRepo := s.paymentRepo.WithTx(tx)
 		txBookingRepo := s.bookingRepo.WithTx(tx)
 		txEventBookingRepo := s.eventBookingRepo.WithTx(tx)
@@ -94,6 +108,11 @@ func (s *PaymentService) HandleNotificationCallback(ctx context.Context, n dto.M
 			if !moved && target == model.PaymentStatusPaid {
 				log.Printf("REVIEW NEEDED: payment %s paid but booking not in status %s", p.OrderID, from)
 			}
+
+			if p.Booking != nil && (to == model.BookingStatusPaid || to == model.BookingStatusPartiallyPaid) {
+				go s.notify(p, p.Booking, nil)
+			}
+
 		}
 
 		if p.EventBookingID != nil {
@@ -110,9 +129,34 @@ func (s *PaymentService) HandleNotificationCallback(ctx context.Context, n dto.M
 			if !moved && target == model.PaymentStatusPaid {
 				log.Printf("REVIEW NEEDED: payment %s paid but event booking not in status %s", p.OrderID, from)
 			}
+
+			if p.EventBooking != nil && to == model.EventBookingStatusPaid {
+				go s.notify(p, nil, p.EventBooking)
+			}
 		}
 
 		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *PaymentService) notify(payment *model.Payment, booking *model.Booking, eventBooking *model.EventBooking) {
+	s.notifier.Send(payment.OrderID, func(ctx context.Context, app *model.Application) []notification.Message {
+		var reward *model.Voucher
+
+		if booking != nil && payment.Kind == model.PaymentKindFull {
+			v, err := s.voucherService.CreateRewardVoucher(ctx, booking)
+			if err != nil {
+				log.Printf("notify %s: failed to create voucher: %v", payment.OrderID, err)
+			}
+
+			reward = v
+		}
+
+		return notification.PaidMessages(app, payment, booking, eventBooking, reward)
 	})
 }
 
